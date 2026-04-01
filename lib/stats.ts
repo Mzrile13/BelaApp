@@ -28,6 +28,10 @@ function normalize(values: number[], value: number) {
   return (value - min) / (max - min);
 }
 
+function shrinkToMean(value: number, sampleSize: number, leagueMean: number, k = 8) {
+  return (value * sampleSize + leagueMean * k) / (sampleSize + k);
+}
+
 function calcTrend(last5: number, last10: number): "hot" | "steady" | "cold" {
   if (last5 - last10 > 8) return "hot";
   if (last10 - last5 > 8) return "cold";
@@ -58,6 +62,21 @@ function biggestComeback(roundNets: number[]) {
     minPrefix = Math.min(minPrefix, prefix);
   }
   return maxRecovery;
+}
+
+function getCurrentStreak(roundNets: number[]) {
+  if (roundNets.length === 0) return 0;
+  let streak = 0;
+  const last = roundNets[roundNets.length - 1];
+  if (last === 0) return 0;
+  const sign = last > 0 ? 1 : -1;
+  for (let i = roundNets.length - 1; i >= 0; i -= 1) {
+    const value = roundNets[i];
+    if (value === 0) break;
+    if ((value > 0 ? 1 : -1) !== sign) break;
+    streak += 1;
+  }
+  return sign * streak;
 }
 
 function getFinishedGameIds(games: Game[], rounds: Round[]) {
@@ -212,8 +231,12 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
       }
     }
 
+    const finishedPlayerGamesSorted = [...finishedPlayerGames].sort((a, b) =>
+      a.createdAt.localeCompare(b.createdAt),
+    );
     let gamesWon = 0;
-    for (const game of finishedPlayerGames) {
+    const gameOutcomes: number[] = [];
+    for (const game of finishedPlayerGamesSorted) {
       const gameRounds = rounds.filter((round) => round.gameId === game.id);
       const score = gameRounds.reduce(
         (acc, round) => {
@@ -225,19 +248,21 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
         { a: 0, b: 0 },
       );
       const team = getPlayerTeam(game, player.id);
-      const won = team === "A" ? score.a >= score.b : score.b >= score.a;
+      const won = team === "A" ? score.a > score.b : score.b > score.a;
+      const lost = team === "A" ? score.a < score.b : score.b < score.a;
       if (won) gamesWon += 1;
+      gameOutcomes.push(won ? 1 : lost ? -1 : 0);
     }
 
     let currentWinStreak = 0;
     let currentLossStreak = 0;
     let bestWinStreak = 0;
     let worstLossStreak = 0;
-    for (const net of netPerRound) {
-      if (net > 0) {
+    for (const outcome of gameOutcomes) {
+      if (outcome > 0) {
         currentWinStreak += 1;
         currentLossStreak = 0;
-      } else if (net < 0) {
+      } else if (outcome < 0) {
         currentLossStreak += 1;
         currentWinStreak = 0;
       } else {
@@ -249,13 +274,19 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
     }
 
     const avgPoints = avg(pointsPerRound);
-    const avgZvanja = roundsPlayed ? zvanjaTotal / roundsPlayed : 0;
+    const avgZvanja = finishedPlayerGames.length ? zvanjaTotal / finishedPlayerGames.length : 0;
     const callsPerRoundAvg = roundsPlayed ? timesCalled / roundsPlayed : 0;
     const favoriteCalledSuit = (Object.entries(calledSuitCounter) as Array<[CalledSuit, number]>)
       .sort((a, b) => b[1] - a[1])[0];
     const avgLast5 = avg(pointsPerRound.slice(-5));
     const avgLast10 = avg(pointsPerRound.slice(-10));
     const consistency = stdDev(pointsPerRound);
+    const currentStreak = getCurrentStreak(gameOutcomes);
+    const last5GameResults = gameOutcomes.slice(-5).map((outcome) => {
+      if (outcome > 0) return "W" as const;
+      if (outcome < 0) return "L" as const;
+      return "D" as const;
+    });
     const callerSuccessRate = timesCalled > 0 ? callerSuccesses / timesCalled : 0;
     const callerRiskScore = timesCalled
       ? round((timesCalled / Math.max(1, roundsPlayed)) * (1 - callerSuccessRate), 3)
@@ -282,6 +313,7 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
       netPerRound: round(pointsWon - pointsAgainst ? (pointsWon - pointsAgainst) / Math.max(1, roundsPlayed) : 0),
       positiveRoundRate: round(netPerRound.filter((n) => n > 0).length / Math.max(1, roundsPlayed)),
       consistencyIndex: round(consistency),
+      currentStreak,
       bestWinStreak,
       worstLossStreak,
       trend: calcTrend(avgLast5, avgLast10),
@@ -292,6 +324,7 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
       clutchIndex: round(clutchTotal ? clutchHits / clutchTotal : 0),
       partnerImpact: 0,
       callerRiskScore,
+      last5GameResults,
       mvpScore: 0,
       insufficientSample:
         finishedPlayerGames.length < MVP_MIN_GAMES || roundsPlayed < MVP_MIN_ROUNDS,
@@ -314,21 +347,50 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
     );
   }
 
-  const avgPointsValues = rows.map((row) => row.avgPoints);
-  const callSuccessValues = rows.map((row) => row.callerSuccessRate);
-  const winRateValues = rows.map((row) => row.gamesWon / Math.max(1, row.gamesPlayed));
-  const consistencyValues = rows.map((row) => 1 / (1 + row.consistencyIndex));
-  const partnerValues = rows.map((row) => row.partnerImpact);
-  const clutchValues = rows.map((row) => row.clutchIndex);
+  const winRateRaw = rows.map((row) => row.gamesWon / Math.max(1, row.gamesPlayed));
+  const plusMinusPerGameRaw = rows.map(
+    (row) => (row.pointsWon - row.pointsAgainst) / Math.max(1, row.gamesPlayed),
+  );
+  const callerSuccessRaw = rows.map((row) => row.callerSuccessRate);
+  const avgPointsRaw = rows.map((row) => row.avgPoints);
+  const clutchRaw = rows.map((row) => row.clutchIndex);
+  const partnerRaw = rows.map((row) => row.partnerImpact);
 
-  for (const row of rows) {
+  const winRateLeague = avg(winRateRaw);
+  const plusMinusLeague = avg(plusMinusPerGameRaw);
+  const callerSuccessLeague = avg(callerSuccessRaw);
+  const avgPointsLeague = avg(avgPointsRaw);
+  const clutchLeague = avg(clutchRaw);
+  const partnerLeague = avg(partnerRaw);
+
+  const winRateFair = rows.map((row, i) =>
+    shrinkToMean(winRateRaw[i], row.gamesPlayed, winRateLeague),
+  );
+  const plusMinusFair = rows.map((row, i) =>
+    shrinkToMean(plusMinusPerGameRaw[i], row.gamesPlayed, plusMinusLeague),
+  );
+  const callerSuccessFair = rows.map((row, i) =>
+    shrinkToMean(callerSuccessRaw[i], row.timesCalled, callerSuccessLeague),
+  );
+  const avgPointsFair = rows.map((row, i) =>
+    shrinkToMean(avgPointsRaw[i], row.roundsPlayed, avgPointsLeague),
+  );
+  const clutchFair = rows.map((row, i) =>
+    shrinkToMean(clutchRaw[i], row.roundsPlayed, clutchLeague),
+  );
+  const partnerFair = rows.map((row, i) =>
+    shrinkToMean(partnerRaw[i], row.gamesPlayed, partnerLeague),
+  );
+
+  for (let idx = 0; idx < rows.length; idx += 1) {
+    const row = rows[idx];
     const mvpScore =
-      normalize(avgPointsValues, row.avgPoints) * 0.35 +
-      normalize(callSuccessValues, row.callerSuccessRate) * 0.2 +
-      normalize(winRateValues, row.gamesWon / Math.max(1, row.gamesPlayed)) * 0.15 +
-      normalize(consistencyValues, 1 / (1 + row.consistencyIndex)) * 0.15 +
-      normalize(partnerValues, row.partnerImpact) * 0.1 +
-      normalize(clutchValues, row.clutchIndex) * 0.05;
+      normalize(winRateFair, winRateFair[idx]) * 0.35 +
+      normalize(plusMinusFair, plusMinusFair[idx]) * 0.25 +
+      normalize(callerSuccessFair, callerSuccessFair[idx]) * 0.15 +
+      normalize(avgPointsFair, avgPointsFair[idx]) * 0.1 +
+      normalize(clutchFair, clutchFair[idx]) * 0.1 +
+      normalize(partnerFair, partnerFair[idx]) * 0.05;
 
     row.mvpScore = round(mvpScore * 100);
   }

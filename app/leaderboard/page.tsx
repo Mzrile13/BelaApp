@@ -43,7 +43,13 @@ export default async function LeaderboardPage() {
                     #{index + 1} {row.username}
                   </p>
                   <p className="text-xs text-emerald-200">
-                    Win {row.gamesWon}/{row.gamesPlayed} · Forma {row.trend}
+                    Win {row.gamesWon}/{row.gamesPlayed}{" "}
+                    ({((row.gamesWon / Math.max(1, row.gamesPlayed)) * 100).toFixed(1)}%) ·{" "}
+                    {row.currentStreak > 0
+                      ? `W${row.currentStreak}`
+                      : row.currentStreak < 0
+                        ? `L${Math.abs(row.currentStreak)}`
+                        : "-"}
                   </p>
                 </div>
                 <div className="text-right">

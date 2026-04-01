@@ -11,6 +11,20 @@ const suitName: Record<"karo" | "herc" | "pik" | "tref", string> = {
 export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
   const winRate =
     stats.gamesPlayed > 0 ? ((stats.gamesWon / stats.gamesPlayed) * 100).toFixed(1) : "0.0";
+  const avgStigliaPerGame =
+    stats.gamesPlayed > 0 ? (stats.stigliaCount / stats.gamesPlayed).toFixed(2) : "0.00";
+  const avgPlusMinusPerGame =
+    stats.gamesPlayed > 0
+      ? ((stats.pointsWon - stats.pointsAgainst) / stats.gamesPlayed).toFixed(2)
+      : "0.00";
+  const streakLabel =
+    stats.currentStreak > 0
+      ? `W${stats.currentStreak}`
+      : stats.currentStreak < 0
+        ? `L${Math.abs(stats.currentStreak)}`
+        : "-";
+  const recentGamesLabel =
+    stats.last5GameResults.length > 0 ? stats.last5GameResults.join(" · ") : "-";
 
   return (
     <article className="rounded-2xl border border-emerald-700/40 bg-emerald-900/50 p-4">
@@ -23,14 +37,14 @@ export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
       <div className="grid grid-cols-2 gap-2 text-sm text-emerald-100">
         <p>Odigrane partije: {stats.gamesPlayed}</p>
         <p>Postotak pobjeda: {winRate}%</p>
-        <p>Bodovi: {stats.pointsWon}</p>
-        <p>Prosjek: {stats.avgPoints}</p>
-        <p>Zvanja: {stats.zvanjaTotal}</p>
-        <p>Štiglja: {stats.stigliaCount}</p>
+        <p>Bodovi po ruci: {stats.avgPoints}</p>
+        <p>Prosj. +/- po partiji: {avgPlusMinusPerGame}</p>
+        <p>Prosj. štiglji/partija: {avgStigliaPerGame}</p>
         <p>Prosj. zvanja: {stats.avgZvanja}</p>
-        <p>Zvao: {stats.timesCalled}</p>
         <p>Zvao po ruci: {stats.callsPerRoundAvg.toFixed(2)}</p>
         <p>Prolaznost: {(stats.callerSuccessRate * 100).toFixed(1)}%</p>
+        <p>Trenutni streak: {streakLabel}</p>
+        <p>Najveći win streak: W{stats.bestWinStreak}</p>
         <p>Najdraži znak: {stats.favoriteCalledSuit ? suitName[stats.favoriteCalledSuit] : "-"}</p>
         <p>Clutch: {(stats.clutchIndex * 100).toFixed(1)}%</p>
       </div>
@@ -46,7 +60,7 @@ export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
           )}
           Forma: {stats.trend}
         </div>
-        <p className="text-emerald-200">L5: {stats.avgLast5}</p>
+        <p className="text-emerald-200">{recentGamesLabel}</p>
       </div>
     </article>
   );

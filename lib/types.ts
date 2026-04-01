@@ -87,6 +87,7 @@ export interface PlayerStats {
   netPerRound: number;
   positiveRoundRate: number;
   consistencyIndex: number;
+  currentStreak: number;
   bestWinStreak: number;
   worstLossStreak: number;
   trend: "hot" | "steady" | "cold";
@@ -97,6 +98,7 @@ export interface PlayerStats {
   clutchIndex: number;
   partnerImpact: number;
   callerRiskScore: number;
+  last5GameResults: Array<"W" | "L" | "D">;
   mvpScore: number;
   insufficientSample: boolean;
 }
