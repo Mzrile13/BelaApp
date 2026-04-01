@@ -1,9 +1,15 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
 import { getRepo } from "@/lib/supabase";
 import { computePlayerStats } from "@/lib/stats";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
 export default async function LeaderboardPage() {
+  noStore();
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
