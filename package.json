@@ -10,7 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.101.0",
+    "@supabase/ssr": "^0.10.0",
+    "@supabase/supabase-js": "^2.101.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
