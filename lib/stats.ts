@@ -1,5 +1,5 @@
 import type { CalledSuit, Game, PairStats, Player, PlayerStats, Round, TeamId } from "@/lib/types";
-import { resolveRoundPoints } from "./scoring";
+import { getGameScore, getWinningTeam, resolveRoundPoints } from "./scoring";
 
 const MVP_MIN_GAMES = 10;
 const MVP_MIN_ROUNDS = 60;
@@ -26,10 +26,6 @@ function normalize(values: number[], value: number) {
   const max = Math.max(...values);
   if (min === max) return 0.5;
   return (value - min) / (max - min);
-}
-
-function smoothRate(successes: number, attempts: number, prior = 0.5, weight = 8) {
-  return (successes + prior * weight) / (attempts + weight);
 }
 
 function calcTrend(last5: number, last10: number): "hot" | "steady" | "cold" {
@@ -64,13 +60,34 @@ function biggestComeback(roundNets: number[]) {
   return maxRecovery;
 }
 
+function getFinishedGameIds(games: Game[], rounds: Round[]) {
+  const roundsByGameId = new Map<string, Round[]>();
+  for (const round of rounds) {
+    const bucket = roundsByGameId.get(round.gameId) ?? [];
+    bucket.push(round);
+    roundsByGameId.set(round.gameId, bucket);
+  }
+
+  const finished = new Set<string>();
+  for (const game of games) {
+    if (game.finishedAt) {
+      finished.add(game.id);
+      continue;
+    }
+    const winner = getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? []));
+    if (winner) finished.add(game.id);
+  }
+  return finished;
+}
+
 export function computePairStats(players: Player[], games: Game[], rounds: Round[]): PairStats[] {
   const usernameById = new Map(players.map((player) => [player.id, player.username]));
+  const finishedGameIds = getFinishedGameIds(games, rounds);
   const rows: PairStats[] = [];
 
   for (const game of games) {
     // Do not count wins/losses for an ongoing game.
-    if (!game.finishedAt) continue;
+    if (!finishedGameIds.has(game.id)) continue;
     const score = rounds
       .filter((round) => round.gameId === game.id)
       .reduce(
@@ -116,12 +133,13 @@ export function computePairStats(players: Player[], games: Game[], rounds: Round
 }
 
 export function computePlayerStats(players: Player[], games: Game[], rounds: Round[]): PlayerStats[] {
+  const finishedGameIds = getFinishedGameIds(games, rounds);
   const rows = players.map((player) => {
     const playerGames = games.filter(
       (game) =>
         game.teams.teamA.includes(player.id) || game.teams.teamB.includes(player.id),
     );
-    const finishedPlayerGames = playerGames.filter((game) => game.finishedAt !== null);
+    const finishedPlayerGames = playerGames.filter((game) => finishedGameIds.has(game.id));
     const gameIds = new Set(finishedPlayerGames.map((game) => game.id));
     const playerRounds = rounds
       .filter((round) => gameIds.has(round.gameId))
@@ -195,7 +213,7 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
     }
 
     let gamesWon = 0;
-    for (const game of playerGames) {
+    for (const game of finishedPlayerGames) {
       const gameRounds = rounds.filter((round) => round.gameId === game.id);
       const score = gameRounds.reduce(
         (acc, round) => {
@@ -206,8 +224,6 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
         },
         { a: 0, b: 0 },
       );
-      // Ongoing games should not be counted as won/lost yet.
-      if (!game.finishedAt) continue;
       const team = getPlayerTeam(game, player.id);
       const won = team === "A" ? score.a >= score.b : score.b >= score.a;
       if (won) gamesWon += 1;
@@ -240,7 +256,7 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
     const avgLast5 = avg(pointsPerRound.slice(-5));
     const avgLast10 = avg(pointsPerRound.slice(-10));
     const consistency = stdDev(pointsPerRound);
-    const callerSuccessRate = smoothRate(callerSuccesses, timesCalled);
+    const callerSuccessRate = timesCalled > 0 ? callerSuccesses / timesCalled : 0;
     const callerRiskScore = timesCalled
       ? round((timesCalled / Math.max(1, roundsPlayed)) * (1 - callerSuccessRate), 3)
       : 0;

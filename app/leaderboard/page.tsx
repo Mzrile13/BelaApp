@@ -21,28 +21,34 @@ export default async function LeaderboardPage() {
           MVP score uključuje učinak, caller uspješnost, partner impact i clutch.
         </p>
         <div className="mt-3 space-y-2">
-          {leaderboard.map((row, index) => (
-            <Link
-              key={row.playerId}
-              href={`/players/${row.username}`}
-              className="flex items-center justify-between rounded-xl bg-emerald-950/40 px-3 py-2"
-            >
-              <div>
-                <p className="font-medium text-white">
-                  #{index + 1} {row.username}
-                </p>
-                <p className="text-xs text-emerald-200">
-                  Win {row.gamesWon}/{row.gamesPlayed} · Forma {row.trend}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-lime-300">MVP {row.mvpScore}</p>
-                {row.insufficientSample ? (
-                  <p className="text-xs text-amber-300">insufficient sample</p>
-                ) : null}
-              </div>
-            </Link>
-          ))}
+          {leaderboard.length === 0 ? (
+            <p className="rounded-xl bg-emerald-950/40 px-3 py-2 text-sm text-emerald-100/90">
+              Još nema završenih partija za leaderboard.
+            </p>
+          ) : (
+            leaderboard.map((row, index) => (
+              <Link
+                key={row.playerId}
+                href={`/players/${row.username}`}
+                className="flex items-center justify-between rounded-xl bg-emerald-950/40 px-3 py-2"
+              >
+                <div>
+                  <p className="font-medium text-white">
+                    #{index + 1} {row.username}
+                  </p>
+                  <p className="text-xs text-emerald-200">
+                    Win {row.gamesWon}/{row.gamesPlayed} · Forma {row.trend}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-lime-300">MVP {row.mvpScore}</p>
+                  {row.insufficientSample ? (
+                    <p className="text-xs text-amber-300">insufficient sample</p>
+                  ) : null}
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </section>
     </main>
