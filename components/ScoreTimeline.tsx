@@ -27,6 +27,7 @@ export function ScoreTimeline({ rounds, game, playersById }: ScoreTimelineProps)
             cumulativeB += resolvedPoints.teamB;
             const dealerId = getDealerForRound(game, round.roundNumber);
             const dealer = playersById.get(dealerId)?.username ?? "Unknown";
+            const callerName = playersById.get(round.callerPlayerId)?.username ?? "Unknown";
             const calledSuit = (round as Partial<Round>).calledSuit;
             const resolvedSuit: CalledSuit =
               typeof calledSuit === "string" &&
@@ -63,8 +64,8 @@ export function ScoreTimeline({ rounds, game, playersById }: ScoreTimelineProps)
                   )}
                 </div>
                 <p className="text-sm text-emerald-300">
-                  Zvanja: A {round.zvanjaTeamA} / B {round.zvanjaTeamB} · Caller{" "}
-                  {round.callerSucceeded ? "uspješan" : "pao"}
+                  Zvanja: A {round.zvanjaTeamA} / B {round.zvanjaTeamB} · {callerName}{" "}
+                  {round.callerSucceeded ? "uspješan" : "neuspješan"}
                 </p>
                 {round.stigliaTeam ? (
                   <p className="text-sm text-emerald-300">Štiglja: Tim {round.stigliaTeam} (+90)</p>
