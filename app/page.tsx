@@ -4,6 +4,9 @@ import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { getRepo } from "@/lib/supabase";
 import { computePairStats, computePlayerStats } from "@/lib/stats";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function Home() {
   return <HomeContent />;
 }

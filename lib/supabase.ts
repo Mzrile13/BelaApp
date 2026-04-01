@@ -282,7 +282,14 @@ const fileRepo =
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRole) return null;
+  if (!url || !serviceRole) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "Supabase env varijable nedostaju u produkciji. Postavi NEXT_PUBLIC_SUPABASE_URL i SUPABASE_SERVICE_ROLE_KEY.",
+      );
+    }
+    return null;
+  }
   return createClient(url, serviceRole);
 }
 
