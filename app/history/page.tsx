@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
-import { getGameScore } from "@/lib/scoring";
+import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +20,12 @@ export default async function HistoryPage() {
     .map((game, index) => ({
       game,
       rounds: roundsByGame[index] ?? [],
+      score: getGameScore(roundsByGame[index] ?? []),
     }))
-    .filter((row) => row.rounds.length > 0);
+    .filter((row) => {
+      if (row.rounds.length === 0) return false;
+      return row.game.finishedAt !== null || getWinningTeam(row.score) !== null;
+    });
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
@@ -35,8 +39,7 @@ export default async function HistoryPage() {
         {gamesWithRounds.length === 0 ? (
           <section className="card p-4 text-sm text-emerald-100/90">Još nema odigranih rundi.</section>
         ) : (
-          gamesWithRounds.map(({ game, rounds }) => {
-            const score = getGameScore(rounds);
+          gamesWithRounds.map(({ game, rounds, score }) => {
             const winnerTeam = score.teamA === score.teamB ? null : score.teamA > score.teamB ? "A" : "B";
             return (
               <section key={game.id} className="card p-4">
