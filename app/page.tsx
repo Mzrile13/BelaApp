@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { History, Trophy, Users } from "lucide-react";
 import { PlayerStatsCard } from "@/components/PlayerStatsCard";
+import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import { computePairStats, computePlayerStats } from "@/lib/stats";
 
@@ -15,8 +16,13 @@ async function HomeContent() {
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const activeGame = games.find((game) => game.finishedAt === null) ?? null;
-  const rounds = (await Promise.all(games.map((game) => repo.listRounds(game.id)))).flat();
+  const roundsByGame = await Promise.all(games.map((game) => repo.listRounds(game.id)));
+  const activeGames = games.filter((game, index) => {
+    if (game.finishedAt !== null) return false;
+    const winner = getWinningTeam(getGameScore(roundsByGame[index] ?? []));
+    return winner === null;
+  });
+  const rounds = roundsByGame.flat();
   const playerStats = computePlayerStats(players, games, rounds);
   const pairStats = computePairStats(players, games, rounds).slice(0, 5);
 
@@ -50,9 +56,9 @@ async function HomeContent() {
             </span>
           </Link>
         </div>
-        {activeGame ? (
+        {activeGames.length > 0 ? (
           <Link
-            href={`/game/${activeGame.id}`}
+            href="/active-games"
             className="mt-2 block rounded-xl border border-lime-300/70 bg-lime-500/20 px-3 py-3 text-center font-semibold text-lime-100 active:bg-lime-500/35 active:text-white"
           >
             Nastavi partiju

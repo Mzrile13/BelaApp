@@ -122,7 +122,7 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
         game.teams.teamA.includes(player.id) || game.teams.teamB.includes(player.id),
     );
     const finishedPlayerGames = playerGames.filter((game) => game.finishedAt !== null);
-    const gameIds = new Set(playerGames.map((game) => game.id));
+    const gameIds = new Set(finishedPlayerGames.map((game) => game.id));
     const playerRounds = rounds
       .filter((round) => gameIds.has(round.gameId))
       .sort((a, b) => a.roundNumber - b.roundNumber);
@@ -149,7 +149,7 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
     };
 
     for (const round of playerRounds) {
-      const game = playerGames.find((candidate) => candidate.id === round.gameId);
+      const game = finishedPlayerGames.find((candidate) => candidate.id === round.gameId);
       if (!game) continue;
       roundsPlayed += 1;
       const team = getPlayerTeam(game, player.id);
