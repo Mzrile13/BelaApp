@@ -29,6 +29,9 @@ export default function NewGamePage() {
   const [creatingPlayer, setCreatingPlayer] = useState(false);
   const [creatingGroup, setCreatingGroup] = useState(false);
   const [renamingGroup, setRenamingGroup] = useState(false);
+  const [deletingGroup, setDeletingGroup] = useState(false);
+  const [confirmDeleteGroup, setConfirmDeleteGroup] = useState<{ id: string; name: string } | null>(null);
+  const [confirmDeleteGroupStep, setConfirmDeleteGroupStep] = useState<1 | 2>(1);
   const [addingToGroup, setAddingToGroup] = useState(false);
   const [removingFromGroup, setRemovingFromGroup] = useState(false);
   const [error, setError] = useState("");
@@ -155,6 +158,33 @@ export default function NewGamePage() {
       return;
     }
     await loadGroups();
+  }
+
+  async function deleteSelectedGroupConfirmed() {
+    if (!confirmDeleteGroup) return;
+    if (confirmDeleteGroupStep === 1) {
+      setConfirmDeleteGroupStep(2);
+      return;
+    }
+    setDeletingGroup(true);
+    setError("");
+    const response = await fetch(`/api/groups/${confirmDeleteGroup.id}`, {
+      method: "DELETE",
+    });
+    setDeletingGroup(false);
+    setConfirmDeleteGroup(null);
+    setConfirmDeleteGroupStep(1);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setError(body.error ?? "Greška pri brisanju grupe");
+      return;
+    }
+    const currentId = confirmDeleteGroup.id;
+    setSelectedGroupId("");
+    await loadGroups();
+    if (currentId === selectedGroupId) {
+      setGroupPlayers([]);
+    }
   }
 
   async function addPlayerToSelectedGroup(playerId: string) {
@@ -343,6 +373,19 @@ export default function NewGamePage() {
                     {renamingGroup ? "Spremam..." : "Preimenuj"}
                   </button>
                 </form>
+                <button
+                  type="button"
+                  disabled={deletingGroup}
+                  onClick={() =>
+                    setConfirmDeleteGroup({
+                      id: selectedGroup.id,
+                      name: selectedGroup.name,
+                    })
+                  }
+                  className="mt-2 rounded-xl border border-rose-400/70 px-4 py-2 text-sm font-semibold text-rose-200 disabled:opacity-60"
+                >
+                  {deletingGroup ? "Brišem grupu..." : "Obriši grupu"}
+                </button>
 
                 <form
                   className="mt-3 flex gap-2"
@@ -529,6 +572,39 @@ export default function NewGamePage() {
 
         {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
       </section>
+
+      {confirmDeleteGroup ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-emerald-600/50 bg-emerald-950 p-4 shadow-2xl">
+            <h3 className="text-base font-bold text-white">Potvrda brisanja grupe</h3>
+            <p className="mt-2 text-sm text-emerald-100">
+              {confirmDeleteGroupStep === 1
+                ? `Želiš li obrisati grupu "${confirmDeleteGroup.name}"?`
+                : "Jesi li stvarno siguran? Ova radnja trajno briše grupu i članove iz te grupe."}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmDeleteGroup(null);
+                  setConfirmDeleteGroupStep(1);
+                }}
+                className="rounded-lg border border-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-100"
+              >
+                Odustani
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteSelectedGroupConfirmed()}
+                disabled={deletingGroup}
+                className="rounded-lg border border-rose-400/70 bg-rose-900/30 px-3 py-2 text-sm font-semibold text-rose-200 disabled:opacity-60"
+              >
+                {confirmDeleteGroupStep === 1 ? "Nastavi" : deletingGroup ? "Brišem..." : "Obriši trajno"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

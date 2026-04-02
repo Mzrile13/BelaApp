@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SuitBadge } from "@/components/SuitBadge";
-import type { CalledSuit, Game, Player } from "@/lib/types";
+import type { CalledSuit, Game, Player, Round } from "@/lib/types";
 
 interface RoundEntryFormProps {
   game: Game;
@@ -14,6 +14,10 @@ interface RoundEntryFormProps {
   }) => Promise<void> | void;
   onCancel?: () => void;
   dealerName?: string;
+  initialRound?: Round;
+  submitEndpoint?: string;
+  submitMethod?: "POST" | "PATCH";
+  submitLabel?: string;
 }
 
 type PointsField = "pointsTeamA" | "pointsTeamB";
@@ -33,6 +37,10 @@ export function RoundEntryForm({
   onSaved,
   onCancel,
   dealerName,
+  initialRound,
+  submitEndpoint = "/api/rounds",
+  submitMethod = "POST",
+  submitLabel = "Spremi ruku",
 }: RoundEntryFormProps) {
   const allPlayers = useMemo(
     () => [...game.teams.teamA, ...game.teams.teamB],
@@ -47,28 +55,64 @@ export function RoundEntryForm({
     [players, game.teams.teamB],
   );
 
+  const initialTokensA = useMemo(() => {
+    const map: Record<string, ZvanjaValue[]> = {};
+    for (const player of teamAPlayers) {
+      const fromArray = (initialRound?.zvanjaByPlayerA ?? []).find(
+        (entry) => entry.playerId === player.id,
+      );
+      const fallback =
+        initialRound?.zvanjaPlayerIdA === player.id ? (initialRound?.zvanjaTeamA ?? 0) : 0;
+      const points = fromArray?.points ?? fallback;
+      map[player.id] = points > 0 ? [points as ZvanjaValue] : [];
+    }
+    return map;
+  }, [initialRound, teamAPlayers]);
+
+  const initialTokensB = useMemo(() => {
+    const map: Record<string, ZvanjaValue[]> = {};
+    for (const player of teamBPlayers) {
+      const fromArray = (initialRound?.zvanjaByPlayerB ?? []).find(
+        (entry) => entry.playerId === player.id,
+      );
+      const fallback =
+        initialRound?.zvanjaPlayerIdB === player.id ? (initialRound?.zvanjaTeamB ?? 0) : 0;
+      const points = fromArray?.points ?? fallback;
+      map[player.id] = points > 0 ? [points as ZvanjaValue] : [];
+    }
+    return map;
+  }, [initialRound, teamBPlayers]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
-    callerPlayerId: allPlayers[0] ?? "",
-    calledSuit: "karo" as CalledSuit,
-    pointsTeamA: 0,
-    pointsTeamB: 0,
-    zvanjaTeamA: 0,
-    zvanjaTeamB: 0,
-    zvanjaPlayerIdA: null as string | null,
-    zvanjaPlayerIdB: null as string | null,
-    stigliaTeam: null as "A" | "B" | null,
+    callerPlayerId: initialRound?.callerPlayerId ?? allPlayers[0] ?? "",
+    calledSuit: initialRound?.calledSuit ?? ("karo" as CalledSuit),
+    pointsTeamA: initialRound?.pointsTeamA ?? 0,
+    pointsTeamB: initialRound?.pointsTeamB ?? 0,
+    zvanjaTeamA: initialRound?.zvanjaTeamA ?? 0,
+    zvanjaTeamB: initialRound?.zvanjaTeamB ?? 0,
+    zvanjaPlayerIdA: initialRound?.zvanjaPlayerIdA ?? (null as string | null),
+    zvanjaPlayerIdB: initialRound?.zvanjaPlayerIdB ?? (null as string | null),
+    stigliaTeam: initialRound?.stigliaTeam ?? (null as "A" | "B" | null),
   });
   const [zvanjaTokensByPlayerA, setZvanjaTokensByPlayerA] = useState<
     Record<string, ZvanjaValue[]>
-  >({});
+  >(initialTokensA);
   const [zvanjaTokensByPlayerB, setZvanjaTokensByPlayerB] = useState<
     Record<string, ZvanjaValue[]>
-  >({});
-  const [activePointsField, setActivePointsField] = useState<PointsField>("pointsTeamA");
+  >(initialTokensB);
+  const [activePointsField, setActivePointsField] = useState<PointsField>(
+    (initialRound?.pointsTeamB ?? 0) > (initialRound?.pointsTeamA ?? 0)
+      ? "pointsTeamB"
+      : "pointsTeamA",
+  );
   const [activeZvanjaPlayerId, setActiveZvanjaPlayerId] = useState<string>(
-    teamAPlayers[0]?.id ?? "",
+    teamAPlayers.find((player) => (initialTokensA[player.id] ?? []).length > 0)?.id ??
+      teamBPlayers.find((player) => (initialTokensB[player.id] ?? []).length > 0)?.id ??
+      teamAPlayers[0]?.id ??
+      teamBPlayers[0]?.id ??
+      "",
   );
 
   async function submit() {
@@ -79,8 +123,8 @@ export function RoundEntryForm({
 
     setLoading(true);
     setError("");
-    const response = await fetch("/api/rounds", {
-      method: "POST",
+    const response = await fetch(submitEndpoint, {
+      method: submitMethod,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
@@ -544,7 +588,7 @@ export function RoundEntryForm({
             onCancel ? "" : "col-span-2"
           }`}
         >
-          {loading ? "Spremam..." : "Spremi ruku"}
+          {loading ? "Spremam..." : submitLabel}
         </button>
       </div>
     </section>

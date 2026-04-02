@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { ActiveGamesList } from "@/components/ActiveGamesList";
 import { BackButton } from "@/components/BackButton";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
@@ -36,42 +36,16 @@ export default async function ActiveGamesPage() {
         </p>
       </section>
 
-      <div className="mt-4 space-y-4">
-        {activeGames.length === 0 ? (
-          <section className="card p-4 text-sm text-emerald-100/90">
-            Trenutno nema aktivnih partija.
-          </section>
-        ) : (
-          activeGames.map(({ game, score, rounds }) => (
-            <section key={game.id} className="card p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm font-semibold text-white">
-                  Partija {new Date(game.createdAt).toLocaleString("hr-HR")}
-                </p>
-                <Link
-                  href={`/game/${game.id}`}
-                  className="rounded-lg border border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-100"
-                >
-                  Otvori
-                </Link>
-              </div>
-
-              <div className="rounded-xl bg-emerald-950/40 p-3 text-sm text-emerald-100">
-                <p className="font-semibold text-white">
-                  Tim A: {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
-                </p>
-                <p className="mt-1 font-semibold text-white">
-                  Tim B: {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
-                </p>
-                <p className="mt-1 text-emerald-300">
-                  Rezultat: A {score.teamA} : {score.teamB} B
-                </p>
-                <p className="mt-1 text-xs text-emerald-200/80">Ruke: {rounds.length}</p>
-              </div>
-            </section>
-          ))
-        )}
-      </div>
+      <ActiveGamesList
+        initialGames={activeGames.map(({ game, score, rounds }) => ({
+          id: game.id,
+          createdAt: game.createdAt,
+          teamA: game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + "),
+          teamB: game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + "),
+          score,
+          roundsCount: rounds.length,
+        }))}
+      />
     </main>
   );
 }

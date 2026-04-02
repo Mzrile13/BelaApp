@@ -1,4 +1,5 @@
 import { getDealerForRound } from "@/lib/dealer";
+import Link from "next/link";
 import { SuitBadge, suitLabel } from "@/components/SuitBadge";
 import { resolveRoundPoints } from "@/lib/scoring";
 import type { CalledSuit, Game, Player, Round } from "@/lib/types";
@@ -7,9 +8,10 @@ interface ScoreTimelineProps {
   rounds: Round[];
   game: Game;
   playersById: Map<string, Player>;
+  canEditRounds?: boolean;
 }
 
-export function ScoreTimeline({ rounds, game, playersById }: ScoreTimelineProps) {
+export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false }: ScoreTimelineProps) {
   let cumulativeA = 0;
   let cumulativeB = 0;
   const allowedSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
@@ -42,9 +44,19 @@ export function ScoreTimeline({ rounds, game, playersById }: ScoreTimelineProps)
               >
                 <div className="flex items-center justify-between">
                   <span className="font-semibold">Ruka #{round.roundNumber}</span>
-                  <span className="font-semibold">
-                    A {resolvedPoints.teamA} : {resolvedPoints.teamB} B
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-semibold">
+                      A {resolvedPoints.teamA} : {resolvedPoints.teamB} B
+                    </span>
+                    {canEditRounds ? (
+                      <Link
+                        href={`/game/${game.id}/edit-round/${round.id}`}
+                        className="rounded-md border border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-100"
+                      >
+                        Uredi
+                      </Link>
+                    ) : null}
+                  </div>
                 </div>
                 <p className="text-sm text-emerald-300">
                   Dijeli: {dealer}

@@ -56,7 +56,8 @@ export function GamePageClient({ gameId }: { gameId: string }) {
   const playersById = new Map(players.map((player) => [player.id, player]));
   const nextDealerId = getNextDealer(payload.game, payload.rounds.length);
   const winnerTeam = getWinningTeam(payload.score);
-  const backFallback = searchParams.get("from") === "history" ? "/history" : "/";
+  const fromHistory = searchParams.get("from") === "history";
+  const backFallback = fromHistory ? "/history" : "/";
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
@@ -80,7 +81,12 @@ export function GamePageClient({ gameId }: { gameId: string }) {
           Unesi novu ruku
         </Link>
       )}
-      <ScoreTimeline rounds={payload.rounds} game={payload.game} playersById={playersById} />
+      <ScoreTimeline
+        rounds={payload.rounds}
+        game={payload.game}
+        playersById={playersById}
+        canEditRounds={!fromHistory}
+      />
     </main>
   );
 }

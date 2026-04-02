@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { RoundEntryForm } from "@/components/RoundEntryForm";
-import { getNextDealer } from "@/lib/dealer";
-import { getGameScore, getWinningTeam } from "@/lib/scoring";
+import { getDealerForRound } from "@/lib/dealer";
 import type { Game, Player, Round } from "@/lib/types";
 
 interface GamePayload {
@@ -13,10 +12,10 @@ interface GamePayload {
   rounds: Round[];
 }
 
-export function NewRoundPageClient({ gameId }: { gameId: string }) {
+export function EditRoundPageClient({ gameId, roundId }: { gameId: string; roundId: string }) {
   const router = useRouter();
   const [game, setGame] = useState<Game | null>(null);
-  const [rounds, setRounds] = useState<Round[]>([]);
+  const [round, setRound] = useState<Round | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [error, setError] = useState("");
 
@@ -33,48 +32,34 @@ export function NewRoundPageClient({ gameId }: { gameId: string }) {
 
     const playersBody = (await playersResponse.json()) as { players: Player[] };
     const gameBody = (await gameResponse.json()) as GamePayload;
+    const targetRound = (gameBody.rounds ?? []).find((row) => row.id === roundId) ?? null;
+
+    if (!targetRound) {
+      setError("Ruka nije pronađena");
+      return;
+    }
 
     setPlayers(playersBody.players ?? []);
     setGame(gameBody.game);
-    setRounds(gameBody.rounds ?? []);
+    setRound(targetRound);
   }
 
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
+  }, [gameId, roundId]);
 
   if (error) {
     return <p className="p-4 text-rose-300">{error}</p>;
   }
 
-  if (!game) {
+  if (!game || !round) {
     return <p className="p-4 text-emerald-100">Učitavanje unosa...</p>;
   }
 
   const playersById = new Map(players.map((player) => [player.id, player]));
-  const nextDealerId = getNextDealer(game, rounds.length);
-  const dealerName = playersById.get(nextDealerId)?.username ?? "Unknown";
-  const winnerTeam = getWinningTeam(getGameScore(rounds));
-
-  if (game.finishedAt || winnerTeam) {
-    return (
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
-        <BackButton fallbackHref={`/game/${gameId}`} />
-        <section className="rounded-2xl border border-lime-300/70 bg-lime-400/20 p-4 text-lime-100">
-          <p className="text-lg font-bold">Partija je završena.</p>
-          {winnerTeam ? <p className="mt-1 text-sm">Pobjednik je Tim {winnerTeam}.</p> : null}
-          <button
-            type="button"
-            onClick={() => router.push(`/game/${gameId}`)}
-            className="mt-3 w-full rounded-xl bg-lime-400 py-3 font-semibold text-emerald-950"
-          >
-            Nazad na partiju
-          </button>
-        </section>
-      </main>
-    );
-  }
+  const dealerId = getDealerForRound(game, round.roundNumber);
+  const dealerName = playersById.get(dealerId)?.username ?? "Unknown";
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
@@ -83,6 +68,10 @@ export function NewRoundPageClient({ gameId }: { gameId: string }) {
         game={game}
         players={players}
         dealerName={dealerName}
+        initialRound={round}
+        submitEndpoint={`/api/rounds/${round.id}`}
+        submitMethod="PATCH"
+        submitLabel="Spremi izmjene"
         onSaved={() => {
           router.push(`/game/${gameId}`);
         }}

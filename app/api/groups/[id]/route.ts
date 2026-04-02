@@ -19,3 +19,17 @@ export async function PATCH(
     return NextResponse.json({ error: "Greška pri promjeni naziva grupe" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id } = await context.params;
+  const repo = getRepo();
+  try {
+    await repo.deleteGroup(id);
+    return NextResponse.json({ ok: true });
+  } catch {
+    return NextResponse.json({ error: "Greška pri brisanju grupe" }, { status: 500 });
+  }
+}
