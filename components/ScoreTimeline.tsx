@@ -97,13 +97,13 @@ export function ScoreTimeline({ rounds, game, playersById }: ScoreTimelineProps)
                   if (round.zvanjaPlayerIdA || round.zvanjaPlayerIdB) {
                     return (
                       <p className="text-sm text-emerald-300">
-                        Zvanja igrač: A{" "}
+                        Zvanja igrači: A{" "}
                         {round.zvanjaPlayerIdA
-                          ? (playersById.get(round.zvanjaPlayerIdA)?.username ?? "Unknown")
+                          ? `${playersById.get(round.zvanjaPlayerIdA)?.username ?? "Unknown"} (${round.zvanjaTeamA})`
                           : "-"}{" "}
                         / B{" "}
                         {round.zvanjaPlayerIdB
-                          ? (playersById.get(round.zvanjaPlayerIdB)?.username ?? "Unknown")
+                          ? `${playersById.get(round.zvanjaPlayerIdB)?.username ?? "Unknown"} (${round.zvanjaTeamB})`
                           : "-"}
                       </p>
                     );

@@ -1,32 +1,43 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
-import { PlayerStatsCard } from "@/components/PlayerStatsCard";
+import { PairStatsCard } from "@/components/PairStatsCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
+import { computePairStats } from "@/lib/stats";
 import { getRepo } from "@/lib/supabase";
-import { computePlayerStats } from "@/lib/stats";
 
-export default async function PlayerPage(props: PageProps<"/players/[username]">) {
-  const { username } = await props.params;
+export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
+  const { pairKey } = await props.params;
+  const [playerAId, playerBId] = pairKey.split("__");
+  if (!playerAId || !playerBId) notFound();
+
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
   const roundsByGame = await Promise.all(games.map((game) => repo.listRounds(game.id)));
   const rounds = roundsByGame.flat();
-  const stats = computePlayerStats(players, games, rounds);
-  const row = stats.find((item) => item.username.toLowerCase() === username.toLowerCase());
+  const allPairStats = computePairStats(players, games, rounds);
+  const stats = allPairStats.find(
+    (row) =>
+      (row.playerAId === playerAId && row.playerBId === playerBId) ||
+      (row.playerAId === playerBId && row.playerBId === playerAId),
+  );
+  if (!stats) notFound();
 
-  if (!row) notFound();
-
-  const player = players.find((item) => item.id === row.playerId);
-  if (!player) notFound();
-  const playersById = new Map(players.map((item) => [item.id, item.username]));
-  const playerGames = games
+  const playersById = new Map(players.map((player) => [player.id, player.username]));
+  const pairGames = games
     .map((game, index) => ({
       game,
       rounds: roundsByGame[index] ?? [],
     }))
-    .filter(({ game }) => game.teams.teamA.includes(player.id) || game.teams.teamB.includes(player.id))
+    .filter(({ game }) => {
+      const teamA = new Set(game.teams.teamA);
+      const teamB = new Set(game.teams.teamB);
+      return (
+        (teamA.has(playerAId) && teamA.has(playerBId)) ||
+        (teamB.has(playerAId) && teamB.has(playerBId))
+      );
+    })
     .map(({ game, rounds }) => ({
       game,
       rounds,
@@ -36,15 +47,16 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
-      <BackButton fallbackHref="/leaderboard" className="mb-3" />
-      <PlayerStatsCard stats={row} />
+      <BackButton fallbackHref="/leaderboard/pairs" className="mb-3" />
+      <PairStatsCard stats={stats} />
+
       <section className="card mt-4 p-4">
-        <h2 className="text-lg font-semibold text-white">Partije igrača</h2>
+        <h2 className="text-lg font-semibold text-white">Partije para</h2>
         <div className="mt-3 space-y-2">
-          {playerGames.length === 0 ? (
-            <p className="text-sm text-emerald-100/80">Igrač još nema odigranih partija.</p>
+          {pairGames.length === 0 ? (
+            <p className="text-sm text-emerald-100/80">Par još nema odigranih partija.</p>
           ) : (
-            playerGames.map(({ game, score }) => {
+            pairGames.map(({ game, score }) => {
               const winner = getWinningTeam(score);
               const finished = game.finishedAt !== null || winner !== null;
               return (

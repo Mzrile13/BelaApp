@@ -36,6 +36,14 @@ export async function POST(request: Request) {
   }
 
   const repo = getRepo();
+  const groupPlayers = await repo.listGroupPlayers(parsed.data.groupId);
+  const allowedIds = new Set(groupPlayers.map((player) => player.id));
+  if (![a1, a2, b1, b2].every((playerId) => allowedIds.has(playerId))) {
+    return NextResponse.json(
+      { error: "Svi odabrani igrači moraju biti članovi odabrane grupe" },
+      { status: 400 },
+    );
+  }
   const game = await repo.createGame(parsed.data);
   return NextResponse.json({ game }, { status: 201 });
 }

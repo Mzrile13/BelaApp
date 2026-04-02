@@ -11,6 +11,12 @@ export interface Player {
   createdAt: string;
 }
 
+export interface PlayerGroup {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface GameTeam {
   teamA: [string, string];
   teamB: [string, string];
@@ -61,6 +67,7 @@ export interface RoundInput {
 }
 
 export interface NewGameInput {
+  groupId: string;
   dealerPlayerId: string;
   teamA: [string, string];
   teamB: [string, string];
@@ -99,6 +106,7 @@ export interface PlayerStats {
   partnerImpact: number;
   callerRiskScore: number;
   last5GameResults: Array<"W" | "L" | "D">;
+  last10GameResults: Array<"W" | "L" | "D">;
   mvpScore: number;
   insufficientSample: boolean;
 }
@@ -111,4 +119,22 @@ export interface PairStats {
   gamesTogether: number;
   winsTogether: number;
   winRate: number;
+  roundsPlayed: number;
+  avgPoints: number;
+  avgPlusMinusPerGame: number;
+  avgZvanja: number;
+  stigliaCount: number;
+  timesCalled: number;
+  favoriteCalledSuit: CalledSuit | null;
+  callerSuccessRate: number;
+  clutchIndex: number;
+  trend: "hot" | "steady" | "cold";
+  callsPerRoundAvg: number;
+  currentStreak: number;
+  bestWinStreak: number;
+  worstLossStreak: number;
+  last5GameResults: Array<"W" | "L" | "D">;
+  last10GameResults: Array<"W" | "L" | "D">;
+  mvpScore: number;
+  insufficientSample: boolean;
 }

@@ -74,7 +74,7 @@ export function GamePageClient({ gameId }: { gameId: string }) {
       ) : (
         <Link
           href={`/game/${gameId}/new-round`}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-lime-400 py-3 font-semibold text-emerald-950 shadow-lg shadow-emerald-950/30"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-lime-200/70 bg-lime-300/80 py-3 font-semibold text-emerald-950 shadow-lg shadow-emerald-950/15"
         >
           <PlusCircle size={18} />
           Unesi novu ruku

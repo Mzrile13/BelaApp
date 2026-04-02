@@ -24,7 +24,7 @@ async function HomeContent() {
   });
   const rounds = roundsByGame.flat();
   const playerStats = computePlayerStats(players, games, rounds);
-  const pairStats = computePairStats(players, games, rounds).slice(0, 5);
+  const pairStats = computePairStats(players, games, rounds).slice(0, 3);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 p-4 pb-20">
@@ -33,7 +33,7 @@ async function HomeContent() {
         <p className="text-sm text-emerald-100/90">
           Live praćenje partija, ruku i naprednih statistika.
         </p>
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-4">
           <Link
             href="/new-game"
             className="rounded-xl bg-emerald-700 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800 active:text-white"
@@ -44,7 +44,13 @@ async function HomeContent() {
             href="/leaderboard"
             className="rounded-xl border border-emerald-500 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800/60 active:text-white"
           >
-            Leaderboard
+            Igrači
+          </Link>
+          <Link
+            href="/leaderboard/pairs"
+            className="rounded-xl border border-emerald-500 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800/60 active:text-white"
+          >
+            Parovi
           </Link>
           <Link
             href="/history"

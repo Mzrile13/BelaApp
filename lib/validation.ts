@@ -12,6 +12,7 @@ export const createPlayerSchema = z.object({
 });
 
 export const createGameSchema = z.object({
+  groupId: z.string().uuid("Neispravan group ID"),
   dealerPlayerId: z.string().uuid("Neispravan dealer ID"),
   teamA: z.tuple([z.string().uuid(), z.string().uuid()]),
   teamB: z.tuple([z.string().uuid(), z.string().uuid()]),

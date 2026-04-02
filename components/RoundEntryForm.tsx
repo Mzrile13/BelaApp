@@ -249,22 +249,50 @@ export function RoundEntryForm({
         <p className="mb-3 text-base font-semibold text-emerald-100">Dijeli: {dealerName}</p>
       ) : null}
       <div className="grid grid-cols-2 gap-3">
-        <label className="col-span-2 text-base font-semibold text-emerald-100">
-          Tko je zvao
-          <select
-            className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-4 py-3 text-lg font-semibold text-emerald-50"
-            value={form.callerPlayerId}
-            onChange={(event) =>
-              setForm((prev) => ({ ...prev, callerPlayerId: event.target.value }))
-            }
-          >
-            {allPlayers.map((id) => (
-              <option key={id} value={id}>
-                {players.find((player) => player.id === id)?.username ?? "Unknown"}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="col-span-2 text-base font-semibold text-emerald-100">
+          <p>Tko je zvao</p>
+          <div className="mt-2 grid grid-cols-1 gap-3">
+            <div className="rounded-lg border border-emerald-700/50 bg-emerald-900/30 p-2">
+              <p className="mb-2 text-sm font-bold text-emerald-200">Tim A</p>
+              <div className="grid grid-cols-2 gap-2">
+                {teamAPlayers.map((player) => (
+                  <button
+                    key={player.id}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
+                    className={`rounded-lg border px-3 py-2 text-left ${
+                      form.callerPlayerId === player.id
+                        ? "border-lime-300 bg-emerald-700/70"
+                        : "border-emerald-700/50 bg-emerald-900/40"
+                    }`}
+                  >
+                    <p className="text-base font-bold text-white">{player.username}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-emerald-700/50 bg-emerald-900/30 p-2">
+              <p className="mb-2 text-sm font-bold text-emerald-200">Tim B</p>
+              <div className="grid grid-cols-2 gap-2">
+                {teamBPlayers.map((player) => (
+                  <button
+                    key={player.id}
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
+                    className={`rounded-lg border px-3 py-2 text-left ${
+                      form.callerPlayerId === player.id
+                        ? "border-lime-300 bg-emerald-700/70"
+                        : "border-emerald-700/50 bg-emerald-900/40"
+                    }`}
+                  >
+                    <p className="text-base font-bold text-white">{player.username}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="col-span-2 text-base font-semibold text-emerald-100">
           <p>Zvani znak</p>

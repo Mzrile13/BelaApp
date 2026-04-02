@@ -6,6 +6,7 @@ import type {
   Game,
   NewGameInput,
   Player,
+  PlayerGroup,
   PlayerZvanja,
   Round,
   RoundInput,
@@ -17,6 +18,12 @@ type Nullable<T> = T | null;
 interface BelaRepository {
   listPlayers(): Promise<Player[]>;
   createPlayer(username: string): Promise<Player>;
+  listGroups(): Promise<PlayerGroup[]>;
+  createGroup(name: string): Promise<PlayerGroup>;
+  renameGroup(groupId: string, name: string): Promise<PlayerGroup>;
+  listGroupPlayers(groupId: string): Promise<Player[]>;
+  addPlayerToGroup(groupId: string, playerId: string): Promise<void>;
+  removePlayerFromGroup(groupId: string, playerId: string): Promise<void>;
   listGames(): Promise<Game[]>;
   getGame(id: string): Promise<Nullable<Game>>;
   createGame(input: NewGameInput): Promise<Game>;
@@ -31,6 +38,8 @@ function nowIso() {
 
 class InMemoryRepo implements BelaRepository {
   private readonly players: Player[] = [];
+  private readonly groups: PlayerGroup[] = [];
+  private readonly groupPlayers: Array<{ groupId: string; playerId: string }> = [];
   private readonly games: Game[] = [];
   private readonly rounds: Round[] = [];
 
@@ -51,6 +60,64 @@ class InMemoryRepo implements BelaRepository {
     };
     this.players.push(player);
     return player;
+  }
+
+  async listGroups() {
+    return [...this.groups].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async createGroup(name: string) {
+    const existing = this.groups.find(
+      (group) => group.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (existing) return existing;
+    const group: PlayerGroup = {
+      id: crypto.randomUUID(),
+      name,
+      createdAt: nowIso(),
+    };
+    this.groups.push(group);
+    return group;
+  }
+
+  async renameGroup(groupId: string, name: string) {
+    const group = this.groups.find((row) => row.id === groupId);
+    if (!group) {
+      throw new Error("Grupa nije pronađena");
+    }
+    group.name = name;
+    return group;
+  }
+
+  async listGroupPlayers(groupId: string) {
+    const memberIds = this.groupPlayers
+      .filter((row) => row.groupId === groupId)
+      .map((row) => row.playerId);
+    return this.players
+      .filter((player) => memberIds.includes(player.id))
+      .sort((a, b) => a.username.localeCompare(b.username));
+  }
+
+  async addPlayerToGroup(groupId: string, playerId: string) {
+    const group = this.groups.find((row) => row.id === groupId);
+    if (!group) throw new Error("Grupa nije pronađena");
+    const player = this.players.find((row) => row.id === playerId);
+    if (!player) throw new Error("Igrač nije pronađen");
+    const exists = this.groupPlayers.some(
+      (row) => row.groupId === groupId && row.playerId === playerId,
+    );
+    if (!exists) {
+      this.groupPlayers.push({ groupId, playerId });
+    }
+  }
+
+  async removePlayerFromGroup(groupId: string, playerId: string) {
+    const index = this.groupPlayers.findIndex(
+      (row) => row.groupId === groupId && row.playerId === playerId,
+    );
+    if (index >= 0) {
+      this.groupPlayers.splice(index, 1);
+    }
   }
 
   async listGames() {
@@ -106,6 +173,8 @@ class InMemoryRepo implements BelaRepository {
 
 interface LocalDb {
   players: Player[];
+  groups: PlayerGroup[];
+  groupPlayers: Array<{ groupId: string; playerId: string }>;
   games: Game[];
   rounds: Round[];
 }
@@ -173,11 +242,14 @@ class FileRepo implements BelaRepository {
       const raw = await readFile(this.dbPath, "utf-8");
       const parsed = JSON.parse(raw) as LocalDb;
       return {
-        ...parsed,
+        players: parsed.players ?? [],
+        groups: parsed.groups ?? [],
+        groupPlayers: parsed.groupPlayers ?? [],
+        games: parsed.games ?? [],
         rounds: (parsed.rounds ?? []).map((round) => this.normalizeRound(round)),
       };
     } catch {
-      return { players: [], games: [], rounds: [] };
+      return { players: [], groups: [], groupPlayers: [], games: [], rounds: [] };
     }
   }
 
@@ -205,6 +277,70 @@ class FileRepo implements BelaRepository {
     db.players.push(player);
     await this.writeDb(db);
     return player;
+  }
+
+  async listGroups() {
+    const db = await this.readDb();
+    return [...db.groups].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async createGroup(name: string) {
+    const db = await this.readDb();
+    const existing = db.groups.find((group) => group.name.toLowerCase() === name.toLowerCase());
+    if (existing) return existing;
+    const group: PlayerGroup = {
+      id: crypto.randomUUID(),
+      name,
+      createdAt: nowIso(),
+    };
+    db.groups.push(group);
+    await this.writeDb(db);
+    return group;
+  }
+
+  async renameGroup(groupId: string, name: string) {
+    const db = await this.readDb();
+    const group = db.groups.find((row) => row.id === groupId);
+    if (!group) throw new Error("Grupa nije pronađena");
+    group.name = name;
+    await this.writeDb(db);
+    return group;
+  }
+
+  async listGroupPlayers(groupId: string) {
+    const db = await this.readDb();
+    const memberIds = db.groupPlayers
+      .filter((row) => row.groupId === groupId)
+      .map((row) => row.playerId);
+    return db.players
+      .filter((player) => memberIds.includes(player.id))
+      .sort((a, b) => a.username.localeCompare(b.username));
+  }
+
+  async addPlayerToGroup(groupId: string, playerId: string) {
+    const db = await this.readDb();
+    const group = db.groups.find((row) => row.id === groupId);
+    if (!group) throw new Error("Grupa nije pronađena");
+    const player = db.players.find((row) => row.id === playerId);
+    if (!player) throw new Error("Igrač nije pronađen");
+    const exists = db.groupPlayers.some(
+      (row) => row.groupId === groupId && row.playerId === playerId,
+    );
+    if (!exists) {
+      db.groupPlayers.push({ groupId, playerId });
+      await this.writeDb(db);
+    }
+  }
+
+  async removePlayerFromGroup(groupId: string, playerId: string) {
+    const db = await this.readDb();
+    const nextGroupPlayers = db.groupPlayers.filter(
+      (row) => !(row.groupId === groupId && row.playerId === playerId),
+    );
+    if (nextGroupPlayers.length !== db.groupPlayers.length) {
+      db.groupPlayers = nextGroupPlayers;
+      await this.writeDb(db);
+    }
   }
 
   async listGames() {
@@ -319,6 +455,70 @@ export function getRepo(): BelaRepository {
       if (error) throw error;
       return { id: data.id, username: data.username, createdAt: data.created_at };
     },
+    async listGroups() {
+      const { data, error } = await supabase
+        .from("groups")
+        .select("id, name, created_at")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        name: row.name,
+        createdAt: row.created_at,
+      }));
+    },
+    async createGroup(name: string) {
+      const { data, error } = await supabase
+        .from("groups")
+        .insert({ name })
+        .select("id, name, created_at")
+        .single();
+      if (error) throw error;
+      return { id: data.id, name: data.name, createdAt: data.created_at };
+    },
+    async renameGroup(groupId: string, name: string) {
+      const { data, error } = await supabase
+        .from("groups")
+        .update({ name })
+        .eq("id", groupId)
+        .select("id, name, created_at")
+        .single();
+      if (error) throw error;
+      return { id: data.id, name: data.name, createdAt: data.created_at };
+    },
+    async listGroupPlayers(groupId: string) {
+      const { data, error } = await supabase
+        .from("group_players")
+        .select("player_id, players!inner(id, username, created_at)")
+        .eq("group_id", groupId);
+      if (error) throw error;
+      return (data ?? [])
+        .map((row) => {
+          const player = Array.isArray(row.players) ? row.players[0] : row.players;
+          if (!player) return null;
+          return {
+            id: player.id as string,
+            username: player.username as string,
+            createdAt: player.created_at as string,
+          };
+        })
+        .filter((row): row is Player => row !== null)
+        .sort((a, b) => a.username.localeCompare(b.username));
+    },
+    async addPlayerToGroup(groupId: string, playerId: string) {
+      const { error } = await supabase
+        .from("group_players")
+        .insert({ group_id: groupId, player_id: playerId });
+      if (error && error.code !== "23505") throw error;
+    },
+    async removePlayerFromGroup(groupId: string, playerId: string) {
+      const { error } = await supabase
+        .from("group_players")
+        .delete()
+        .eq("group_id", groupId)
+        .eq("player_id", playerId);
+      if (error) throw error;
+    },
     async listGames() {
       const { data, error } = await supabase
         .from("games")
@@ -379,7 +579,7 @@ export function getRepo(): BelaRepository {
       const { data, error } = await supabase
         .from("rounds")
         .select(
-          "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, stiglia_team, caller_succeeded, created_at",
+          "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
         )
         .eq("game_id", gameId)
         .order("round_number", { ascending: true });
@@ -397,6 +597,12 @@ export function getRepo(): BelaRepository {
         zvanjaTeamB: row.zvanja_team_b,
         zvanjaPlayerIdA: row.zvanja_player_id_a,
         zvanjaPlayerIdB: row.zvanja_player_id_b,
+        zvanjaByPlayerA: Array.isArray(row.zvanja_by_player_a)
+          ? (row.zvanja_by_player_a as PlayerZvanja[])
+          : [],
+        zvanjaByPlayerB: Array.isArray(row.zvanja_by_player_b)
+          ? (row.zvanja_by_player_b as PlayerZvanja[])
+          : [],
         stigliaTeam: row.stiglia_team,
         callerSucceeded: row.caller_succeeded,
         createdAt: row.created_at,
@@ -423,11 +629,13 @@ export function getRepo(): BelaRepository {
           zvanja_team_b: computed.zvanjaTeamB,
           zvanja_player_id_a: computed.zvanjaPlayerIdA,
           zvanja_player_id_b: computed.zvanjaPlayerIdB,
+          zvanja_by_player_a: computed.zvanjaByPlayerA,
+          zvanja_by_player_b: computed.zvanjaByPlayerB,
           stiglia_team: computed.stigliaTeam,
           caller_succeeded: computed.callerSucceeded,
         })
         .select(
-          "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, stiglia_team, caller_succeeded, created_at",
+          "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
         )
         .single();
 
@@ -445,6 +653,12 @@ export function getRepo(): BelaRepository {
         zvanjaTeamB: data.zvanja_team_b,
         zvanjaPlayerIdA: data.zvanja_player_id_a,
         zvanjaPlayerIdB: data.zvanja_player_id_b,
+        zvanjaByPlayerA: Array.isArray(data.zvanja_by_player_a)
+          ? (data.zvanja_by_player_a as PlayerZvanja[])
+          : [],
+        zvanjaByPlayerB: Array.isArray(data.zvanja_by_player_b)
+          ? (data.zvanja_by_player_b as PlayerZvanja[])
+          : [],
         stigliaTeam: data.stiglia_team,
         callerSucceeded: data.caller_succeeded,
         createdAt: data.created_at,
