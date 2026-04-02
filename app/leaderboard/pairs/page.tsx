@@ -8,10 +8,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
+function queryParamToString(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
 export default async function PairLeaderboardPage(props: PageProps<"/leaderboard/pairs">) {
   noStore();
   const searchParams = await props.searchParams;
-  const query = (searchParams?.q ?? "").toLowerCase().trim();
+  const queryRaw = queryParamToString(searchParams?.q);
+  const query = queryRaw.toLowerCase().trim();
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
@@ -35,7 +41,7 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
           <input
             type="search"
             name="q"
-            defaultValue={searchParams?.q ?? ""}
+            defaultValue={queryRaw}
             placeholder="Pretraži par (username)..."
             className="w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50 placeholder:text-emerald-300/70"
           />
