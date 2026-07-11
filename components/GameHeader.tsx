@@ -23,7 +23,7 @@ export function GameHeader({
   const teamANames = names(game.teams.teamA, playersById);
   const teamBNames = names(game.teams.teamB, playersById);
   return (
-    <section className="rounded-2xl border border-emerald-800/30 bg-emerald-900/60 p-4 shadow-lg">
+    <section className="glass-card rounded-2xl p-4 shadow-lg">
       <div className="mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-emerald-50">Aktivna partija</h1>
         <div className="flex items-center gap-2 text-base font-semibold text-emerald-100/90">

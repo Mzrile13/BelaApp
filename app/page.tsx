@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { History, Trophy, Users } from "lucide-react";
+import { Trophy, Users } from "lucide-react";
 import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
@@ -33,41 +33,53 @@ async function HomeContent() {
         <p className="text-sm text-emerald-100/90">
           Live praćenje partija, ruku i naprednih statistika.
         </p>
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-4">
-          <Link
-            href="/new-game"
-            className="rounded-xl bg-emerald-700 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800 active:text-white"
-          >
-            Nova partija
-          </Link>
+
+        <Link
+          href="/new-game"
+          className="btn-gold mt-3 block rounded-xl px-3 py-3 text-center font-bold"
+        >
+          Nova partija
+        </Link>
+
+        <div className="mt-2 grid grid-cols-3 gap-2">
           <Link
             href="/leaderboard"
-            className="rounded-xl border border-emerald-500 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800/60 active:text-white"
+            className="flex flex-col items-center gap-1.5 rounded-2xl border border-emerald-600/30 bg-emerald-950/30 px-2 py-3 text-center active:bg-emerald-800/50"
           >
-            Igrači
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="8" cy="8" r="4.2" stroke="#d9b567" strokeWidth="1.4" />
+              <circle cx="14.5" cy="9.5" r="3.4" stroke="#8fa89b" strokeWidth="1.3" />
+            </svg>
+            <span className="text-xs font-semibold text-emerald-50">Igrači</span>
           </Link>
           <Link
             href="/leaderboard/pairs"
-            className="rounded-xl border border-emerald-500 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800/60 active:text-white"
+            className="flex flex-col items-center gap-1.5 rounded-2xl border border-emerald-600/30 bg-emerald-950/30 px-2 py-3 text-center active:bg-emerald-800/50"
           >
-            Parovi
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="8.5" cy="11" r="4.6" stroke="#d9b567" strokeWidth="1.4" />
+              <circle cx="13.5" cy="11" r="4.6" stroke="#8fa89b" strokeWidth="1.3" />
+            </svg>
+            <span className="text-xs font-semibold text-emerald-50">Parovi</span>
           </Link>
           <Link
             href="/history"
-            className="rounded-xl border border-emerald-500 px-3 py-3 text-center font-semibold text-emerald-50 active:bg-emerald-800/60 active:text-white"
+            className="flex flex-col items-center gap-1.5 rounded-2xl border border-emerald-600/30 bg-emerald-950/30 px-2 py-3 text-center active:bg-emerald-800/50"
           >
-            <span className="inline-flex items-center gap-2">
-              <History size={16} />
-              Povijest partija
-            </span>
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="7.5" stroke="#d9b567" strokeWidth="1.4" />
+              <path d="M11 6.5V11L14 13" stroke="#d9b567" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            <span className="text-xs font-semibold text-emerald-50">Povijest</span>
           </Link>
         </div>
+
         {activeGames.length > 0 ? (
           <Link
             href="/active-games"
-            className="mt-2 block rounded-xl border border-amber-300/70 bg-amber-500/20 px-3 py-3 text-center font-semibold text-amber-100 active:bg-amber-500/35 active:text-white"
+            className="mt-2 block rounded-xl border border-amber-300/40 bg-amber-500/10 px-3 py-3 text-center font-semibold text-amber-100 active:bg-amber-500/20 active:text-white"
           >
-            Nastavi partiju
+            Nastavi partiju &rarr;
           </Link>
         ) : null}
       </section>
