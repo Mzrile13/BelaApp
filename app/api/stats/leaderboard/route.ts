@@ -6,7 +6,7 @@ export async function GET() {
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const rounds = (await Promise.all(games.map((game) => repo.listRounds(game.id)))).flat();
+  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
   const rawRows = computePlayerStats(players, games, rounds);
   const leaderboard = rawRows
     .filter((row) => row.gamesPlayed > 0)

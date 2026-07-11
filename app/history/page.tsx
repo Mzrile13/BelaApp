@@ -13,14 +13,20 @@ export default async function HistoryPage() {
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const roundsByGame = await Promise.all(games.map((game) => repo.listRounds(game.id)));
+  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  const roundsByGameId = new Map<string, typeof rounds>();
+  for (const round of rounds) {
+    const bucket = roundsByGameId.get(round.gameId) ?? [];
+    bucket.push(round);
+    roundsByGameId.set(round.gameId, bucket);
+  }
   const playersById = new Map(players.map((player) => [player.id, player.username]));
 
   const gamesWithRounds = games
-    .map((game, index) => ({
+    .map((game) => ({
       game,
-      rounds: roundsByGame[index] ?? [],
-      score: getGameScore(roundsByGame[index] ?? []),
+      rounds: roundsByGameId.get(game.id) ?? [],
+      score: getGameScore(roundsByGameId.get(game.id) ?? []),
     }))
     .filter((row) => {
       if (row.rounds.length === 0) return false;

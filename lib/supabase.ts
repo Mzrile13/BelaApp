@@ -34,6 +34,7 @@ interface BelaRepository {
   finishGame(gameId: string): Promise<void>;
   reopenGame(gameId: string): Promise<void>;
   listRounds(gameId: string): Promise<Round[]>;
+  listRoundsForGames(gameIds: string[]): Promise<Round[]>;
   createRound(input: RoundInput): Promise<Round>;
   updateRound(roundId: string, input: RoundInput): Promise<Round>;
 }
@@ -181,6 +182,13 @@ class InMemoryRepo implements BelaRepository {
   async listRounds(gameId: string) {
     return this.rounds
       .filter((round) => round.gameId === gameId)
+      .sort((a, b) => a.roundNumber - b.roundNumber);
+  }
+
+  async listRoundsForGames(gameIds: string[]) {
+    const gameIdSet = new Set(gameIds);
+    return this.rounds
+      .filter((round) => gameIdSet.has(round.gameId))
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }
 
@@ -465,6 +473,14 @@ class FileRepo implements BelaRepository {
     const db = await this.readDb();
     return db.rounds
       .filter((round) => round.gameId === gameId)
+      .sort((a, b) => a.roundNumber - b.roundNumber);
+  }
+
+  async listRoundsForGames(gameIds: string[]) {
+    const db = await this.readDb();
+    const gameIdSet = new Set(gameIds);
+    return db.rounds
+      .filter((round) => gameIdSet.has(round.gameId))
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }
 
@@ -788,6 +804,40 @@ export function getRepo(): BelaRepository {
           "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
         )
         .eq("game_id", gameId)
+        .order("round_number", { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map((row) => ({
+        id: row.id,
+        gameId: row.game_id,
+        roundNumber: row.round_number,
+        callerPlayerId: row.caller_player_id,
+        calledSuit: row.called_suit,
+        callingTeam: row.calling_team,
+        pointsTeamA: row.points_team_a,
+        pointsTeamB: row.points_team_b,
+        zvanjaTeamA: row.zvanja_team_a,
+        zvanjaTeamB: row.zvanja_team_b,
+        zvanjaPlayerIdA: row.zvanja_player_id_a,
+        zvanjaPlayerIdB: row.zvanja_player_id_b,
+        zvanjaByPlayerA: Array.isArray(row.zvanja_by_player_a)
+          ? (row.zvanja_by_player_a as PlayerZvanja[])
+          : [],
+        zvanjaByPlayerB: Array.isArray(row.zvanja_by_player_b)
+          ? (row.zvanja_by_player_b as PlayerZvanja[])
+          : [],
+        stigliaTeam: row.stiglia_team,
+        callerSucceeded: row.caller_succeeded,
+        createdAt: row.created_at,
+      }));
+    },
+    async listRoundsForGames(gameIds: string[]) {
+      if (gameIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("rounds")
+        .select(
+          "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
+        )
+        .in("game_id", gameIds)
         .order("round_number", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((row) => ({

@@ -16,13 +16,18 @@ async function HomeContent() {
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const roundsByGame = await Promise.all(games.map((game) => repo.listRounds(game.id)));
-  const activeGames = games.filter((game, index) => {
+  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  const roundsByGameId = new Map<string, typeof rounds>();
+  for (const round of rounds) {
+    const bucket = roundsByGameId.get(round.gameId) ?? [];
+    bucket.push(round);
+    roundsByGameId.set(round.gameId, bucket);
+  }
+  const activeGames = games.filter((game) => {
     if (game.finishedAt !== null) return false;
-    const winner = getWinningTeam(getGameScore(roundsByGame[index] ?? []));
+    const winner = getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? []));
     return winner === null;
   });
-  const rounds = roundsByGame.flat();
   const playerStats = computePlayerStats(players, games, rounds);
   const pairStats = computePairStats(players, games, rounds).slice(0, 3);
 

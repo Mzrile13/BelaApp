@@ -21,7 +21,7 @@ export default async function LeaderboardPage(props: PageProps<"/leaderboard">) 
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const rounds = (await Promise.all(games.map((game) => repo.listRounds(game.id)))).flat();
+  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
   const leaderboard = computePlayerStats(players, games, rounds)
     .filter((row) => row.gamesPlayed > 0)
     .filter((row) => (query ? row.username.toLowerCase().includes(query) : true));

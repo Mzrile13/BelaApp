@@ -13,15 +13,21 @@ export default async function ActiveGamesPage() {
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const roundsByGame = await Promise.all(games.map((game) => repo.listRounds(game.id)));
+  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  const roundsByGameId = new Map<string, typeof rounds>();
+  for (const round of rounds) {
+    const bucket = roundsByGameId.get(round.gameId) ?? [];
+    bucket.push(round);
+    roundsByGameId.set(round.gameId, bucket);
+  }
   const playersById = new Map(players.map((player) => [player.id, player.username]));
 
   const activeGames = games
-    .map((game, index) => {
-      const rounds = roundsByGame[index] ?? [];
-      const score = getGameScore(rounds);
+    .map((game) => {
+      const gameRounds = roundsByGameId.get(game.id) ?? [];
+      const score = getGameScore(gameRounds);
       const winner = getWinningTeam(score);
-      return { game, rounds, score, winner };
+      return { game, rounds: gameRounds, score, winner };
     })
     .filter(({ game, winner }) => game.finishedAt === null && winner === null);
 

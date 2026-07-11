@@ -11,8 +11,13 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
   const repo = getRepo();
   const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const roundsByGame = await Promise.all(games.map((game) => repo.listRounds(game.id)));
-  const rounds = roundsByGame.flat();
+  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  const roundsByGameId = new Map<string, typeof rounds>();
+  for (const round of rounds) {
+    const bucket = roundsByGameId.get(round.gameId) ?? [];
+    bucket.push(round);
+    roundsByGameId.set(round.gameId, bucket);
+  }
   const stats = computePlayerStats(players, games, rounds);
   const row = stats.find((item) => item.username.toLowerCase() === username.toLowerCase());
 
@@ -22,9 +27,9 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
   if (!player) notFound();
   const playersById = new Map(players.map((item) => [item.id, item.username]));
   const playerGames = games
-    .map((game, index) => ({
+    .map((game) => ({
       game,
-      rounds: roundsByGame[index] ?? [],
+      rounds: roundsByGameId.get(game.id) ?? [],
     }))
     .filter(({ game }) => game.teams.teamA.includes(player.id) || game.teams.teamB.includes(player.id))
     .map(({ game, rounds }) => ({
