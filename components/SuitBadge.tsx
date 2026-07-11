@@ -9,6 +9,8 @@ interface SuitBadgeProps {
   suit: CalledSuit;
   selected?: boolean;
   compact?: boolean;
+  chip?: boolean;
+  bare?: boolean;
 }
 
 const suitLabels: Record<CalledSuit, string> = {
@@ -25,14 +27,53 @@ const suitIcons: Record<CalledSuit, StaticImageData> = {
   tref: trefIcon,
 };
 
-export function SuitBadge({ suit, selected = false, compact = false }: SuitBadgeProps) {
+export function SuitBadge({
+  suit,
+  selected = false,
+  compact = false,
+  chip = false,
+  bare = false,
+}: SuitBadgeProps) {
+  if (bare) {
+    return (
+      <Image
+        src={suitIcons[suit]}
+        alt={suitLabels[suit]}
+        width={16}
+        height={16}
+        className="h-4 w-4 object-contain"
+      />
+    );
+  }
+
+  if (chip) {
+    return (
+      <span
+        className={`flex flex-col items-center gap-[3px] rounded-[9px] px-0.5 pt-1.5 pb-[7px] border ${
+          selected
+            ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.12)]"
+            : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
+        }`}
+      >
+        <Image
+          src={suitIcons[suit]}
+          alt={suitLabels[suit]}
+          width={18}
+          height={18}
+          className="h-[18px] w-[18px] object-contain"
+        />
+        <span className="text-[9.5px] font-semibold text-[#eef3ee]">{suitLabels[suit]}</span>
+      </span>
+    );
+  }
+
   return (
     <span
       className={`inline-flex items-center rounded-xl border ${
         compact ? "gap-2 px-2 py-1.5" : "min-h-14 w-full justify-start gap-3 px-4 py-3"
       } ${
         selected
-          ? "border-amber-300 bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
+          ? "border-[#d9b567] bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
           : "border-emerald-600/60 bg-emerald-950/45 text-emerald-100"
       }`}
     >

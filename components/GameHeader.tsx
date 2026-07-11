@@ -1,4 +1,3 @@
-import { UserRound } from "lucide-react";
 import type { Game, Player } from "@/lib/types";
 
 interface GameHeaderProps {
@@ -23,30 +22,27 @@ export function GameHeader({
   const teamANames = names(game.teams.teamA, playersById);
   const teamBNames = names(game.teams.teamB, playersById);
   return (
-    <section className="glass-card rounded-2xl p-4 shadow-lg">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-emerald-50">Aktivna partija</h1>
-        <div className="flex items-center gap-2 text-base font-semibold text-emerald-100/90">
-          <UserRound size={16} />
-          <span>Sljedeći dijeli: {dealer}</span>
-        </div>
+    <section className="glass-card rounded-[16px] px-3 py-[11px]">
+      <div className="mb-2 flex items-center justify-between">
+        <h1 className="text-[18px] font-extrabold text-[#f7fbf6]">Aktivna partija</h1>
+        <p className="text-[13px] font-semibold text-[#a9c2b3]">Dijeli: {dealer}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="flex min-h-40 flex-col justify-between rounded-xl bg-emerald-800/70 p-3">
-          <p className="text-sm text-emerald-200">Tim A</p>
-          <p className="min-h-12 text-base font-semibold leading-tight text-white break-words">
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-[12px] bg-[rgba(6,20,16,0.4)] px-2.5 py-2">
+          <p className="text-[10px] font-semibold text-[#8fa89b]">TIM A</p>
+          <p className="mt-0.5 mb-[3px] text-[11.5px] font-bold break-words text-[#eef3ee]">
             {teamANames}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-amber-300">{score.teamA}</p>
+          <p className="font-mono text-[24px] font-extrabold text-[#d9b567]">{score.teamA}</p>
         </div>
 
-        <div className="flex min-h-40 flex-col justify-between rounded-xl bg-emerald-800/70 p-3">
-          <p className="text-sm text-emerald-200">Tim B</p>
-          <p className="min-h-12 text-base font-semibold leading-tight text-white break-words">
+        <div className="rounded-[12px] bg-[rgba(6,20,16,0.4)] px-2.5 py-2">
+          <p className="text-[10px] font-semibold text-[#8fa89b]">TIM B</p>
+          <p className="mt-0.5 mb-[3px] text-[11.5px] font-bold break-words text-[#eef3ee]">
             {teamBNames}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-amber-300">{score.teamB}</p>
+          <p className="font-mono text-[24px] font-extrabold text-[#d9b567]">{score.teamB}</p>
         </div>
       </div>
     </section>

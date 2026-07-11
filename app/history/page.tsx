@@ -66,7 +66,7 @@ export default async function HistoryPage() {
                   >
                     Tim A: {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     {winnerTeam === "A" ? (
-                      <span className="ml-2 rounded-full bg-amber-300/20 px-2 py-0.5 text-xs text-amber-200">
+                      <span className="ml-2 rounded-full bg-[rgba(217,181,103,0.2)] px-2 py-0.5 text-xs text-[#d9b567]">
                         pobjednik
                       </span>
                     ) : null}
@@ -82,7 +82,7 @@ export default async function HistoryPage() {
                   >
                     Tim B: {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     {winnerTeam === "B" ? (
-                      <span className="ml-2 rounded-full bg-amber-300/20 px-2 py-0.5 text-xs text-amber-200">
+                      <span className="ml-2 rounded-full bg-[rgba(217,181,103,0.2)] px-2 py-0.5 text-xs text-[#d9b567]">
                         pobjednik
                       </span>
                     ) : null}

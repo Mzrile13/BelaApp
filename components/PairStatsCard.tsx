@@ -19,49 +19,64 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
       : stats.currentStreak < 0
         ? `L${Math.abs(stats.currentStreak)}`
         : "-";
-  const recentGamesLabel =
-    stats.last5GameResults.length > 0 ? stats.last5GameResults.join(" · ") : "-";
   const winsInLast10 = stats.last10GameResults.filter((result) => result === "W").length;
   const lossesInLast10 = stats.last10GameResults.filter((result) => result === "L").length;
+  const losses = Math.max(0, stats.gamesTogether - stats.winsTogether);
+
+  const statPairs: Array<[string, string]> = [
+    ["Odigrane partije", String(stats.gamesTogether)],
+    ["Pobjede", `${winRate}%`],
+    ["Bodovi po ruci", String(stats.avgPoints)],
+    ["Plus minus", stats.avgPlusMinusPerGame.toFixed(2)],
+    ["Prosj. štiglji", avgStigliaPerGame],
+    ["Prosj. zvanja", String(stats.avgZvanja)],
+    ["Zvali po ruci", stats.callsPerRoundAvg.toFixed(2)],
+    ["Prolaznost", `${(stats.callerSuccessRate * 100).toFixed(1)}%`],
+    ["Trenutni streak", streakLabel],
+    ["Max win streak", `W${stats.bestWinStreak}`],
+    ["Najdraži znak", stats.favoriteCalledSuit ? suitName[stats.favoriteCalledSuit] : "-"],
+    ["Clutch", `${(stats.clutchIndex * 100).toFixed(1)}%`],
+  ];
 
   return (
-    <article className="rounded-2xl border border-emerald-700/40 bg-emerald-900/50 p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">
+    <article className="rounded-[18px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-4">
+      <div className="mb-2.5 flex items-center justify-between">
+        <h3 className="text-[15px] font-bold text-[#f7fbf6]">
           {stats.playerAUsername} + {stats.playerBUsername}
         </h3>
-        <span className="rounded-full bg-amber-300 px-2 py-1 text-xs font-bold text-emerald-950">
+        <span className="rounded-full bg-[#d9b567] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
           MVP {stats.mvpScore}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 text-sm text-emerald-100">
-        <p>Odigrane partije: {stats.gamesTogether}</p>
-        <p>Pobjede: {winRate}%</p>
-        <p>Bodovi po ruci: {stats.avgPoints}</p>
-        <p>Plus minus: {stats.avgPlusMinusPerGame.toFixed(2)}</p>
-        <p>Prosj. štiglji: {avgStigliaPerGame}</p>
-        <p>Prosj. zvanja: {stats.avgZvanja}</p>
-        <p>Zvali po ruci: {stats.callsPerRoundAvg.toFixed(2)}</p>
-        <p>Prolaznost: {(stats.callerSuccessRate * 100).toFixed(1)}%</p>
-        <p>Trenutni streak: {streakLabel}</p>
-        <p>Max win streak: W{stats.bestWinStreak}</p>
-        <p>Najdraži znak: {stats.favoriteCalledSuit ? suitName[stats.favoriteCalledSuit] : "-"}</p>
-        <p>Clutch: {(stats.clutchIndex * 100).toFixed(1)}%</p>
+      <div className="mb-2.5 grid grid-cols-2 gap-x-2.5 gap-y-1.5">
+        {statPairs.map(([label, value]) => (
+          <p key={label} className="flex justify-between text-[12px] text-[#a9c2b3]">
+            <span>{label}</span>
+            <b className="font-semibold text-[#eef3ee]">{value}</b>
+          </p>
+        ))}
       </div>
 
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-950/40 px-3 py-2 text-sm">
-        <div className="flex items-center gap-2 text-emerald-100">
+      <div className="flex items-center justify-between rounded-[12px] bg-[rgba(6,20,16,0.45)] py-[9px]">
+        <p className="flex items-center gap-1.5 pl-2.5 text-[12px] font-semibold text-[#dcece3]">
           {winsInLast10 > lossesInLast10 ? (
-            <TrendingUp size={16} className="text-amber-300" />
+            <TrendingUp size={14} className="text-[#d9b567]" />
           ) : lossesInLast10 > winsInLast10 ? (
-            <TrendingDown size={16} className="text-rose-300" />
-          ) : (
-            <span className="h-2 w-2 rounded-full bg-emerald-200" />
-          )}
-          {stats.winsTogether}W/{Math.max(0, stats.gamesTogether - stats.winsTogether)}L
+            <TrendingDown size={14} className="text-rose-300" />
+          ) : null}
+          {stats.winsTogether}W / {losses}L · {streakLabel}
+        </p>
+        <div className="flex gap-1 pr-2.5">
+          {stats.last5GameResults.map((result, index) => (
+            <span
+              key={index}
+              className={`h-[7px] w-[7px] rounded-full ${
+                result === "W" ? "bg-[#d9b567]" : "bg-[rgba(196,90,74,0.85)]"
+              }`}
+            />
+          ))}
         </div>
-        <p className="text-emerald-200">{recentGamesLabel}</p>
       </div>
     </article>
   );
