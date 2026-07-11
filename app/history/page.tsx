@@ -31,42 +31,42 @@ export default async function HistoryPage() {
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/" className="mb-3" />
       <section className="card p-4">
-        <h1 className="text-xl font-bold text-white">Povijest partija</h1>
-        <p className="text-sm text-emerald-100/90">Pregled svih odigranih partija.</p>
+        <h1 className="text-xl font-bold text-[#f7fbf6]">Povijest partija</h1>
+        <p className="text-sm text-[#a9c2b3]">Pregled svih odigranih partija.</p>
       </section>
 
       <div className="mt-4 space-y-4">
         {gamesWithRounds.length === 0 ? (
-          <section className="card p-4 text-sm text-emerald-100/90">Još nema odigranih rundi.</section>
+          <section className="card p-4 text-sm text-[#a9c2b3]">Još nema odigranih rundi.</section>
         ) : (
           gamesWithRounds.map(({ game, rounds, score }) => {
             const winnerTeam = score.teamA === score.teamB ? null : score.teamA > score.teamB ? "A" : "B";
             return (
               <section key={game.id} className="card p-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-white">
+                  <p className="text-sm font-semibold text-[#f2f5f0]">
                     Partija {new Date(game.createdAt).toLocaleString("hr-HR")}
                   </p>
                   <Link
                     href={`/game/${game.id}?from=history`}
-                    className="rounded-lg border border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-100"
+                    className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
                   >
                     Otvori
                   </Link>
                 </div>
-                <div className="rounded-xl bg-emerald-950/40 p-3 text-sm text-emerald-100">
+                <div className="rounded-[14px] bg-[rgba(6,20,16,0.45)] p-3 text-sm text-[#dcece3]">
                   <p
                     className={`font-semibold ${
                       winnerTeam === "A"
-                        ? "text-white"
+                        ? "text-[#f7fbf6]"
                         : winnerTeam === "B"
-                          ? "text-emerald-300"
-                          : "text-white"
+                          ? "text-[#8fa89b]"
+                          : "text-[#f7fbf6]"
                     }`}
                   >
                     Tim A: {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     {winnerTeam === "A" ? (
-                      <span className="ml-2 rounded-full bg-[rgba(217,181,103,0.2)] px-2 py-0.5 text-xs text-[#d9b567]">
+                      <span className="ml-2 rounded-full bg-[rgba(201,217,160,0.2)] px-2 py-0.5 text-xs text-[#c9d9a0]">
                         pobjednik
                       </span>
                     ) : null}
@@ -74,20 +74,20 @@ export default async function HistoryPage() {
                   <p
                     className={`mt-1 font-semibold ${
                       winnerTeam === "B"
-                        ? "text-white"
+                        ? "text-[#f7fbf6]"
                         : winnerTeam === "A"
-                          ? "text-emerald-300"
-                          : "text-white"
+                          ? "text-[#8fa89b]"
+                          : "text-[#f7fbf6]"
                     }`}
                   >
                     Tim B: {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     {winnerTeam === "B" ? (
-                      <span className="ml-2 rounded-full bg-[rgba(217,181,103,0.2)] px-2 py-0.5 text-xs text-[#d9b567]">
+                      <span className="ml-2 rounded-full bg-[rgba(201,217,160,0.2)] px-2 py-0.5 text-xs text-[#c9d9a0]">
                         pobjednik
                       </span>
                     ) : null}
                   </p>
-                  <p className="mt-1 text-emerald-300">
+                  <p className="mt-1 text-[#8fa89b]">
                     Rezultat: A {score.teamA} : {score.teamB} B
                   </p>
                 </div>

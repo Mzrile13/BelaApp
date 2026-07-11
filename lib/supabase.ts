@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import http from "node:http";
+import https from "node:https";
 import type {
   CalledSuit,
   Game,
@@ -525,6 +527,83 @@ const fileRepo =
   (globalThis as { __belaFileRepo?: FileRepo }).__belaFileRepo ?? new FileRepo();
 (globalThis as { __belaFileRepo?: FileRepo }).__belaFileRepo = fileRepo;
 
+// Node's built-in fetch (undici) negotiates HTTP/2 with Supabase's Cloudflare
+// edge, which corrupts TLS records under Next.js's dev-mode fetch wrapping
+// (surfaces as "bad record mac" / ERR_HTTP2_INVALID_SESSION). Node's classic
+// http/https modules never speak HTTP/2, so routing Supabase requests through
+// them sidesteps the bug entirely. A bounded keep-alive pool (rather than a
+// fresh connection per request) keeps N+1-style concurrent fetches (e.g.
+// listRounds per game) fast without reintroducing the corruption.
+const nodeHttp1Agent = new https.Agent({
+  keepAlive: true,
+  maxSockets: 6,
+  ALPNProtocols: ["http/1.1"],
+});
+
+function nodeHttp1Fetch(input: string | URL, init: RequestInit = {}): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const url = new URL(input.toString());
+    const isHttps = url.protocol === "https:";
+    const transport = isHttps ? https : http;
+
+    const headers: Record<string, string> = {};
+    if (init.headers instanceof Headers) {
+      init.headers.forEach((value, key) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(init.headers)) {
+      for (const [key, value] of init.headers) headers[key] = value;
+    } else if (init.headers) {
+      Object.assign(headers, init.headers as Record<string, string>);
+    }
+
+    const body =
+      typeof init.body === "string" ? init.body : init.body ? String(init.body) : undefined;
+    if (body !== undefined && !("content-length" in headers) && !("Content-Length" in headers)) {
+      headers["Content-Length"] = Buffer.byteLength(body).toString();
+    }
+
+    const request = transport.request(
+      {
+        hostname: url.hostname,
+        port: url.port || (isHttps ? 443 : 80),
+        path: `${url.pathname}${url.search}`,
+        method: init.method ?? "GET",
+        headers,
+        ...(isHttps ? { agent: nodeHttp1Agent, ALPNProtocols: ["http/1.1"] } : {}),
+      },
+      (res) => {
+        const chunks: Buffer[] = [];
+        res.on("data", (chunk: Buffer) => chunks.push(chunk));
+        res.on("end", () => {
+          const responseHeaders = new Headers();
+          for (const [key, value] of Object.entries(res.headers)) {
+            if (Array.isArray(value)) {
+              for (const entry of value) responseHeaders.append(key, entry);
+            } else if (value !== undefined) {
+              responseHeaders.set(key, value);
+            }
+          }
+          const status = res.statusCode ?? 200;
+          // Fetch spec forbids a body on null-body statuses; Response throws otherwise.
+          const isNullBodyStatus = status === 204 || status === 205 || status === 304;
+          resolve(
+            new Response(isNullBodyStatus ? null : Buffer.concat(chunks), {
+              status,
+              statusText: res.statusMessage ?? "",
+              headers: responseHeaders,
+            }),
+          );
+        });
+      },
+    );
+
+    request.on("error", reject);
+    if (body !== undefined) request.write(body);
+    request.end();
+  });
+}
+
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -536,7 +615,9 @@ function getSupabaseAdmin() {
     }
     return null;
   }
-  return createClient(url, serviceRole);
+  return createClient(url, serviceRole, {
+    global: { fetch: nodeHttp1Fetch as unknown as typeof fetch },
+  });
 }
 
 export function getRepo(): BelaRepository {

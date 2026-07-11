@@ -49,7 +49,7 @@ export function NewRoundPageClient({ gameId }: { gameId: string }) {
   }
 
   if (!game) {
-    return <p className="p-4 text-emerald-100">Učitavanje unosa...</p>;
+    return <p className="p-4 text-[#a9c2b3]">Učitavanje unosa...</p>;
   }
 
   const playersById = new Map(players.map((player) => [player.id, player]));
@@ -61,13 +61,13 @@ export function NewRoundPageClient({ gameId }: { gameId: string }) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
         <BackButton fallbackHref={`/game/${gameId}`} />
-        <section className="rounded-[14px] border border-[rgba(217,181,103,0.4)] bg-[rgba(217,181,103,0.10)] p-4 text-[#eef6ea]">
+        <section className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] p-4 text-[#eef6ea]">
           <p className="text-lg font-bold">Partija je završena.</p>
           {winnerTeam ? <p className="mt-1 text-sm">Pobjednik je Tim {winnerTeam}.</p> : null}
           <button
             type="button"
             onClick={() => router.push(`/game/${gameId}`)}
-            className="btn-gold mt-3 w-full rounded-xl py-3 font-semibold"
+            className="btn-accent mt-3 w-full rounded-xl py-3 font-semibold"
           >
             Nazad na partiju
           </button>

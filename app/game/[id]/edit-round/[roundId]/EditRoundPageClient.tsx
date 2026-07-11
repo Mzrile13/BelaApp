@@ -54,7 +54,7 @@ export function EditRoundPageClient({ gameId, roundId }: { gameId: string; round
   }
 
   if (!game || !round) {
-    return <p className="p-4 text-emerald-100">Učitavanje unosa...</p>;
+    return <p className="p-4 text-[#a9c2b3]">Učitavanje unosa...</p>;
   }
 
   const playersById = new Map(players.map((player) => [player.id, player]));

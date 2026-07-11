@@ -50,7 +50,7 @@ export function GamePageClient({ gameId }: { gameId: string }) {
   }
 
   if (!payload) {
-    return <p className="p-4 text-emerald-100">Učitavanje partije...</p>;
+    return <p className="p-4 text-[#a9c2b3]">Učitavanje partije...</p>;
   }
 
   const playersById = new Map(players.map((player) => [player.id, player]));
@@ -69,13 +69,13 @@ export function GamePageClient({ gameId }: { gameId: string }) {
         dealerPlayerId={nextDealerId}
       />
       {winnerTeam ? (
-        <div className="rounded-[14px] border border-[rgba(217,181,103,0.4)] bg-[rgba(217,181,103,0.10)] px-4 py-3 text-center font-semibold text-[#eef6ea]">
+        <div className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] px-4 py-3 text-center font-semibold text-[#eef6ea]">
           Partija je završena. Pobjednik je Tim {winnerTeam}.
         </div>
       ) : (
         <Link
           href={`/game/${gameId}/new-round`}
-          className="btn-gold flex items-center justify-center gap-2 rounded-2xl py-3 font-semibold"
+          className="btn-accent flex items-center justify-center gap-2 rounded-2xl py-3 font-semibold"
         >
           <PlusCircle size={18} />
           Unesi novu ruku

@@ -313,7 +313,7 @@ export function RoundEntryForm({
                     onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
                     className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
                       form.callerPlayerId === player.id
-                        ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.14)]"
+                        ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
                         : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                     }`}
                   >
@@ -333,7 +333,7 @@ export function RoundEntryForm({
                     onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
                     className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
                       form.callerPlayerId === player.id
-                        ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.14)]"
+                        ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
                         : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                     }`}
                   >
@@ -366,7 +366,7 @@ export function RoundEntryForm({
           onClick={() => setActivePointsField("pointsTeamA")}
           className={`rounded-[11px] border px-[9px] py-2 text-left ${
             activePointsField === "pointsTeamA"
-              ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.12)]"
+              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
@@ -380,7 +380,7 @@ export function RoundEntryForm({
           onClick={() => setActivePointsField("pointsTeamB")}
           className={`rounded-[11px] border px-[9px] py-2 text-left ${
             activePointsField === "pointsTeamB"
-              ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.12)]"
+              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
@@ -418,14 +418,14 @@ export function RoundEntryForm({
             <button
               type="button"
               onClick={backspacePoints}
-              className="rounded-[8px] bg-[rgba(217,181,103,0.12)] py-2 text-center text-[11.5px] font-bold text-[#d9b567]"
+              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[11.5px] font-bold text-[#c9d9a0]"
             >
               Del
             </button>
             <button
               type="button"
               onClick={clearPoints}
-              className="rounded-[8px] bg-[rgba(217,181,103,0.12)] py-2 text-center text-[11.5px] font-bold text-[#d9b567]"
+              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[11.5px] font-bold text-[#c9d9a0]"
             >
               Clear
             </button>
@@ -437,7 +437,7 @@ export function RoundEntryForm({
           onClick={() => setActiveZvanjaPlayerId(teamAPlayers[0]?.id ?? "")}
           className={`rounded-[11px] border px-[9px] py-2 text-left ${
             game.teams.teamA.includes(activeZvanjaPlayerId)
-              ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.12)]"
+              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
@@ -464,7 +464,7 @@ export function RoundEntryForm({
           onClick={() => setActiveZvanjaPlayerId(teamBPlayers[0]?.id ?? "")}
           className={`rounded-[11px] border px-[9px] py-2 text-left ${
             game.teams.teamB.includes(activeZvanjaPlayerId)
-              ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.12)]"
+              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
@@ -507,7 +507,7 @@ export function RoundEntryForm({
                       onClick={() => setActiveZvanjaPlayerId(player.id)}
                       className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
                         activeZvanjaPlayerId === player.id
-                          ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.14)]"
+                          ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
                           : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                       }`}
                     >
@@ -534,7 +534,7 @@ export function RoundEntryForm({
                       onClick={() => setActiveZvanjaPlayerId(player.id)}
                       className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
                         activeZvanjaPlayerId === player.id
-                          ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.14)]"
+                          ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
                           : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                       }`}
                     >
@@ -556,7 +556,7 @@ export function RoundEntryForm({
                 type="button"
                 key={value}
                 onClick={() => applyZvanja(value as ZvanjaValue)}
-                className="rounded-[8px] bg-[rgba(217,181,103,0.85)] py-[7px] text-center text-[11px] font-bold text-[#10261c]"
+                className="rounded-[8px] bg-[rgba(201,217,160,0.85)] py-[7px] text-center text-[11px] font-bold text-[#10261c]"
               >
                 +{value}
               </button>
@@ -568,7 +568,7 @@ export function RoundEntryForm({
               onClick={applyStigliaForActivePointsTeam}
               className={`shrink-0 rounded-[7px] px-[9px] py-[5px] text-[10.5px] font-bold whitespace-nowrap ${
                 form.stigliaTeam
-                  ? "bg-[rgba(217,181,103,0.85)] text-[#10261c]"
+                  ? "bg-[rgba(201,217,160,0.85)] text-[#10261c]"
                   : "bg-[rgba(6,20,16,0.5)] text-[#a9c2b3]"
               }`}
             >
@@ -581,7 +581,7 @@ export function RoundEntryForm({
           <button
             type="button"
             onClick={clearZvanjaForActivePlayer}
-            className="mt-1.5 w-full rounded-[8px] bg-[rgba(217,181,103,0.12)] py-2 text-center text-[11.5px] font-bold text-[#d9b567]"
+            className="mt-1.5 w-full rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[11.5px] font-bold text-[#c9d9a0]"
           >
             Reset aktivnog igrača
           </button>
@@ -604,7 +604,7 @@ export function RoundEntryForm({
           type="button"
           onClick={submit}
           disabled={loading}
-          className={`btn-gold rounded-[11px] py-[11px] text-center text-[12.5px] font-bold disabled:opacity-60 ${
+          className={`btn-accent rounded-[11px] py-[11px] text-center text-[12.5px] font-bold disabled:opacity-60 ${
             onCancel ? "" : "col-span-2"
           }`}
         >

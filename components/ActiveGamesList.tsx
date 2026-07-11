@@ -51,20 +51,20 @@ export function ActiveGamesList({ initialGames }: { initialGames: ActiveGameRow[
     <div className="mt-4 space-y-4">
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
       {games.length === 0 ? (
-        <section className="card p-4 text-sm text-emerald-100/90">
+        <section className="card p-4 text-sm text-[#a9c2b3]">
           Trenutno nema aktivnih partija.
         </section>
       ) : (
         games.map((game) => (
           <section key={game.id} className="card p-4">
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-[#f2f5f0]">
                 Partija {new Date(game.createdAt).toLocaleString("hr-HR")}
               </p>
               <div className="flex gap-2">
                 <Link
                   href={`/game/${game.id}`}
-                  className="rounded-lg border border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-100"
+                  className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
                 >
                   Otvori
                 </Link>
@@ -79,13 +79,13 @@ export function ActiveGamesList({ initialGames }: { initialGames: ActiveGameRow[
               </div>
             </div>
 
-            <div className="rounded-xl bg-emerald-950/40 p-3 text-sm text-emerald-100">
-              <p className="font-semibold text-white">Tim A: {game.teamA}</p>
-              <p className="mt-1 font-semibold text-white">Tim B: {game.teamB}</p>
-              <p className="mt-1 text-emerald-300">
+            <div className="rounded-[14px] bg-[rgba(6,20,16,0.45)] p-3 text-sm text-[#dcece3]">
+              <p className="font-semibold text-[#f2f5f0]">Tim A: {game.teamA}</p>
+              <p className="mt-1 font-semibold text-[#f2f5f0]">Tim B: {game.teamB}</p>
+              <p className="mt-1 text-[#8fa89b]">
                 Rezultat: A {game.score.teamA} : {game.score.teamB} B
               </p>
-              <p className="mt-1 text-xs text-emerald-200/80">Ruke: {game.roundsCount}</p>
+              <p className="mt-1 text-xs text-[#8fa89b]">Ruke: {game.roundsCount}</p>
             </div>
           </section>
         ))
@@ -93,9 +93,9 @@ export function ActiveGamesList({ initialGames }: { initialGames: ActiveGameRow[
 
       {confirmTarget ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-emerald-600/50 bg-emerald-950 p-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white">Potvrda brisanja</h3>
-            <p className="mt-2 text-sm text-emerald-100">
+          <div className="w-full max-w-sm rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[#0a2019] p-4 shadow-2xl">
+            <h3 className="text-base font-bold text-[#f7fbf6]">Potvrda brisanja</h3>
+            <p className="mt-2 text-sm text-[#dcece3]">
               {confirmStep === 1
                 ? `Želiš li obrisati aktivnu partiju od ${new Date(confirmTarget.createdAt).toLocaleString("hr-HR")}?`
                 : "Jesi li stvarno siguran? Ova radnja trajno briše partiju i sve njezine ruke."}
@@ -107,7 +107,7 @@ export function ActiveGamesList({ initialGames }: { initialGames: ActiveGameRow[
                   setConfirmTarget(null);
                   setConfirmStep(1);
                 }}
-                className="rounded-lg border border-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-100"
+                className="rounded-lg border border-[rgba(169,194,179,0.3)] px-3 py-2 text-sm font-semibold text-[#dcece3]"
               >
                 Odustani
               </button>

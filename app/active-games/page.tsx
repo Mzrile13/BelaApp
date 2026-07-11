@@ -30,8 +30,8 @@ export default async function ActiveGamesPage() {
       <BackButton fallbackHref="/" className="mb-3" />
 
       <section className="card p-4">
-        <h1 className="text-xl font-bold text-white">Aktivne partije</h1>
-        <p className="text-sm text-emerald-100/90">
+        <h1 className="text-xl font-bold text-[#f7fbf6]">Aktivne partije</h1>
+        <p className="text-sm text-[#a9c2b3]">
           Odaberi partiju koju želiš nastaviti.
         </p>
       </section>

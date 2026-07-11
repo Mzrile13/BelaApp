@@ -38,7 +38,7 @@ async function HomeContent() {
 
         <Link
           href="/new-game"
-          className="btn-gold block rounded-[16px] p-4 text-center text-[15px] font-bold"
+          className="btn-accent block rounded-[16px] p-4 text-center text-[15px] font-bold"
         >
           Nova partija
         </Link>
@@ -49,7 +49,7 @@ async function HomeContent() {
             className="rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-1.5 py-3 text-center"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
-              <circle cx="8" cy="8" r="4.2" stroke="#d9b567" strokeWidth="1.4" />
+              <circle cx="8" cy="8" r="4.2" stroke="#c9d9a0" strokeWidth="1.4" />
               <circle cx="14.5" cy="9.5" r="3.4" stroke="#8fa89b" strokeWidth="1.3" />
             </svg>
             <span className="text-[11.5px] font-semibold text-[#dcece3]">Igrači</span>
@@ -59,7 +59,7 @@ async function HomeContent() {
             className="rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-1.5 py-3 text-center"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
-              <circle cx="8.5" cy="11" r="4.6" stroke="#d9b567" strokeWidth="1.4" />
+              <circle cx="8.5" cy="11" r="4.6" stroke="#c9d9a0" strokeWidth="1.4" />
               <circle cx="13.5" cy="11" r="4.6" stroke="#8fa89b" strokeWidth="1.3" />
             </svg>
             <span className="text-[11.5px] font-semibold text-[#dcece3]">Parovi</span>
@@ -69,8 +69,8 @@ async function HomeContent() {
             className="rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-1.5 py-3 text-center"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
-              <circle cx="11" cy="11" r="7.5" stroke="#d9b567" strokeWidth="1.4" />
-              <path d="M11 6.5V11L14 13" stroke="#d9b567" strokeWidth="1.4" strokeLinecap="round" />
+              <circle cx="11" cy="11" r="7.5" stroke="#c9d9a0" strokeWidth="1.4" />
+              <path d="M11 6.5V11L14 13" stroke="#c9d9a0" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
             <span className="text-[11.5px] font-semibold text-[#dcece3]">Povijest</span>
           </Link>
@@ -79,7 +79,7 @@ async function HomeContent() {
         {activeGames.length > 0 ? (
           <Link
             href="/active-games"
-            className="mt-2.5 block rounded-[14px] border border-[rgba(217,181,103,0.4)] bg-[rgba(217,181,103,0.10)] p-[13px] text-center text-[13.5px] font-semibold text-[#eef6ea]"
+            className="mt-2.5 block rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] p-[13px] text-center text-[13.5px] font-semibold text-[#eef6ea]"
           >
             Nastavi partiju &rarr;
           </Link>
@@ -88,11 +88,11 @@ async function HomeContent() {
 
       <section className="card px-[18px] pt-[18px] pb-2">
         <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-[#f2f5f0]">
-          <Trophy size={16} className="text-[#d9b567]" /> Top igrači
+          <Trophy size={16} className="text-[#c9d9a0]" /> Top igrači
         </h2>
         <div className="space-y-3">
           {playerStats.length === 0 ? (
-            <p className="text-sm text-emerald-100/80">
+            <p className="text-sm text-[#a9c2b3]">
               Još nema podataka. Dodaj igrače i pokreni prvu partiju.
             </p>
           ) : (
@@ -105,11 +105,11 @@ async function HomeContent() {
 
       <section className="card px-[18px] pt-[18px] pb-2">
         <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-[#f2f5f0]">
-          <Users size={16} className="text-[#d9b567]" /> Najbolji parovi
+          <Users size={16} className="text-[#c9d9a0]" /> Najbolji parovi
         </h2>
         <div className="space-y-2.5">
           {pairStats.length === 0 ? (
-            <p className="text-sm text-emerald-100/80">Nema dovoljno podataka za parove.</p>
+            <p className="text-sm text-[#a9c2b3]">Nema dovoljno podataka za parove.</p>
           ) : (
             pairStats.map((pair) => (
               <div

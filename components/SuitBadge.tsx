@@ -51,7 +51,7 @@ export function SuitBadge({
       <span
         className={`flex flex-col items-center gap-[3px] rounded-[9px] px-0.5 pt-1.5 pb-[7px] border ${
           selected
-            ? "border-[rgba(217,181,103,0.7)] bg-[rgba(217,181,103,0.12)]"
+            ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
             : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
         }`}
       >
@@ -73,8 +73,8 @@ export function SuitBadge({
         compact ? "gap-2 px-2 py-1.5" : "min-h-14 w-full justify-start gap-3 px-4 py-3"
       } ${
         selected
-          ? "border-[#d9b567] bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
-          : "border-emerald-600/60 bg-emerald-950/45 text-emerald-100"
+          ? "border-[#c9d9a0] bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
+          : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)] text-[#dcece3]"
       }`}
     >
       <Image

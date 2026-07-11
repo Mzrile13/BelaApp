@@ -5,7 +5,7 @@
   --foreground: #e8fff5;
   --surface: #0f5132;
   --surface-2: #16603e;
-  --accent: #d9b567;
+  --accent: #c9d9a0;
 }
 
 @theme inline {
@@ -21,13 +21,13 @@
     --foreground: #e8fff5;
     --surface: #0f5132;
     --surface-2: #16603e;
-    --accent: #d9b567;
+    --accent: #c9d9a0;
   }
 }
 
 body {
   background:
-    radial-gradient(120% 60% at 85% -10%, rgba(217, 181, 103, 0.1) 0%, transparent 55%),
+    radial-gradient(120% 60% at 85% -10%, rgba(201, 217, 160, 0.1) 0%, transparent 55%),
     radial-gradient(90% 50% at 0% 100%, rgba(20, 90, 64, 0.35) 0%, transparent 60%),
     repeating-linear-gradient(
       135deg,
@@ -56,20 +56,20 @@ a {
 .glass-card {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 45%),
     rgba(18, 55, 40, 0.55);
-  border: 1px solid rgba(217, 181, 103, 0.14);
+  border: 1px solid rgba(201, 217, 160, 0.14);
 }
 
-.btn-gold {
-  background: linear-gradient(180deg, #e7cd8e, var(--accent));
+.btn-accent {
+  background: linear-gradient(180deg, #d7f1c7, var(--accent));
   color: #10261c;
-  box-shadow: 0 12px 24px -8px rgba(217, 181, 103, 0.45);
+  box-shadow: 0 12px 24px -8px rgba(201, 217, 160, 0.45);
 }
 
 /* Mobile tap feedback: make pressed button clearly visible. */
 button,
 a {
   cursor: pointer;
-  -webkit-tap-highlight-color: rgba(217, 181, 103, 0.28);
+  -webkit-tap-highlight-color: rgba(201, 217, 160, 0.28);
   transition:
     transform 120ms ease,
     filter 120ms ease,
@@ -81,16 +81,16 @@ button:active,
 a:active {
   filter: brightness(1.25) saturate(1.1);
   transform: scale(0.97);
-  outline: 3px solid rgba(217, 181, 103, 0.9);
+  outline: 3px solid rgba(201, 217, 160, 0.9);
   outline-offset: 2px;
   box-shadow:
-    0 0 0 4px rgba(217, 181, 103, 0.35),
+    0 0 0 4px rgba(201, 217, 160, 0.35),
     inset 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(217, 181, 103, 0.9);
+  outline: 3px solid rgba(201, 217, 160, 0.9);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(217, 181, 103, 0.3);
+  box-shadow: 0 0 0 4px rgba(201, 217, 160, 0.3);
 }

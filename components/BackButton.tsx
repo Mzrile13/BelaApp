@@ -15,7 +15,7 @@ export function BackButton({
   return (
     <Link
       href={fallbackHref}
-      className={`inline-flex items-center gap-1 rounded-xl border border-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-100 ${className}`}
+      className={`inline-flex items-center gap-1 rounded-xl border border-[rgba(169,194,179,0.3)] px-3 py-2 text-sm font-semibold text-[#dcece3] ${className}`}
     >
       <ChevronLeft size={16} />
       {label}

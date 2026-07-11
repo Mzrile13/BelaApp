@@ -33,10 +33,10 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
       <h2 className="mb-3.5 text-[20px] font-extrabold text-[#f7fbf6]">Timeline ruku</h2>
       <div className="relative rounded-[20px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] pt-2 pr-3.5 pb-3.5 pl-[22px]">
         {rounds.length === 0 ? (
-          <p className="text-sm text-emerald-200">Još nema unesenih ruku.</p>
+          <p className="text-sm text-[#8fa89b]">Još nema unesenih ruku.</p>
         ) : (
           <>
-            <div className="pointer-events-none absolute top-5 bottom-5 left-[26px] w-[1.5px] bg-gradient-to-b from-[rgba(217,181,103,0.5)] to-[rgba(217,181,103,0.05)]" />
+            <div className="pointer-events-none absolute top-5 bottom-5 left-[26px] w-[1.5px] bg-gradient-to-b from-[rgba(201,217,160,0.5)] to-[rgba(201,217,160,0.05)]" />
             <div className="mt-2.5 flex flex-col gap-3.5">
               {roundsWithTotals.map(({ round, cumulativeA, cumulativeB }) => {
                 const resolvedPoints = resolveRoundPoints(round);
@@ -52,7 +52,7 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
                 const showLegacyMissing = round.calledSuitLegacyMissing === true;
                 return (
                   <div key={round.id} className="relative pl-[22px]">
-                    <div className="absolute top-1.5 -left-2 h-2.5 w-2.5 rounded-full bg-[#d9b567] shadow-[0_0_0_3px_#0a2019]" />
+                    <div className="absolute top-1.5 -left-2 h-2.5 w-2.5 rounded-full bg-[#c9d9a0] shadow-[0_0_0_3px_#0a2019]" />
                     <div className="rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3.5 py-3">
                       <div className="mb-1.5 flex items-center justify-between">
                         <span className="text-[13px] font-bold text-[#f2f5f0]">
@@ -79,7 +79,7 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
                       <div className="mt-1 flex items-center gap-2 text-[11.5px] text-[#8fa89b]">
                         <span>Zvano:</span>
                         {showLegacyMissing ? (
-                          <span className="text-[#d9b567]">nije upisano (stara ruka)</span>
+                          <span className="text-[#c9d9a0]">nije upisano (stara ruka)</span>
                         ) : (
                           <>
                             <SuitBadge suit={resolvedSuit} bare />
@@ -142,7 +142,7 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
                         <span
                           className={`rounded-full px-2 py-[3px] text-[10.5px] font-bold tracking-[0.03em] uppercase ${
                             round.callerSucceeded
-                              ? "bg-[rgba(217,181,103,0.85)] text-[#10261c]"
+                              ? "bg-[rgba(201,217,160,0.85)] text-[#10261c]"
                               : "bg-[rgba(196,90,74,0.85)] text-white"
                           }`}
                         >

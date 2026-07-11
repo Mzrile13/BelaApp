@@ -44,7 +44,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
         <h3 className="text-[15px] font-bold text-[#f7fbf6]">
           {stats.playerAUsername} + {stats.playerBUsername}
         </h3>
-        <span className="rounded-full bg-[#d9b567] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
+        <span className="rounded-full bg-[#c9d9a0] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
           MVP {stats.mvpScore}
         </span>
       </div>
@@ -61,7 +61,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
       <div className="flex items-center justify-between rounded-[12px] bg-[rgba(6,20,16,0.45)] py-[9px]">
         <p className="flex items-center gap-1.5 pl-2.5 text-[12px] font-semibold text-[#dcece3]">
           {winsInLast10 > lossesInLast10 ? (
-            <TrendingUp size={14} className="text-[#d9b567]" />
+            <TrendingUp size={14} className="text-[#c9d9a0]" />
           ) : lossesInLast10 > winsInLast10 ? (
             <TrendingDown size={14} className="text-rose-300" />
           ) : null}
@@ -72,7 +72,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
             <span
               key={index}
               className={`h-[7px] w-[7px] rounded-full ${
-                result === "W" ? "bg-[#d9b567]" : "bg-[rgba(196,90,74,0.85)]"
+                result === "W" ? "bg-[#c9d9a0]" : "bg-[rgba(196,90,74,0.85)]"
               }`}
             />
           ))}

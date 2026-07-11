@@ -34,7 +34,7 @@ export function GameHeader({
           <p className="mt-0.5 mb-[3px] text-[11.5px] font-bold break-words text-[#eef3ee]">
             {teamANames}
           </p>
-          <p className="font-mono text-[24px] font-extrabold text-[#d9b567]">{score.teamA}</p>
+          <p className="font-mono text-[24px] font-extrabold text-[#c9d9a0]">{score.teamA}</p>
         </div>
 
         <div className="rounded-[12px] bg-[rgba(6,20,16,0.4)] px-2.5 py-2">
@@ -42,7 +42,7 @@ export function GameHeader({
           <p className="mt-0.5 mb-[3px] text-[11.5px] font-bold break-words text-[#eef3ee]">
             {teamBNames}
           </p>
-          <p className="font-mono text-[24px] font-extrabold text-[#d9b567]">{score.teamB}</p>
+          <p className="font-mono text-[24px] font-extrabold text-[#c9d9a0]">{score.teamB}</p>
         </div>
       </div>
     </section>

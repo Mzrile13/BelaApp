@@ -300,15 +300,15 @@ export default function NewGamePage() {
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/" className="mb-3" />
       <section className="card p-4">
-        <h1 className="text-xl font-bold text-white">Nova partija</h1>
+        <h1 className="text-xl font-bold text-[#f7fbf6]">Nova partija</h1>
         {step === "groups" ? (
           <>
-            <p className="text-sm text-emerald-100/90">
+            <p className="text-sm text-[#a9c2b3]">
               Prvo odaberi ili napravi grupu igrača.
             </p>
 
-            <div className="mt-4 rounded-xl border border-emerald-600/50 bg-emerald-950/30 p-3">
-              <p className="mb-2 text-sm font-semibold text-emerald-200">Nova grupa</p>
+            <div className="mt-4 rounded-[14px] border border-[rgba(169,194,179,0.14)] bg-[rgba(6,20,16,0.22)] p-3">
+              <p className="mb-2 text-sm font-semibold text-[#a9c2b3]">Nova grupa</p>
               <form
                 className="flex gap-2"
                 onSubmit={(event) => {
@@ -319,13 +319,13 @@ export default function NewGamePage() {
                 <input
                   value={groupName}
                   onChange={(event) => setGroupName(event.target.value)}
-                  className="w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   placeholder="Naziv nove grupe"
                 />
                 <button
                   type="submit"
                   disabled={creatingGroup}
-                  className="btn-gold rounded-xl px-4 font-semibold disabled:opacity-60"
+                  className="btn-accent rounded-xl px-4 font-semibold disabled:opacity-60"
                 >
                   {creatingGroup ? "Spremam..." : "Dodaj"}
                 </button>
@@ -333,10 +333,10 @@ export default function NewGamePage() {
             </div>
 
             <div className="mt-4">
-              <label className="text-sm text-emerald-100">
+              <label className="text-sm text-[#dcece3]">
                 Postojeće grupe
                 <select
-                  className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   value={selectedGroupId}
                   onChange={(event) => setSelectedGroupId(event.target.value)}
                 >
@@ -362,13 +362,13 @@ export default function NewGamePage() {
                   <input
                     value={renameGroupName}
                     onChange={(event) => setRenameGroupName(event.target.value)}
-                    className="w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                    className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                     placeholder="Promijeni naziv grupe"
                   />
                   <button
                     type="submit"
                     disabled={renamingGroup}
-                    className="rounded-xl border border-emerald-500 px-4 font-semibold text-emerald-100 disabled:opacity-60"
+                    className="rounded-xl border border-[rgba(169,194,179,0.3)] px-4 font-semibold text-[#dcece3] disabled:opacity-60"
                   >
                     {renamingGroup ? "Spremam..." : "Preimenuj"}
                   </button>
@@ -397,7 +397,7 @@ export default function NewGamePage() {
                   <input
                     value={newUsername}
                     onChange={(event) => setNewUsername(event.target.value)}
-                    className="w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                    className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                     placeholder="Novi username za grupu"
                     autoCapitalize="none"
                     autoCorrect="off"
@@ -405,7 +405,7 @@ export default function NewGamePage() {
                   <button
                     type="submit"
                     disabled={creatingPlayer || addingToGroup}
-                    className="btn-gold rounded-xl px-4 font-semibold disabled:opacity-60"
+                    className="btn-accent rounded-xl px-4 font-semibold disabled:opacity-60"
                   >
                     {creatingPlayer || addingToGroup ? "Dodajem..." : "Dodaj"}
                   </button>
@@ -415,7 +415,7 @@ export default function NewGamePage() {
                   <select
                     value={existingPlayerId}
                     onChange={(event) => setExistingPlayerId(event.target.value)}
-                    className="w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                    className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   >
                     <option value="">Dodaj postojećeg igrača u grupu</option>
                     {players
@@ -430,14 +430,14 @@ export default function NewGamePage() {
                     type="button"
                     disabled={!existingPlayerId || addingToGroup}
                     onClick={() => void addPlayerToSelectedGroup(existingPlayerId)}
-                    className="rounded-xl border border-emerald-500 px-4 font-semibold text-emerald-100 disabled:opacity-60"
+                    className="rounded-xl border border-[rgba(169,194,179,0.3)] px-4 font-semibold text-[#dcece3] disabled:opacity-60"
                   >
                     Dodaj
                   </button>
                 </div>
 
-                <div className="mt-3 rounded-xl border border-emerald-700/40 bg-emerald-950/40 p-3">
-                  <p className="text-sm font-semibold text-emerald-200">Igrači u grupi</p>
+                <div className="mt-3 rounded-[14px] border border-[rgba(169,194,179,0.14)] bg-[rgba(6,20,16,0.22)] p-3">
+                  <p className="text-sm font-semibold text-[#a9c2b3]">Igrači u grupi</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {groupPlayers.map((player) => (
                       <button
@@ -445,14 +445,14 @@ export default function NewGamePage() {
                         type="button"
                         disabled={removingFromGroup}
                         onClick={() => void removePlayerFromSelectedGroup(player.id)}
-                        className="rounded-full border border-emerald-600/60 px-3 py-1 text-sm text-emerald-100 disabled:opacity-60"
+                        className="rounded-full border border-[rgba(169,194,179,0.3)] px-3 py-1 text-sm text-[#dcece3] disabled:opacity-60"
                         title="Ukloni igrača iz grupe"
                       >
                         {player.username} ×
                       </button>
                     ))}
                     {groupPlayers.length === 0 ? (
-                      <span className="text-sm text-emerald-300/90">Nema igrača u grupi.</span>
+                      <span className="text-sm text-[#8fa89b]">Nema igrača u grupi.</span>
                     ) : null}
                   </div>
                 </div>
@@ -461,7 +461,7 @@ export default function NewGamePage() {
                   type="button"
                   onClick={() => setStep("setup")}
                   disabled={groupPlayers.length < 4}
-                  className="btn-gold mt-4 w-full rounded-xl py-3 font-semibold disabled:opacity-60"
+                  className="btn-accent mt-4 w-full rounded-xl py-3 font-semibold disabled:opacity-60"
                 >
                   Nastavi na postavu partije
                 </button>
@@ -470,19 +470,19 @@ export default function NewGamePage() {
           </>
         ) : (
           <>
-            <p className="text-sm text-emerald-100/90">
-              Grupa: <span className="font-semibold text-white">{selectedGroup?.name ?? "-"}</span>
+            <p className="text-sm text-[#a9c2b3]">
+              Grupa: <span className="font-semibold text-[#f7fbf6]">{selectedGroup?.name ?? "-"}</span>
             </p>
             <button
               type="button"
-              className="mt-2 rounded-lg border border-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-100"
+              className="mt-2 rounded-lg border border-[rgba(169,194,179,0.3)] px-3 py-2 text-sm font-semibold text-[#dcece3]"
               onClick={() => setStep("groups")}
             >
               Natrag na grupe
             </button>
 
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <label className="col-span-2 text-sm text-emerald-100">
+              <label className="col-span-2 text-sm text-[#dcece3]">
                 Prvi djelitelj
                 <select
                   key={`dealer-${playersOptionsKey}`}
@@ -490,7 +490,7 @@ export default function NewGamePage() {
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, dealerPlayerId: event.target.value }))
                   }
-                  className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                 >
                   <option value="">Odaberi igrača</option>
                   {groupPlayers.map((player) => (
@@ -501,11 +501,11 @@ export default function NewGamePage() {
                 </select>
               </label>
 
-              <label className="text-sm text-emerald-100">
+              <label className="text-sm text-[#dcece3]">
                 Tim A - Igrač 1
                 <select
                   key={`teamA-0-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   value={form.teamA[0]}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, teamA: [event.target.value, prev.teamA[1]] }))
@@ -515,11 +515,11 @@ export default function NewGamePage() {
                   {groupPlayers.map((player) => playerOption(player, form.teamA[0]))}
                 </select>
               </label>
-              <label className="text-sm text-emerald-100">
+              <label className="text-sm text-[#dcece3]">
                 Tim A - Igrač 2
                 <select
                   key={`teamA-1-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   value={form.teamA[1]}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, teamA: [prev.teamA[0], event.target.value] }))
@@ -529,11 +529,11 @@ export default function NewGamePage() {
                   {groupPlayers.map((player) => playerOption(player, form.teamA[1]))}
                 </select>
               </label>
-              <label className="text-sm text-emerald-100">
+              <label className="text-sm text-[#dcece3]">
                 Tim B - Igrač 1
                 <select
                   key={`teamB-0-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   value={form.teamB[0]}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, teamB: [event.target.value, prev.teamB[1]] }))
@@ -543,11 +543,11 @@ export default function NewGamePage() {
                   {groupPlayers.map((player) => playerOption(player, form.teamB[0]))}
                 </select>
               </label>
-              <label className="text-sm text-emerald-100">
+              <label className="text-sm text-[#dcece3]">
                 Tim B - Igrač 2
                 <select
                   key={`teamB-1-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-emerald-600/60 bg-emerald-950/40 px-3 py-2 text-emerald-50"
+                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
                   value={form.teamB[1]}
                   onChange={(event) =>
                     setForm((prev) => ({ ...prev, teamB: [prev.teamB[0], event.target.value] }))
@@ -563,7 +563,7 @@ export default function NewGamePage() {
               type="button"
               onClick={createGame}
               disabled={loading}
-              className="btn-gold mt-4 w-full rounded-xl py-3 font-semibold disabled:opacity-60"
+              className="btn-accent mt-4 w-full rounded-xl py-3 font-semibold disabled:opacity-60"
             >
               {loading ? "Kreiram..." : "Pokreni partiju"}
             </button>
@@ -575,9 +575,9 @@ export default function NewGamePage() {
 
       {confirmDeleteGroup ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-emerald-600/50 bg-emerald-950 p-4 shadow-2xl">
-            <h3 className="text-base font-bold text-white">Potvrda brisanja grupe</h3>
-            <p className="mt-2 text-sm text-emerald-100">
+          <div className="w-full max-w-sm rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[#0a2019] p-4 shadow-2xl">
+            <h3 className="text-base font-bold text-[#f7fbf6]">Potvrda brisanja grupe</h3>
+            <p className="mt-2 text-sm text-[#dcece3]">
               {confirmDeleteGroupStep === 1
                 ? `Želiš li obrisati grupu "${confirmDeleteGroup.name}"?`
                 : "Jesi li stvarno siguran? Ova radnja trajno briše grupu i članove iz te grupe."}
@@ -589,7 +589,7 @@ export default function NewGamePage() {
                   setConfirmDeleteGroup(null);
                   setConfirmDeleteGroupStep(1);
                 }}
-                className="rounded-lg border border-emerald-500 px-3 py-2 text-sm font-semibold text-emerald-100"
+                className="rounded-lg border border-[rgba(169,194,179,0.3)] px-3 py-2 text-sm font-semibold text-[#dcece3]"
               >
                 Odustani
               </button>

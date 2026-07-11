@@ -51,10 +51,10 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
       <PairStatsCard stats={stats} />
 
       <section className="card mt-4 p-4">
-        <h2 className="text-lg font-semibold text-white">Partije para</h2>
+        <h2 className="text-lg font-semibold text-[#f7fbf6]">Partije para</h2>
         <div className="mt-3 space-y-2">
           {pairGames.length === 0 ? (
-            <p className="text-sm text-emerald-100/80">Par još nema odigranih partija.</p>
+            <p className="text-sm text-[#a9c2b3]">Par još nema odigranih partija.</p>
           ) : (
             pairGames.map(({ game, score }) => {
               const winner = getWinningTeam(score);
@@ -62,23 +62,23 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
               return (
                 <div
                   key={game.id}
-                  className="flex items-center justify-between rounded-xl bg-emerald-950/40 px-3 py-2"
+                  className="flex items-center justify-between rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3 py-2"
                 >
                   <div>
-                    <p className="text-sm font-medium text-white">
+                    <p className="text-sm font-medium text-[#f2f5f0]">
                       {new Date(game.createdAt).toLocaleString("hr-HR")}
                     </p>
-                    <p className="text-xs text-emerald-200">
+                    <p className="text-xs text-[#dcece3]">
                       A {score.teamA} : {score.teamB} B · {finished ? "završena" : "u tijeku"}
                     </p>
-                    <p className="text-xs text-emerald-300/90">
+                    <p className="text-xs text-[#8fa89b]">
                       {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")} vs{" "}
                       {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     </p>
                   </div>
                   <Link
                     href={`/game/${game.id}?from=history`}
-                    className="rounded-lg border border-emerald-500 px-2 py-1 text-xs font-semibold text-emerald-100"
+                    className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
                   >
                     Otvori
                   </Link>
