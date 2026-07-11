@@ -70,7 +70,7 @@ export default async function LeaderboardPage(props: PageProps<"/leaderboard">) 
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-lime-300">MVP {row.mvpScore}</p>
+                  <p className="text-sm font-semibold text-amber-300">MVP {row.mvpScore}</p>
                   {row.insufficientSample ? (
                     <p className="text-xs text-amber-300">insufficient sample</p>
                   ) : null}

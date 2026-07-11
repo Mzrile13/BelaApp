@@ -65,7 +65,7 @@ async function HomeContent() {
         {activeGames.length > 0 ? (
           <Link
             href="/active-games"
-            className="mt-2 block rounded-xl border border-lime-300/70 bg-lime-500/20 px-3 py-3 text-center font-semibold text-lime-100 active:bg-lime-500/35 active:text-white"
+            className="mt-2 block rounded-xl border border-amber-300/70 bg-amber-500/20 px-3 py-3 text-center font-semibold text-amber-100 active:bg-amber-500/35 active:text-white"
           >
             Nastavi partiju
           </Link>

@@ -287,15 +287,15 @@ export function RoundEntryForm({
   }
 
   return (
-    <section className="rounded-2xl border border-emerald-700/40 bg-emerald-900/50 p-4 shadow-xl shadow-emerald-950/30">
-      <h2 className="mb-3 text-lg font-semibold text-white">Unos nove ruke</h2>
+    <section className="rounded-2xl border border-emerald-700/40 bg-emerald-900/50 p-3 shadow-xl shadow-emerald-950/30">
+      <h2 className="mb-2 text-lg font-semibold text-white">Unos nove ruke</h2>
       {dealerName ? (
-        <p className="mb-3 text-base font-semibold text-emerald-100">Dijeli: {dealerName}</p>
+        <p className="mb-2 text-base font-semibold text-emerald-100">Dijeli: {dealerName}</p>
       ) : null}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2 text-base font-semibold text-emerald-100">
           <p>Tko je zvao</p>
-          <div className="mt-2 grid grid-cols-1 gap-3">
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
             <div className="rounded-lg border border-emerald-700/50 bg-emerald-900/30 p-2">
               <p className="mb-2 text-sm font-bold text-emerald-200">Tim A</p>
               <div className="grid grid-cols-2 gap-2">
@@ -306,7 +306,7 @@ export function RoundEntryForm({
                     onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
                     className={`rounded-lg border px-3 py-2 text-left ${
                       form.callerPlayerId === player.id
-                        ? "border-lime-300 bg-emerald-700/70"
+                        ? "border-amber-300 bg-emerald-700/70"
                         : "border-emerald-700/50 bg-emerald-900/40"
                     }`}
                   >
@@ -326,7 +326,7 @@ export function RoundEntryForm({
                     onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
                     className={`rounded-lg border px-3 py-2 text-left ${
                       form.callerPlayerId === player.id
-                        ? "border-lime-300 bg-emerald-700/70"
+                        ? "border-amber-300 bg-emerald-700/70"
                         : "border-emerald-700/50 bg-emerald-900/40"
                     }`}
                   >
@@ -340,7 +340,7 @@ export function RoundEntryForm({
 
         <div className="col-span-2 text-base font-semibold text-emerald-100">
           <p>Zvani znak</p>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
             {calledSuits.map((suit) => (
               <button
                 key={suit}
@@ -359,24 +359,24 @@ export function RoundEntryForm({
           onClick={() => setActivePointsField("pointsTeamA")}
           className={`rounded-xl border p-3 text-left ${
             activePointsField === "pointsTeamA"
-              ? "border-lime-300 bg-emerald-800/80"
+              ? "border-amber-300 bg-emerald-800/80"
               : "border-emerald-600/50 bg-emerald-950/40"
           }`}
         >
           <p className="text-sm text-emerald-200">Bodovi Tim A</p>
-          <p className="text-4xl font-extrabold text-white">{form.pointsTeamA}</p>
+          <p className="text-3xl font-extrabold text-white">{form.pointsTeamA}</p>
         </button>
         <button
           type="button"
           onClick={() => setActivePointsField("pointsTeamB")}
           className={`rounded-xl border p-3 text-left ${
             activePointsField === "pointsTeamB"
-              ? "border-lime-300 bg-emerald-800/80"
+              ? "border-amber-300 bg-emerald-800/80"
               : "border-emerald-600/50 bg-emerald-950/40"
           }`}
         >
           <p className="text-sm text-emerald-200">Bodovi Tim B</p>
-          <p className="text-4xl font-extrabold text-white">{form.pointsTeamB}</p>
+          <p className="text-3xl font-extrabold text-white">{form.pointsTeamB}</p>
         </button>
 
         <div className="col-span-2 rounded-xl border border-emerald-600/50 bg-emerald-950/40 p-3">
@@ -426,12 +426,12 @@ export function RoundEntryForm({
           onClick={() => setActiveZvanjaPlayerId(teamAPlayers[0]?.id ?? "")}
           className={`rounded-xl border p-3 text-left ${
             game.teams.teamA.includes(activeZvanjaPlayerId)
-              ? "border-lime-300 bg-emerald-800/80"
+              ? "border-amber-300 bg-emerald-800/80"
               : "border-emerald-600/50 bg-emerald-950/40"
           }`}
         >
           <p className="text-sm text-emerald-200">Zvanja Tim A</p>
-          <p className="text-3xl font-extrabold text-white">{form.zvanjaTeamA}</p>
+          <p className="text-2xl font-extrabold text-white">{form.zvanjaTeamA}</p>
           <p className="mt-1 text-sm text-emerald-300/90">
             {teamAPlayers
               .map((player) => ({
@@ -451,12 +451,12 @@ export function RoundEntryForm({
           onClick={() => setActiveZvanjaPlayerId(teamBPlayers[0]?.id ?? "")}
           className={`rounded-xl border p-3 text-left ${
             game.teams.teamB.includes(activeZvanjaPlayerId)
-              ? "border-lime-300 bg-emerald-800/80"
+              ? "border-amber-300 bg-emerald-800/80"
               : "border-emerald-600/50 bg-emerald-950/40"
           }`}
         >
           <p className="text-sm text-emerald-200">Zvanja Tim B</p>
-          <p className="text-3xl font-extrabold text-white">{form.zvanjaTeamB}</p>
+          <p className="text-2xl font-extrabold text-white">{form.zvanjaTeamB}</p>
           <p className="mt-1 text-sm text-emerald-300/90">
             {teamBPlayers
               .map((player) => ({
@@ -492,7 +492,7 @@ export function RoundEntryForm({
                       onClick={() => setActiveZvanjaPlayerId(player.id)}
                       className={`rounded-lg border px-3 py-2 text-left ${
                         activeZvanjaPlayerId === player.id
-                          ? "border-lime-300 bg-emerald-700/70"
+                          ? "border-amber-300 bg-emerald-700/70"
                           : "border-emerald-700/50 bg-emerald-900/40"
                       }`}
                     >
@@ -519,7 +519,7 @@ export function RoundEntryForm({
                       onClick={() => setActiveZvanjaPlayerId(player.id)}
                       className={`rounded-lg border px-3 py-2 text-left ${
                         activeZvanjaPlayerId === player.id
-                          ? "border-lime-300 bg-emerald-700/70"
+                          ? "border-amber-300 bg-emerald-700/70"
                           : "border-emerald-700/50 bg-emerald-900/40"
                       }`}
                     >
@@ -584,7 +584,7 @@ export function RoundEntryForm({
           type="button"
           onClick={submit}
           disabled={loading}
-          className={`rounded-xl bg-lime-400 py-4 text-lg font-bold text-emerald-950 disabled:opacity-60 ${
+          className={`rounded-xl bg-amber-400 py-4 text-lg font-bold text-emerald-950 disabled:opacity-60 ${
             onCancel ? "" : "col-span-2"
           }`}
         >

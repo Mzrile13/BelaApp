@@ -61,13 +61,13 @@ export function NewRoundPageClient({ gameId }: { gameId: string }) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
         <BackButton fallbackHref={`/game/${gameId}`} />
-        <section className="rounded-2xl border border-lime-300/70 bg-lime-400/20 p-4 text-lime-100">
+        <section className="rounded-2xl border border-amber-300/70 bg-amber-400/20 p-4 text-amber-100">
           <p className="text-lg font-bold">Partija je završena.</p>
           {winnerTeam ? <p className="mt-1 text-sm">Pobjednik je Tim {winnerTeam}.</p> : null}
           <button
             type="button"
             onClick={() => router.push(`/game/${gameId}`)}
-            className="mt-3 w-full rounded-xl bg-lime-400 py-3 font-semibold text-emerald-950"
+            className="mt-3 w-full rounded-xl bg-amber-400 py-3 font-semibold text-emerald-950"
           >
             Nazad na partiju
           </button>

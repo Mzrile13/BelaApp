@@ -30,7 +30,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
         <h3 className="text-lg font-semibold text-white">
           {stats.playerAUsername} + {stats.playerBUsername}
         </h3>
-        <span className="rounded-full bg-lime-300 px-2 py-1 text-xs font-bold text-emerald-950">
+        <span className="rounded-full bg-amber-300 px-2 py-1 text-xs font-bold text-emerald-950">
           MVP {stats.mvpScore}
         </span>
       </div>
@@ -53,7 +53,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
       <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-950/40 px-3 py-2 text-sm">
         <div className="flex items-center gap-2 text-emerald-100">
           {winsInLast10 > lossesInLast10 ? (
-            <TrendingUp size={16} className="text-lime-300" />
+            <TrendingUp size={16} className="text-amber-300" />
           ) : lossesInLast10 > winsInLast10 ? (
             <TrendingDown size={16} className="text-rose-300" />
           ) : (

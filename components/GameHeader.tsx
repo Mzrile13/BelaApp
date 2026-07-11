@@ -38,7 +38,7 @@ export function GameHeader({
           <p className="min-h-12 text-base font-semibold leading-tight text-white break-words">
             {teamANames}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-lime-300">{score.teamA}</p>
+          <p className="mt-2 text-4xl font-extrabold text-amber-300">{score.teamA}</p>
         </div>
 
         <div className="flex min-h-40 flex-col justify-between rounded-xl bg-emerald-800/70 p-3">
@@ -46,7 +46,7 @@ export function GameHeader({
           <p className="min-h-12 text-base font-semibold leading-tight text-white break-words">
             {teamBNames}
           </p>
-          <p className="mt-2 text-4xl font-extrabold text-lime-300">{score.teamB}</p>
+          <p className="mt-2 text-4xl font-extrabold text-amber-300">{score.teamB}</p>
         </div>
       </div>
     </section>

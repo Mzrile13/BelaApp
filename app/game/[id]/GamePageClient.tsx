@@ -69,13 +69,13 @@ export function GamePageClient({ gameId }: { gameId: string }) {
         dealerPlayerId={nextDealerId}
       />
       {winnerTeam ? (
-        <div className="rounded-2xl border border-lime-300/70 bg-lime-400/20 px-4 py-3 text-center font-semibold text-lime-100">
+        <div className="rounded-2xl border border-amber-300/70 bg-amber-400/20 px-4 py-3 text-center font-semibold text-amber-100">
           Partija je završena. Pobjednik je Tim {winnerTeam}.
         </div>
       ) : (
         <Link
           href={`/game/${gameId}/new-round`}
-          className="flex items-center justify-center gap-2 rounded-2xl border border-lime-200/70 bg-lime-300/80 py-3 font-semibold text-emerald-950 shadow-lg shadow-emerald-950/15"
+          className="flex items-center justify-center gap-2 rounded-2xl border border-amber-200/70 bg-amber-300/80 py-3 font-semibold text-emerald-950 shadow-lg shadow-emerald-950/15"
         >
           <PlusCircle size={18} />
           Unesi novu ruku

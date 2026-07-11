@@ -76,7 +76,8 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
                   )}
                 </div>
                 <p className="text-sm text-emerald-300">
-                  Zvanja: A {round.zvanjaTeamA} / B {round.zvanjaTeamB} · {callerName}{" "}
+                  Zvanja: A {round.zvanjaTeamA} / B {round.zvanjaTeamB} ·{" "}
+                  <span className="font-semibold text-emerald-50">{callerName}</span>{" "}
                   {round.callerSucceeded ? "uspješan" : "neuspješan"}
                 </p>
                 {round.stigliaTeam ? (

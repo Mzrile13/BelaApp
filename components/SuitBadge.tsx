@@ -32,7 +32,7 @@ export function SuitBadge({ suit, selected = false, compact = false }: SuitBadge
         compact ? "gap-2 px-2 py-1.5" : "min-h-14 w-full justify-start gap-3 px-4 py-3"
       } ${
         selected
-          ? "border-lime-300 bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
+          ? "border-amber-300 bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
           : "border-emerald-600/60 bg-emerald-950/45 text-emerald-100"
       }`}
     >

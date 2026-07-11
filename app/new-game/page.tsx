@@ -325,7 +325,7 @@ export default function NewGamePage() {
                 <button
                   type="submit"
                   disabled={creatingGroup}
-                  className="rounded-xl bg-lime-400 px-4 font-semibold text-emerald-950 disabled:opacity-60"
+                  className="rounded-xl bg-amber-400 px-4 font-semibold text-emerald-950 disabled:opacity-60"
                 >
                   {creatingGroup ? "Spremam..." : "Dodaj"}
                 </button>
@@ -405,7 +405,7 @@ export default function NewGamePage() {
                   <button
                     type="submit"
                     disabled={creatingPlayer || addingToGroup}
-                    className="rounded-xl bg-lime-400 px-4 font-semibold text-emerald-950 disabled:opacity-60"
+                    className="rounded-xl bg-amber-400 px-4 font-semibold text-emerald-950 disabled:opacity-60"
                   >
                     {creatingPlayer || addingToGroup ? "Dodajem..." : "Dodaj"}
                   </button>
@@ -461,7 +461,7 @@ export default function NewGamePage() {
                   type="button"
                   onClick={() => setStep("setup")}
                   disabled={groupPlayers.length < 4}
-                  className="mt-4 w-full rounded-xl bg-lime-400 py-3 font-semibold text-emerald-950 disabled:opacity-60"
+                  className="mt-4 w-full rounded-xl bg-amber-400 py-3 font-semibold text-emerald-950 disabled:opacity-60"
                 >
                   Nastavi na postavu partije
                 </button>
@@ -563,7 +563,7 @@ export default function NewGamePage() {
               type="button"
               onClick={createGame}
               disabled={loading}
-              className="mt-4 w-full rounded-xl bg-lime-400 py-3 font-semibold text-emerald-950 disabled:opacity-60"
+              className="mt-4 w-full rounded-xl bg-amber-400 py-3 font-semibold text-emerald-950 disabled:opacity-60"
             >
               {loading ? "Kreiram..." : "Pokreni partiju"}
             </button>

@@ -5,7 +5,7 @@
   --foreground: #e8fff5;
   --surface: #0f5132;
   --surface-2: #16603e;
-  --accent: #c6ff5a;
+  --accent: #d9b567;
 }
 
 @theme inline {
@@ -21,7 +21,7 @@
     --foreground: #e8fff5;
     --surface: #0f5132;
     --surface-2: #16603e;
-    --accent: #c6ff5a;
+    --accent: #d9b567;
   }
 }
 
@@ -51,7 +51,7 @@ a {
 button,
 a {
   cursor: pointer;
-  -webkit-tap-highlight-color: rgba(198, 255, 90, 0.28);
+  -webkit-tap-highlight-color: rgba(217, 181, 103, 0.28);
   transition:
     transform 120ms ease,
     filter 120ms ease,
@@ -63,16 +63,16 @@ button:active,
 a:active {
   filter: brightness(1.25) saturate(1.1);
   transform: scale(0.97);
-  outline: 3px solid rgba(198, 255, 90, 0.9);
+  outline: 3px solid rgba(217, 181, 103, 0.9);
   outline-offset: 2px;
   box-shadow:
-    0 0 0 4px rgba(198, 255, 90, 0.35),
+    0 0 0 4px rgba(217, 181, 103, 0.35),
     inset 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(198, 255, 90, 0.9);
+  outline: 3px solid rgba(217, 181, 103, 0.9);
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(198, 255, 90, 0.3);
+  box-shadow: 0 0 0 4px rgba(217, 181, 103, 0.3);
 }
