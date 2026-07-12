@@ -308,7 +308,12 @@ export function computePairStats(players: Player[], games: Game[], rounds: Round
     row.mvpScore = round(mvpScore * 100);
   }
 
-  return stats.sort((a, b) => b.mvpScore - a.mvpScore || b.gamesTogether - a.gamesTogether);
+  return stats.sort(
+    (a, b) =>
+      Number(a.insufficientSample) - Number(b.insufficientSample) ||
+      b.mvpScore - a.mvpScore ||
+      b.gamesTogether - a.gamesTogether,
+  );
 }
 
 export function computePlayerStats(players: Player[], games: Game[], rounds: Round[]): PlayerStats[] {
@@ -561,5 +566,10 @@ export function computePlayerStats(players: Player[], games: Game[], rounds: Rou
     row.mvpScore = round(mvpScore * 100);
   }
 
-  return rows.sort((a, b) => b.mvpScore - a.mvpScore || b.avgPoints - a.avgPoints);
+  return rows.sort(
+    (a, b) =>
+      Number(a.insufficientSample) - Number(b.insufficientSample) ||
+      b.mvpScore - a.mvpScore ||
+      b.avgPoints - a.avgPoints,
+  );
 }

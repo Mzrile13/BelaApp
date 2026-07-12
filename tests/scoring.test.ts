@@ -2,10 +2,22 @@ import { describe, expect, it } from "vitest";
 import type { Game } from "../lib/types";
 import {
   computeRound,
+  deriveInputPoints,
   evaluateCallerSuccess,
   getGameScore,
   getWinningTeam,
 } from "../lib/scoring";
+import type { RoundInput } from "../lib/types";
+
+function storedRound(input: RoundInput) {
+  const computed = computeRound(game, input);
+  return {
+    id: "x",
+    roundNumber: 1,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    ...computed,
+  };
+}
 
 const game: Game = {
   id: "00000000-0000-0000-0000-000000000100",
@@ -135,6 +147,62 @@ describe("scoring", () => {
     ]);
 
     expect(score).toEqual({ teamA: 252, teamB: 0 });
+  });
+
+  it("recovers clean points for the edit form (no zvanja leak into 162)", () => {
+    // Normal successful round: stored points include zvanja, derived must strip them.
+    const normal = storedRound({
+      gameId: game.id,
+      callerPlayerId: game.teams.teamA[0],
+      calledSuit: "herc",
+      pointsTeamA: 100,
+      pointsTeamB: 62,
+      zvanjaTeamA: 20,
+      zvanjaTeamB: 0,
+      zvanjaPlayerIdA: game.teams.teamA[1],
+      zvanjaPlayerIdB: null,
+      stigliaTeam: null,
+    });
+    expect(normal.pointsTeamA).toBe(120); // stored = clean + zvanja
+    const derivedNormal = deriveInputPoints(normal);
+    expect(derivedNormal).toEqual({ pointsTeamA: 100, pointsTeamB: 62 });
+    expect(derivedNormal.pointsTeamA + derivedNormal.pointsTeamB).toBeLessThanOrEqual(162);
+
+    // Štiglja round.
+    const stiglia = storedRound({
+      gameId: game.id,
+      callerPlayerId: game.teams.teamA[0],
+      calledSuit: "tref",
+      pointsTeamA: 162,
+      pointsTeamB: 0,
+      zvanjaTeamA: 20,
+      zvanjaTeamB: 0,
+      zvanjaPlayerIdA: game.teams.teamA[1],
+      zvanjaPlayerIdB: null,
+      stigliaTeam: "A",
+    });
+    expect(deriveInputPoints(stiglia)).toEqual({ pointsTeamA: 162, pointsTeamB: 0 });
+
+    // Fallen caller: derived points re-run through computeRound reproduce the fall.
+    const fallenInput: RoundInput = {
+      gameId: game.id,
+      callerPlayerId: game.teams.teamA[0],
+      calledSuit: "pik",
+      pointsTeamA: 81,
+      pointsTeamB: 81,
+      zvanjaTeamA: 0,
+      zvanjaTeamB: 20,
+      zvanjaPlayerIdA: null,
+      zvanjaPlayerIdB: game.teams.teamB[0],
+      stigliaTeam: null,
+    };
+    const fallen = storedRound(fallenInput);
+    const derivedFallen = deriveInputPoints(fallen);
+    expect(derivedFallen.pointsTeamA + derivedFallen.pointsTeamB).toBeLessThanOrEqual(162);
+    const recomputed = computeRound(game, { ...fallenInput, ...derivedFallen });
+    expect(recomputed.callerSucceeded).toBe(false);
+    expect(recomputed.pointsTeamA).toBe(fallen.pointsTeamA);
+    expect(recomputed.pointsTeamB).toBe(fallen.pointsTeamB);
   });
 
   it("picks winner when both teams pass 1000", () => {

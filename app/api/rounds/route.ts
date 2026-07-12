@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
+import { STATS_CACHE_TAG } from "@/lib/cachedStats";
 import { createRoundSchema } from "@/lib/validation";
 
 function isAllowedZvanjaTotal(total: number) {
@@ -144,6 +146,7 @@ export async function POST(request: Request) {
   if (winnerTeam) {
     await repo.finishGame(game.id);
   }
+  revalidateTag(STATS_CACHE_TAG, "max");
 
   return NextResponse.json(
     { round, gameFinished: Boolean(winnerTeam), winnerTeam, score: scoreAfterInsert },

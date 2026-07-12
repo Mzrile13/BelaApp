@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Trophy, Users } from "lucide-react";
+import { LogoutButton } from "@/components/LogoutButton";
 import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
-import { computePairStats, computePlayerStats } from "@/lib/stats";
+import { getCachedPairStats, getCachedPlayerStats } from "@/lib/cachedStats";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,29 +15,37 @@ export default function Home() {
 
 async function HomeContent() {
   const repo = getRepo();
-  const players = await repo.listPlayers();
   const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
-  const roundsByGameId = new Map<string, typeof rounds>();
-  for (const round of rounds) {
+  // Only unfinished games can be active; load rounds just for those instead of
+  // scanning every round in the database.
+  const unfinishedGames = games.filter((game) => game.finishedAt === null);
+  const unfinishedRounds = unfinishedGames.length
+    ? await repo.listRoundsForGames(unfinishedGames.map((game) => game.id))
+    : [];
+  const roundsByGameId = new Map<string, typeof unfinishedRounds>();
+  for (const round of unfinishedRounds) {
     const bucket = roundsByGameId.get(round.gameId) ?? [];
     bucket.push(round);
     roundsByGameId.set(round.gameId, bucket);
   }
-  const activeGames = games.filter((game) => {
-    if (game.finishedAt !== null) return false;
-    const winner = getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? []));
-    return winner === null;
-  });
-  const playerStats = computePlayerStats(players, games, rounds);
-  const pairStats = computePairStats(players, games, rounds).slice(0, 3);
+  const activeGames = unfinishedGames.filter(
+    (game) => getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? [])) === null,
+  );
+  const [playerStats, pairStatsAll] = await Promise.all([
+    getCachedPlayerStats(),
+    getCachedPairStats(),
+  ]);
+  const pairStats = pairStatsAll.slice(0, 3);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 p-4 pb-20">
       <section className="glass-card rounded-[22px] px-5 py-[22px] shadow-[0_18px_36px_-18px_rgba(0,0,0,0.55)]">
-        <h1 className="text-[26px] font-extrabold tracking-[-0.01em] text-[#f7fbf6]">
-          Bela Tracker
-        </h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-[26px] font-extrabold tracking-[-0.01em] text-[#f7fbf6]">
+            Bela Tracker
+          </h1>
+          <LogoutButton />
+        </div>
         <p className="mt-1.5 mb-[18px] text-[13.5px] leading-[1.5] text-[#a9c2b3]">
           Live praćenje partija, ruku i naprednih statistika.
         </p>

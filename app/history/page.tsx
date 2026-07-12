@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
-import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import { getRepo } from "@/lib/supabase";
+import { HistoryList } from "@/components/HistoryList";
+import { HISTORY_PAGE_SIZE, getHistoryPage } from "@/lib/history";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -10,28 +9,7 @@ export const fetchCache = "force-no-store";
 
 export default async function HistoryPage() {
   noStore();
-  const repo = getRepo();
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
-  const roundsByGameId = new Map<string, typeof rounds>();
-  for (const round of rounds) {
-    const bucket = roundsByGameId.get(round.gameId) ?? [];
-    bucket.push(round);
-    roundsByGameId.set(round.gameId, bucket);
-  }
-  const playersById = new Map(players.map((player) => [player.id, player.username]));
-
-  const gamesWithRounds = games
-    .map((game) => ({
-      game,
-      rounds: roundsByGameId.get(game.id) ?? [],
-      score: getGameScore(roundsByGameId.get(game.id) ?? []),
-    }))
-    .filter((row) => {
-      if (row.rounds.length === 0) return false;
-      return row.game.finishedAt !== null || getWinningTeam(row.score) !== null;
-    });
+  const page = await getHistoryPage(0, HISTORY_PAGE_SIZE);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
@@ -41,66 +19,13 @@ export default async function HistoryPage() {
         <p className="text-sm text-[#a9c2b3]">Pregled svih odigranih partija.</p>
       </section>
 
-      <div className="mt-4 space-y-4">
-        {gamesWithRounds.length === 0 ? (
-          <section className="card p-4 text-sm text-[#a9c2b3]">Još nema odigranih rundi.</section>
-        ) : (
-          gamesWithRounds.map(({ game, rounds, score }) => {
-            const winnerTeam = score.teamA === score.teamB ? null : score.teamA > score.teamB ? "A" : "B";
-            return (
-              <section key={game.id} className="card p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-[#f2f5f0]">
-                    Partija {new Date(game.createdAt).toLocaleString("hr-HR")}
-                  </p>
-                  <Link
-                    href={`/game/${game.id}?from=history`}
-                    className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
-                  >
-                    Otvori
-                  </Link>
-                </div>
-                <div className="rounded-[14px] bg-[rgba(6,20,16,0.45)] p-3 text-sm text-[#dcece3]">
-                  <p
-                    className={`font-semibold ${
-                      winnerTeam === "A"
-                        ? "text-[#f7fbf6]"
-                        : winnerTeam === "B"
-                          ? "text-[#8fa89b]"
-                          : "text-[#f7fbf6]"
-                    }`}
-                  >
-                    Tim A: {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
-                    {winnerTeam === "A" ? (
-                      <span className="ml-2 rounded-full bg-[rgba(201,217,160,0.2)] px-2 py-0.5 text-xs text-[#c9d9a0]">
-                        pobjednik
-                      </span>
-                    ) : null}
-                  </p>
-                  <p
-                    className={`mt-1 font-semibold ${
-                      winnerTeam === "B"
-                        ? "text-[#f7fbf6]"
-                        : winnerTeam === "A"
-                          ? "text-[#8fa89b]"
-                          : "text-[#f7fbf6]"
-                    }`}
-                  >
-                    Tim B: {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
-                    {winnerTeam === "B" ? (
-                      <span className="ml-2 rounded-full bg-[rgba(201,217,160,0.2)] px-2 py-0.5 text-xs text-[#c9d9a0]">
-                        pobjednik
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="mt-1 text-[#8fa89b]">
-                    Rezultat: A {score.teamA} : {score.teamB} B
-                  </p>
-                </div>
-              </section>
-            );
-          })
-        )}
+      <div className="mt-4">
+        <HistoryList
+          initialRows={page.rows}
+          initialHasMore={page.hasMore}
+          initialNextOffset={page.nextOffset}
+          pageSize={HISTORY_PAGE_SIZE}
+        />
       </div>
     </main>
   );

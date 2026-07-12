@@ -86,6 +86,51 @@ export function computeRound(game: Game, input: RoundInput): ComputedRound {
   };
 }
 
+/**
+ * Inverse of {@link computeRound}. A stored round keeps the *computed* display
+ * points in `pointsTeamA`/`pointsTeamB` (clean points + zvanja + štiglja bonus,
+ * or everything shifted to one team when the caller fell). The round entry form
+ * however works with the raw *clean* points (which always sum to ≤ 162). When
+ * pre-filling the edit form we must reconstruct those clean points, otherwise
+ * the zvanja get shown inside the clean-points fields and the total wrongly
+ * exceeds 162, blocking the save.
+ */
+export function deriveInputPoints(round: Round): { pointsTeamA: number; pointsTeamB: number } {
+  const clamp = (value: number) => Math.max(0, Math.min(162, value));
+  const stigliaTeam = round.stigliaTeam;
+  const zvanjaTotal = round.zvanjaTeamA + round.zvanjaTeamB;
+
+  let effectiveZvanjaA = round.zvanjaTeamA;
+  let effectiveZvanjaB = round.zvanjaTeamB;
+  if (stigliaTeam === "A") {
+    effectiveZvanjaA = zvanjaTotal;
+    effectiveZvanjaB = 0;
+  }
+  if (stigliaTeam === "B") {
+    effectiveZvanjaA = 0;
+    effectiveZvanjaB = zvanjaTotal;
+  }
+  const stigliaBonusA = stigliaTeam === "A" ? 90 : 0;
+  const stigliaBonusB = stigliaTeam === "B" ? 90 : 0;
+
+  if (round.callerSucceeded) {
+    return {
+      pointsTeamA: clamp(round.pointsTeamA - effectiveZvanjaA - stigliaBonusA),
+      pointsTeamB: clamp(round.pointsTeamB - effectiveZvanjaB - stigliaBonusB),
+    };
+  }
+
+  // Caller fell: all points were shifted to the non-calling team, so the
+  // original clean split is not recoverable. Put the recovered clean total on
+  // the team that actually took the tricks (the non-calling one). Re-running
+  // computeRound on this reproduces the same fallen-caller round.
+  const winnerStored = round.callingTeam === "A" ? round.pointsTeamB : round.pointsTeamA;
+  const cleanTotal = clamp(winnerStored - zvanjaTotal - (stigliaBonusA + stigliaBonusB));
+  return round.callingTeam === "A"
+    ? { pointsTeamA: 0, pointsTeamB: cleanTotal }
+    : { pointsTeamA: cleanTotal, pointsTeamB: 0 };
+}
+
 export function resolveRoundPoints(round: Round) {
   const stigliaTeam = round.stigliaTeam;
   if (!stigliaTeam) {

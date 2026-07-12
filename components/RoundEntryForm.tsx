@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SuitBadge } from "@/components/SuitBadge";
+import { deriveInputPoints } from "@/lib/scoring";
 import type { CalledSuit, Game, Player, Round } from "@/lib/types";
 
 interface RoundEntryFormProps {
@@ -83,13 +84,23 @@ export function RoundEntryForm({
     return map;
   }, [initialRound, teamBPlayers]);
 
+  // Stored rounds keep computed display points (clean + zvanja + štiglja) in
+  // pointsTeamA/B, so reconstruct the raw clean points for the entry fields.
+  const initialCleanPoints = useMemo(
+    () =>
+      initialRound
+        ? deriveInputPoints(initialRound)
+        : { pointsTeamA: 0, pointsTeamB: 0 },
+    [initialRound],
+  );
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     callerPlayerId: initialRound?.callerPlayerId ?? allPlayers[0] ?? "",
     calledSuit: initialRound?.calledSuit ?? ("karo" as CalledSuit),
-    pointsTeamA: initialRound?.pointsTeamA ?? 0,
-    pointsTeamB: initialRound?.pointsTeamB ?? 0,
+    pointsTeamA: initialCleanPoints.pointsTeamA,
+    pointsTeamB: initialCleanPoints.pointsTeamB,
     zvanjaTeamA: initialRound?.zvanjaTeamA ?? 0,
     zvanjaTeamB: initialRound?.zvanjaTeamB ?? 0,
     zvanjaPlayerIdA: initialRound?.zvanjaPlayerIdA ?? (null as string | null),
@@ -103,7 +114,7 @@ export function RoundEntryForm({
     Record<string, ZvanjaValue[]>
   >(initialTokensB);
   const [activePointsField, setActivePointsField] = useState<PointsField>(
-    (initialRound?.pointsTeamB ?? 0) > (initialRound?.pointsTeamA ?? 0)
+    initialCleanPoints.pointsTeamB > initialCleanPoints.pointsTeamA
       ? "pointsTeamB"
       : "pointsTeamA",
   );

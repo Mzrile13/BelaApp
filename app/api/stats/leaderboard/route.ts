@@ -1,19 +1,14 @@
 import { NextResponse } from "next/server";
-import { getRepo } from "@/lib/supabase";
-import { computePlayerStats } from "@/lib/stats";
+import { getCachedPlayerStats } from "@/lib/cachedStats";
 
 export async function GET() {
-  const repo = getRepo();
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
-  const rawRows = computePlayerStats(players, games, rounds);
+  const rawRows = await getCachedPlayerStats();
   const leaderboard = rawRows
     .filter((row) => row.gamesPlayed > 0)
     .map((row, index) => ({
-    rank: index + 1,
-    ...row,
-  }));
+      rank: index + 1,
+      ...row,
+    }));
 
   return NextResponse.json({ leaderboard });
 }

@@ -28,6 +28,7 @@ interface BelaRepository {
   addPlayerToGroup(groupId: string, playerId: string): Promise<void>;
   removePlayerFromGroup(groupId: string, playerId: string): Promise<void>;
   listGames(): Promise<Game[]>;
+  listFinishedGamesPage(limit: number, offset: number): Promise<{ games: Game[]; hasMore: boolean }>;
   getGame(id: string): Promise<Nullable<Game>>;
   createGame(input: NewGameInput): Promise<Game>;
   deleteGame(gameId: string): Promise<void>;
@@ -139,6 +140,14 @@ class InMemoryRepo implements BelaRepository {
 
   async listGames() {
     return [...this.games].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  async listFinishedGamesPage(limit: number, offset: number) {
+    const finished = this.games
+      .filter((game) => game.finishedAt !== null)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const games = finished.slice(offset, offset + limit);
+    return { games, hasMore: offset + limit < finished.length };
   }
 
   async getGame(id: string) {
@@ -421,6 +430,15 @@ class FileRepo implements BelaRepository {
   async listGames() {
     const db = await this.readDb();
     return [...db.games].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  async listFinishedGamesPage(limit: number, offset: number) {
+    const db = await this.readDb();
+    const finished = db.games
+      .filter((game) => game.finishedAt !== null)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    const games = finished.slice(offset, offset + limit);
+    return { games, hasMore: offset + limit < finished.length };
   }
 
   async getGame(id: string) {
@@ -743,6 +761,26 @@ export function getRepo(): BelaRepository {
         finishedAt: row.finished_at,
         teams: row.teams,
       }));
+    },
+    async listFinishedGamesPage(limit: number, offset: number) {
+      // Fetch one extra row to detect whether further pages exist.
+      const { data, error } = await supabase
+        .from("games")
+        .select("id, dealer_player_id, created_at, finished_at, teams")
+        .not("finished_at", "is", null)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit);
+      if (error) throw error;
+      const rows = data ?? [];
+      const hasMore = rows.length > limit;
+      const games = rows.slice(0, limit).map((row) => ({
+        id: row.id,
+        dealerPlayerId: row.dealer_player_id,
+        createdAt: row.created_at,
+        finishedAt: row.finished_at,
+        teams: row.teams,
+      }));
+      return { games, hasMore };
     },
     async getGame(id: string) {
       const { data, error } = await supabase

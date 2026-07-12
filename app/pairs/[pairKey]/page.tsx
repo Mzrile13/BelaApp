@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { PairStatsCard } from "@/components/PairStatsCard";
+import { RevealList } from "@/components/RevealList";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { computePairStats } from "@/lib/stats";
 import { getRepo } from "@/lib/supabase";
@@ -57,18 +58,20 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
 
       <section className="card mt-4 p-4">
         <h2 className="text-lg font-semibold text-[#f7fbf6]">Partije para</h2>
-        <div className="mt-3 space-y-2">
+        <div className="mt-3">
           {pairGames.length === 0 ? (
             <p className="text-sm text-[#a9c2b3]">Par još nema odigranih partija.</p>
           ) : (
-            pairGames.map(({ game, score }) => {
-              const winner = getWinningTeam(score);
-              const finished = game.finishedAt !== null || winner !== null;
-              return (
-                <div
-                  key={game.id}
-                  className="flex items-center justify-between rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3 py-2"
-                >
+            <RevealList
+              listClassName="space-y-2"
+              items={pairGames.map(({ game, score }) => {
+                const winner = getWinningTeam(score);
+                const finished = game.finishedAt !== null || winner !== null;
+                return (
+                  <div
+                    key={game.id}
+                    className="flex items-center justify-between rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3 py-2"
+                  >
                   <div>
                     <p className="text-sm font-medium text-[#f2f5f0]">
                       {new Date(game.createdAt).toLocaleString("hr-HR")}
@@ -88,8 +91,9 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
                     Otvori
                   </Link>
                 </div>
-              );
-            })
+                );
+              })}
+            />
           )}
         </div>
       </section>

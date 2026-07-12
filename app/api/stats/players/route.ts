@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
-import { getRepo } from "@/lib/supabase";
-import { computePlayerStats } from "@/lib/stats";
+import { getCachedPlayerStats } from "@/lib/cachedStats";
 
 export async function GET() {
-  const repo = getRepo();
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
-  const stats = computePlayerStats(players, games, rounds);
+  const stats = await getCachedPlayerStats();
   return NextResponse.json({ stats });
 }
