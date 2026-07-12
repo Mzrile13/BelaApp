@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Trophy, Users } from "lucide-react";
 import { LogoutButton } from "@/components/LogoutButton";
@@ -41,9 +42,21 @@ async function HomeContent() {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 p-4 pb-20">
       <section className="glass-card rounded-[22px] px-5 py-[22px] shadow-[0_18px_36px_-18px_rgba(0,0,0,0.55)]">
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-[26px] font-extrabold tracking-[-0.01em] text-[#f7fbf6]">
-            Bela Tracker
-          </h1>
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[rgba(201,217,160,0.35)] shadow-[0_6px_16px_-8px_rgba(0,0,0,0.6)]">
+              <Image
+                src="/logo.png"
+                alt="Bela Tracker logo"
+                width={44}
+                height={44}
+                priority
+                className="h-full w-full object-contain"
+              />
+            </span>
+            <h1 className="text-[26px] font-extrabold tracking-[-0.01em] text-[#f7fbf6]">
+              Bela Tracker
+            </h1>
+          </div>
           <LogoutButton />
         </div>
         <p className="mt-1.5 mb-[18px] text-[13.5px] leading-[1.5] text-[#a9c2b3]">
