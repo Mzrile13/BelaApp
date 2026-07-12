@@ -15,27 +15,54 @@ interface GroupsPayload {
 
 type Step = "groups" | "setup";
 
+const AVATAR_PALETTE: Array<[string, string]> = [
+  ["#e7cd8e", "#10261c"],
+  ["#8fbfa4", "#0a1f17"],
+  ["#a9b6e0", "#0f1428"],
+  ["#e0a9b6", "#28101a"],
+  ["#c9d9a0", "#152210"],
+  ["#9fd0d0", "#0a2222"],
+];
+
+function avatarFor(id: string): { bg: string; fg: string } {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  const [bg, fg] = AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
+  return { bg, fg };
+}
+
+function initialOf(username: string): string {
+  return username.slice(0, 1).toUpperCase();
+}
+
+function memberCountLabel(count: number): string {
+  return `${count} ${count === 1 ? "igrač" : "igrača"}`;
+}
+
 export default function NewGamePage() {
   const router = useRouter();
   const [players, setPlayers] = useState<Player[]>([]);
   const [groups, setGroups] = useState<PlayerGroup[]>([]);
   const [groupPlayers, setGroupPlayers] = useState<Player[]>([]);
+  const [groupMembers, setGroupMembers] = useState<Record<string, Player[]>>({});
   const [step, setStep] = useState<Step>("groups");
   const [selectedGroupId, setSelectedGroupId] = useState("");
-  const [groupName, setGroupName] = useState("");
-  const [renameGroupName, setRenameGroupName] = useState("");
-  const [existingPlayerId, setExistingPlayerId] = useState("");
+
+  const [groupQuery, setGroupQuery] = useState("");
+  const [addingGroup, setAddingGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [renameName, setRenameName] = useState("");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [addInput, setAddInput] = useState("");
+  const [addFocused, setAddFocused] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [creatingPlayer, setCreatingPlayer] = useState(false);
   const [creatingGroup, setCreatingGroup] = useState(false);
-  const [renamingGroup, setRenamingGroup] = useState(false);
   const [deletingGroup, setDeletingGroup] = useState(false);
-  const [confirmDeleteGroup, setConfirmDeleteGroup] = useState<{ id: string; name: string } | null>(null);
-  const [confirmDeleteGroupStep, setConfirmDeleteGroupStep] = useState<1 | 2>(1);
   const [addingToGroup, setAddingToGroup] = useState(false);
-  const [removingFromGroup, setRemovingFromGroup] = useState(false);
   const [error, setError] = useState("");
-  const [newUsername, setNewUsername] = useState("");
 
   const [form, setForm] = useState({
     groupId: "",
@@ -43,14 +70,14 @@ export default function NewGamePage() {
     teamA: ["", ""] as [string, string],
     teamB: ["", ""] as [string, string],
   });
+
   const selectedGroup = useMemo(
     () => groups.find((group) => group.id === selectedGroupId) ?? null,
     [groups, selectedGroupId],
   );
 
   const selectedInTeams = useMemo(
-    () =>
-      [...form.teamA, ...form.teamB].filter((value) => value.length > 0),
+    () => [...form.teamA, ...form.teamB].filter((value) => value.length > 0),
     [form],
   );
   const playersOptionsKey = useMemo(
@@ -58,21 +85,85 @@ export default function NewGamePage() {
     [groupPlayers],
   );
 
+  const visibleGroups = useMemo(() => {
+    const query = groupQuery.trim().toLowerCase();
+    if (!query) return groups;
+    return groups.filter((group) => group.name.toLowerCase().includes(query));
+  }, [groups, groupQuery]);
+
+  const manyGroups = groups.length >= 6;
+  const showSearch = manyGroups;
+  const noGroupResults = groupQuery.trim().length > 0 && visibleGroups.length === 0;
+
+  const suggestions = useMemo(() => {
+    if (!selectedGroup || !addFocused) return [] as Array<
+      | { kind: "existing"; player: Player }
+      | { kind: "create"; name: string }
+    >;
+    const query = addInput.trim().toLowerCase();
+    const inGroup = new Set(groupPlayers.map((player) => player.id));
+    const matches = players
+      .filter(
+        (player) =>
+          !inGroup.has(player.id) &&
+          (query === "" || player.username.toLowerCase().includes(query)),
+      )
+      .slice(0, 6);
+    const list: Array<
+      | { kind: "existing"; player: Player }
+      | { kind: "create"; name: string }
+    > = matches.map((player) => ({ kind: "existing", player }));
+    const exact = players.some((player) => player.username.toLowerCase() === query);
+    if (query !== "" && !exact) {
+      list.unshift({ kind: "create", name: addInput.trim() });
+    }
+    return list;
+  }, [selectedGroup, addFocused, addInput, players, groupPlayers]);
+
+  const showSuggest = !!selectedGroup && addFocused && suggestions.length > 0;
+
+  const total = groupPlayers.length;
+  const canContinue = !!selectedGroup && total >= 4;
+  let counterLabel: string;
+  let counterColor: string;
+  if (!selectedGroup) {
+    counterLabel = "Odaberi grupu za nastavak";
+    counterColor = "#7d9587";
+  } else if (canContinue) {
+    counterLabel = `✓ ${total} igrača — spremno za postavu`;
+    counterColor = "#a9c98f";
+  } else {
+    counterLabel = `Treba ${4 - total} igrača više (min. 4)`;
+    counterColor = "#d0a97a";
+  }
+
   async function loadPlayers() {
     const response = await fetch(`/api/players?t=${Date.now()}`, { cache: "no-store" });
     const data = (await response.json()) as PlayersPayload;
     setPlayers(data.players ?? []);
   }
 
-  async function loadGroups() {
+  async function loadGroups(): Promise<PlayerGroup[]> {
     const response = await fetch(`/api/groups?t=${Date.now()}`, { cache: "no-store" });
     const data = (await response.json()) as GroupsPayload;
     const nextGroups = data.groups ?? [];
     setGroups(nextGroups);
-    if (!selectedGroupId && nextGroups[0]) {
-      setSelectedGroupId(nextGroups[0].id);
-      setRenameGroupName(nextGroups[0].name);
-    }
+    return nextGroups;
+  }
+
+  async function fetchGroupMembers(groupId: string): Promise<Player[]> {
+    const response = await fetch(`/api/groups/${groupId}/players?t=${Date.now()}`, {
+      cache: "no-store",
+    });
+    const data = (await response.json()) as PlayersPayload;
+    return data.players ?? [];
+  }
+
+  async function loadAllGroupMembers(list: PlayerGroup[]) {
+    const entries = await Promise.all(
+      list.map(async (group) => [group.id, await fetchGroupMembers(group.id)] as const),
+    );
+    setGroupMembers(Object.fromEntries(entries));
   }
 
   async function loadGroupPlayers(groupId: string) {
@@ -80,12 +171,9 @@ export default function NewGamePage() {
       setGroupPlayers([]);
       return;
     }
-    const response = await fetch(`/api/groups/${groupId}/players?t=${Date.now()}`, {
-      cache: "no-store",
-    });
-    const data = (await response.json()) as PlayersPayload;
-    const nextPlayers = data.players ?? [];
+    const nextPlayers = await fetchGroupMembers(groupId);
     setGroupPlayers(nextPlayers);
+    setGroupMembers((prev) => ({ ...prev, [groupId]: nextPlayers }));
     setForm((prev) => ({
       ...prev,
       groupId,
@@ -105,21 +193,36 @@ export default function NewGamePage() {
   }
 
   useEffect(() => {
-    void Promise.all([loadPlayers(), loadGroups()]);
+    void (async () => {
+      const [, nextGroups] = await Promise.all([loadPlayers(), loadGroups()]);
+      await loadAllGroupMembers(nextGroups);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!selectedGroupId) return;
-    setRenameGroupName(selectedGroup?.name ?? "");
+    if (!selectedGroupId) {
+      setGroupPlayers([]);
+      return;
+    }
     void loadGroupPlayers(selectedGroupId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId]);
 
-  async function createGroup() {
-    const name = groupName.trim();
+  function selectGroup(id: string) {
+    setSelectedGroupId(id);
+    setRenaming(false);
+    setConfirmingDelete(false);
+    setAddInput("");
+    setAddFocused(false);
+    setError("");
+  }
+
+  async function confirmAddGroup() {
+    const name = newGroupName.trim();
     if (!name) {
-      setError("Upiši naziv grupe.");
+      setAddingGroup(false);
+      setNewGroupName("");
       return;
     }
     setCreatingGroup(true);
@@ -136,22 +239,24 @@ export default function NewGamePage() {
       return;
     }
     const body = (await response.json()) as { group: PlayerGroup };
-    setGroupName("");
-    await loadGroups();
-    setSelectedGroupId(body.group.id);
+    setAddingGroup(false);
+    setNewGroupName("");
+    const nextGroups = await loadGroups();
+    setGroupMembers((prev) => ({ ...prev, [body.group.id]: prev[body.group.id] ?? [] }));
+    void loadAllGroupMembers(nextGroups);
+    selectGroup(body.group.id);
   }
 
-  async function renameGroup() {
-    const name = renameGroupName.trim();
-    if (!selectedGroupId || !name) return;
-    setRenamingGroup(true);
+  async function confirmRename() {
+    const name = renameName.trim();
+    setRenaming(false);
+    if (!selectedGroupId || !name || name === selectedGroup?.name) return;
     setError("");
     const response = await fetch(`/api/groups/${selectedGroupId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
-    setRenamingGroup(false);
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as { error?: string };
       setError(body.error ?? "Greška pri preimenovanju grupe");
@@ -160,31 +265,26 @@ export default function NewGamePage() {
     await loadGroups();
   }
 
-  async function deleteSelectedGroupConfirmed() {
-    if (!confirmDeleteGroup) return;
-    if (confirmDeleteGroupStep === 1) {
-      setConfirmDeleteGroupStep(2);
-      return;
-    }
+  async function confirmDelete() {
+    if (!selectedGroupId) return;
     setDeletingGroup(true);
     setError("");
-    const response = await fetch(`/api/groups/${confirmDeleteGroup.id}`, {
-      method: "DELETE",
-    });
+    const deletedId = selectedGroupId;
+    const response = await fetch(`/api/groups/${deletedId}`, { method: "DELETE" });
     setDeletingGroup(false);
-    setConfirmDeleteGroup(null);
-    setConfirmDeleteGroupStep(1);
+    setConfirmingDelete(false);
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as { error?: string };
       setError(body.error ?? "Greška pri brisanju grupe");
       return;
     }
-    const currentId = confirmDeleteGroup.id;
-    setSelectedGroupId("");
-    await loadGroups();
-    if (currentId === selectedGroupId) {
-      setGroupPlayers([]);
-    }
+    setGroupMembers((prev) => {
+      const next = { ...prev };
+      delete next[deletedId];
+      return next;
+    });
+    const nextGroups = await loadGroups();
+    selectGroup(nextGroups[0]?.id ?? "");
   }
 
   async function addPlayerToSelectedGroup(playerId: string) {
@@ -202,23 +302,19 @@ export default function NewGamePage() {
       setError(body.error ?? "Greška pri dodavanju igrača u grupu");
       return;
     }
-    setExistingPlayerId("");
+    setAddInput("");
+    setAddFocused(true);
     await loadGroupPlayers(selectedGroupId);
   }
 
   async function removePlayerFromSelectedGroup(playerId: string) {
     if (!selectedGroupId || !playerId) return;
-    const playerName = groupPlayers.find((player) => player.id === playerId)?.username ?? "ovog igrača";
-    const confirmed = window.confirm(`Maknuti ${playerName} iz grupe?`);
-    if (!confirmed) return;
-    setRemovingFromGroup(true);
     setError("");
     const response = await fetch(`/api/groups/${selectedGroupId}/players`, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ playerId }),
     });
-    setRemovingFromGroup(false);
     if (!response.ok) {
       const body = (await response.json().catch(() => ({}))) as { error?: string };
       setError(body.error ?? "Greška pri brisanju igrača iz grupe");
@@ -227,16 +323,9 @@ export default function NewGamePage() {
     await loadGroupPlayers(selectedGroupId);
   }
 
-  async function createPlayerInGroup() {
-    const username = newUsername.trim();
-    if (!selectedGroupId) {
-      setError("Prvo odaberi grupu.");
-      return;
-    }
-    if (!username) {
-      setError("Upiši username prije dodavanja.");
-      return;
-    }
+  async function createAndAddPlayer(rawName: string) {
+    const username = rawName.trim();
+    if (!selectedGroupId || !username) return;
     setCreatingPlayer(true);
     setError("");
     const response = await fetch("/api/players", {
@@ -245,17 +334,25 @@ export default function NewGamePage() {
       body: JSON.stringify({ username }),
     });
     setCreatingPlayer(false);
-
-    if (response.ok) {
-      const body = (await response.json()) as { player: Player };
-      await addPlayerToSelectedGroup(body.player.id);
-      setNewUsername("");
-      await loadPlayers();
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setError(body.error ?? "Greška pri dodavanju igrača");
       return;
     }
+    const body = (await response.json()) as { player: Player };
+    await addPlayerToSelectedGroup(body.player.id);
+    await loadPlayers();
+  }
 
-    const body = (await response.json().catch(() => ({}))) as { error?: string };
-    setError(body.error ?? "Greška pri dodavanju igrača");
+  function onAddEnter() {
+    const query = addInput.trim().toLowerCase();
+    if (!query) return;
+    const inGroup = new Set(groupPlayers.map((player) => player.id));
+    const match =
+      players.find((player) => !inGroup.has(player.id) && player.username.toLowerCase() === query) ??
+      players.find((player) => !inGroup.has(player.id) && player.username.toLowerCase().includes(query));
+    if (match) void addPlayerToSelectedGroup(match.id);
+    else void createAndAddPlayer(addInput.trim());
   }
 
   async function createGame() {
@@ -286,13 +383,106 @@ export default function NewGamePage() {
     const isTakenInAnotherTeamSlot =
       selectedInTeams.includes(player.id) && currentValue !== player.id;
     return (
-      <option
-        key={player.id}
-        value={player.id}
-        disabled={isTakenInAnotherTeamSlot}
-      >
+      <option key={player.id} value={player.id} disabled={isTakenInAnotherTeamSlot}>
         {player.username}
       </option>
+    );
+  }
+
+  function renderGroupCard(group: PlayerGroup) {
+    const isSelected = group.id === selectedGroupId;
+    const members = groupMembers[group.id] ?? [];
+    const shown = members.slice(0, 4);
+    const overflow = members.length - shown.length;
+    return (
+      <div
+        key={group.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => selectGroup(group.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            selectGroup(group.id);
+          }
+        }}
+        className="relative flex cursor-pointer flex-col rounded-2xl border-[1.5px] p-3 pr-[13px] transition-colors"
+        style={{
+          background: isSelected ? "rgba(201,217,160,.10)" : "rgba(15,50,36,.5)",
+          borderColor: isSelected ? "#c9d9a0" : "rgba(255,255,255,.06)",
+        }}
+      >
+        <div
+          className="absolute right-[10px] top-[10px] flex h-[18px] w-[18px] items-center justify-center rounded-full transition-opacity"
+          style={{
+            background: "linear-gradient(180deg, #d7f1c7, #c9d9a0)",
+            opacity: isSelected ? 1 : 0,
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+            <path
+              d="M2.5 6.2L5 8.5L9.5 3.5"
+              stroke="#10261c"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <div className="mb-[10px] flex shrink-0">
+          {shown.map((member, index) => {
+            const { bg, fg } = avatarFor(member.id);
+            return (
+              <div
+                key={member.id}
+                className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10.5px] font-extrabold"
+                style={{
+                  marginLeft: index === 0 ? 0 : "-8px",
+                  background: bg,
+                  color: fg,
+                  border: "1.5px solid #0b241b",
+                }}
+              >
+                {initialOf(member.username)}
+              </div>
+            );
+          })}
+          {overflow > 0 ? (
+            <div
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10.5px] font-extrabold"
+              style={{
+                marginLeft: shown.length === 0 ? 0 : "-8px",
+                background: "rgba(6,20,16,.85)",
+                color: "#b7ccbf",
+                border: "1.5px solid #0b241b",
+              }}
+            >
+              +{overflow}
+            </div>
+          ) : null}
+          {members.length === 0 ? (
+            <div
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[13px] font-extrabold"
+              style={{
+                background: "rgba(6,20,16,.6)",
+                color: "#6f857a",
+                border: "1.5px dashed rgba(169,194,179,.3)",
+              }}
+            >
+              ·
+            </div>
+          ) : null}
+        </div>
+        <div className="w-full min-w-0">
+          <p className="m-0 truncate text-sm font-bold text-[#f2f5f0]">{group.name}</p>
+          <p
+            className="mt-[2px] text-[11.5px] font-semibold"
+            style={{ color: isSelected ? "#c9d9a0" : "#8fa89b" }}
+          >
+            {memberCountLabel(members.length)}
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -300,176 +490,421 @@ export default function NewGamePage() {
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/" className="mb-3" />
       <section className="card p-4">
-        <h1 className="text-xl font-bold text-[#f7fbf6]">Nova partija</h1>
         {step === "groups" ? (
           <>
-            <p className="text-sm text-[#a9c2b3]">
-              Prvo odaberi ili napravi grupu igrača.
-            </p>
+            {/* header */}
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[rgba(201,217,160,.16)] text-xs font-extrabold text-[#c9d9a0]">
+                  1
+                </span>
+                <p className="m-0 text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa89b]">
+                  Korak 1 od 2 · Grupa
+                </p>
+              </div>
+              <h1 className="mt-2 text-xl font-extrabold text-[#f7fbf6]">Odabir grupe igrača</h1>
+              <p className="mt-1 text-sm text-[#97a49c]">
+                Odaberi grupu tapom ili napravi novu. Dodaj igrače u jednom polju.
+              </p>
+            </div>
 
-            <div className="mt-4 rounded-[14px] border border-[rgba(169,194,179,0.14)] bg-[rgba(6,20,16,0.22)] p-3">
-              <p className="mb-2 text-sm font-semibold text-[#a9c2b3]">Nova grupa</p>
-              <form
-                className="flex gap-2"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void createGroup();
+            {/* search */}
+            {showSearch ? (
+              <div
+                className="mt-4 flex items-center gap-2 rounded-xl py-[3px] pl-3 pr-[3px]"
+                style={{
+                  background: "rgba(6,20,16,.5)",
+                  border: "1px solid rgba(169,194,179,.16)",
                 }}
               >
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                  <circle cx="7" cy="7" r="5" stroke="#8fa89b" strokeWidth="1.3" />
+                  <path d="M11 11L14 14" stroke="#8fa89b" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
                 <input
-                  value={groupName}
-                  onChange={(event) => setGroupName(event.target.value)}
-                  className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  placeholder="Naziv nove grupe"
+                  value={groupQuery}
+                  onChange={(event) => setGroupQuery(event.target.value)}
+                  placeholder="Traži grupu…"
+                  className="min-w-0 flex-1 border-none bg-transparent py-[9px] text-[13px] font-medium text-[#eef3ee] outline-none"
                 />
-                <button
-                  type="submit"
-                  disabled={creatingGroup}
-                  className="btn-accent rounded-xl px-4 font-semibold disabled:opacity-60"
-                >
-                  {creatingGroup ? "Spremam..." : "Dodaj"}
-                </button>
-              </form>
-            </div>
-
-            <div className="mt-4">
-              <label className="text-sm text-[#dcece3]">
-                Postojeće grupe
-                <select
-                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  value={selectedGroupId}
-                  onChange={(event) => setSelectedGroupId(event.target.value)}
-                >
-                  <option value="">Odaberi grupu</option>
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            {selectedGroup ? (
-              <>
-                <form
-                  className="mt-3 flex gap-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void renameGroup();
-                  }}
-                >
-                  <input
-                    value={renameGroupName}
-                    onChange={(event) => setRenameGroupName(event.target.value)}
-                    className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                    placeholder="Promijeni naziv grupe"
-                  />
-                  <button
-                    type="submit"
-                    disabled={renamingGroup}
-                    className="rounded-xl border border-[rgba(169,194,179,0.3)] px-4 font-semibold text-[#dcece3] disabled:opacity-60"
-                  >
-                    {renamingGroup ? "Spremam..." : "Preimenuj"}
-                  </button>
-                </form>
-                <button
-                  type="button"
-                  disabled={deletingGroup}
-                  onClick={() =>
-                    setConfirmDeleteGroup({
-                      id: selectedGroup.id,
-                      name: selectedGroup.name,
-                    })
-                  }
-                  className="mt-2 rounded-xl border border-rose-400/70 px-4 py-2 text-sm font-semibold text-rose-200 disabled:opacity-60"
-                >
-                  {deletingGroup ? "Brišem grupu..." : "Obriši grupu"}
-                </button>
-
-                <form
-                  className="mt-3 flex gap-2"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void createPlayerInGroup();
-                  }}
-                >
-                  <input
-                    value={newUsername}
-                    onChange={(event) => setNewUsername(event.target.value)}
-                    className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                    placeholder="Novi username za grupu"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                  />
-                  <button
-                    type="submit"
-                    disabled={creatingPlayer || addingToGroup}
-                    className="btn-accent rounded-xl px-4 font-semibold disabled:opacity-60"
-                  >
-                    {creatingPlayer || addingToGroup ? "Dodajem..." : "Dodaj"}
-                  </button>
-                </form>
-
-                <div className="mt-3 flex gap-2">
-                  <select
-                    value={existingPlayerId}
-                    onChange={(event) => setExistingPlayerId(event.target.value)}
-                    className="w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  >
-                    <option value="">Dodaj postojećeg igrača u grupu</option>
-                    {players
-                      .filter((player) => !groupPlayers.some((member) => member.id === player.id))
-                      .map((player) => (
-                        <option key={player.id} value={player.id}>
-                          {player.username}
-                        </option>
-                      ))}
-                  </select>
+                {groupQuery.trim().length > 0 ? (
                   <button
                     type="button"
-                    disabled={!existingPlayerId || addingToGroup}
-                    onClick={() => void addPlayerToSelectedGroup(existingPlayerId)}
-                    className="rounded-xl border border-[rgba(169,194,179,0.3)] px-4 font-semibold text-[#dcece3] disabled:opacity-60"
+                    onClick={() => setGroupQuery("")}
+                    title="Očisti"
+                    className="mr-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-none bg-[rgba(255,255,255,.05)] p-0 text-[15px] leading-none text-[#8fa89b]"
                   >
-                    Dodaj
+                    ×
                   </button>
-                </div>
+                ) : null}
+              </div>
+            ) : null}
 
-                <div className="mt-3 rounded-[14px] border border-[rgba(169,194,179,0.14)] bg-[rgba(6,20,16,0.22)] p-3">
-                  <p className="text-sm font-semibold text-[#a9c2b3]">Igrači u grupi</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {groupPlayers.map((player) => (
-                      <button
-                        key={player.id}
-                        type="button"
-                        disabled={removingFromGroup}
-                        onClick={() => void removePlayerFromSelectedGroup(player.id)}
-                        className="rounded-full border border-[rgba(169,194,179,0.3)] px-3 py-1 text-sm text-[#dcece3] disabled:opacity-60"
-                        title="Ukloni igrača iz grupe"
-                      >
-                        {player.username} ×
-                      </button>
-                    ))}
-                    {groupPlayers.length === 0 ? (
-                      <span className="text-sm text-[#8fa89b]">Nema igrača u grupi.</span>
-                    ) : null}
+            {/* group grid */}
+            <div
+              className={`mt-4 grid grid-cols-2 gap-[10px]${
+                manyGroups ? " no-scrollbar overflow-y-auto pr-[2px]" : ""
+              }`}
+              style={manyGroups ? { maxHeight: 300 } : undefined}
+            >
+              {visibleGroups.map((group) => renderGroupCard(group))}
+
+              {noGroupResults ? (
+                <div className="col-span-2 px-2 py-[14px] text-center text-[12.5px] text-[#7d9587]">
+                  Nema grupe za „{groupQuery.trim()}”.
+                </div>
+              ) : null}
+
+              {/* new group tile / inline input */}
+              {addingGroup ? (
+                <div
+                  className="col-span-2 flex min-h-[96px] flex-col justify-center gap-2 rounded-2xl p-[11px]"
+                  style={{
+                    background: "rgba(6,20,16,.5)",
+                    border: "1.5px solid rgba(201,217,160,.5)",
+                  }}
+                >
+                  <input
+                    autoFocus
+                    value={newGroupName}
+                    onChange={(event) => setNewGroupName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void confirmAddGroup();
+                      if (event.key === "Escape") {
+                        setAddingGroup(false);
+                        setNewGroupName("");
+                      }
+                    }}
+                    placeholder="Naziv grupe"
+                    className="w-full rounded-[10px] px-[10px] py-2 text-[13px] font-semibold text-[#eef3ee] outline-none"
+                    style={{
+                      background: "rgba(6,20,16,.55)",
+                      border: "1px solid rgba(169,194,179,.24)",
+                    }}
+                  />
+                  <div className="flex gap-[6px]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddingGroup(false);
+                        setNewGroupName("");
+                      }}
+                      className="shrink-0 rounded-[9px] bg-transparent px-[10px] py-[7px] text-xs font-bold text-[#b7ccbf]"
+                      style={{ border: "1px solid rgba(169,194,179,.28)" }}
+                    >
+                      Odustani
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void confirmAddGroup()}
+                      disabled={creatingGroup}
+                      className="flex-1 rounded-[9px] border-none px-[10px] py-[7px] text-xs font-extrabold text-[#10261c] disabled:opacity-60"
+                      style={{ background: "linear-gradient(180deg, #d7f1c7, #c9d9a0)" }}
+                    >
+                      {creatingGroup ? "Spremam…" : "Kreiraj"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setAddingGroup(true);
+                    setNewGroupName("");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setAddingGroup(true);
+                      setNewGroupName("");
+                    }
+                  }}
+                  className="flex min-h-[96px] cursor-pointer flex-col items-center justify-center gap-[7px] rounded-2xl p-[13px] transition-colors"
+                  style={{
+                    background: "rgba(201,217,160,.04)",
+                    border: "1.5px dashed rgba(201,217,160,.32)",
+                  }}
+                >
+                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[rgba(201,217,160,.14)] text-[20px] font-medium leading-none text-[#c9d9a0]">
+                    +
+                  </div>
+                  <p className="m-0 text-[12.5px] font-bold text-[#c9d9a0]">Nova grupa</p>
+                </div>
+              )}
+            </div>
+
+            {/* selected group detail */}
+            {selectedGroup ? (
+              <div
+                className="mt-4 flex flex-col gap-3 rounded-[18px] p-[14px]"
+                style={{
+                  background: "rgba(15,50,36,.5)",
+                  border: "1px solid rgba(255,255,255,.06)",
+                }}
+              >
+                {/* header + menu */}
+                <div className="flex items-center justify-between gap-2">
+                  {renaming ? (
+                    <input
+                      autoFocus
+                      value={renameName}
+                      onChange={(event) => setRenameName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") void confirmRename();
+                        if (event.key === "Escape") setRenaming(false);
+                      }}
+                      onBlur={() => void confirmRename()}
+                      className="flex-1 rounded-[9px] px-[9px] py-[6px] text-sm font-bold text-[#eef3ee] outline-none"
+                      style={{
+                        background: "rgba(6,20,16,.55)",
+                        border: "1px solid rgba(201,217,160,.5)",
+                      }}
+                    />
+                  ) : (
+                    <p className="m-0 text-[14.5px] font-extrabold text-[#f7fbf6]">
+                      {selectedGroup.name}
+                    </p>
+                  )}
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRenaming(true);
+                        setRenameName(selectedGroup.name);
+                        setConfirmingDelete(false);
+                      }}
+                      title="Preimenuj"
+                      className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] p-0"
+                      style={{
+                        background: "rgba(6,20,16,.35)",
+                        border: "1px solid rgba(169,194,179,.2)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M11 2.5L13.5 5L5.5 13H3V10.5L11 2.5Z"
+                          stroke="#b7ccbf"
+                          strokeWidth="1.3"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmingDelete(true);
+                        setRenaming(false);
+                      }}
+                      title="Obriši grupu"
+                      className="flex h-[30px] w-[30px] items-center justify-center rounded-[9px] p-0"
+                      style={{
+                        background: confirmingDelete ? "rgba(190,70,70,.18)" : "rgba(6,20,16,.35)",
+                        border: confirmingDelete
+                          ? "1px solid rgba(220,110,110,.5)"
+                          : "1px solid rgba(169,194,179,.2)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                        <path
+                          d="M3 4.5H13M6.5 4.5V3.2C6.5 2.8 6.8 2.5 7.2 2.5H8.8C9.2 2.5 9.5 2.8 9.5 3.2V4.5M5 4.5V13C5 13.4 5.3 13.7 5.7 13.7H10.3C10.7 13.7 11 13.4 11 13V4.5"
+                          stroke={confirmingDelete ? "#e79a9a" : "#b7ccbf"}
+                          strokeWidth="1.3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setStep("setup")}
-                  disabled={groupPlayers.length < 4}
-                  className="btn-accent mt-4 w-full rounded-xl py-3 font-semibold disabled:opacity-60"
-                >
-                  Nastavi na postavu partije
-                </button>
-              </>
+                {confirmingDelete ? (
+                  <div
+                    className="flex items-center gap-[10px] rounded-xl px-[11px] py-[10px]"
+                    style={{
+                      background: "rgba(190,70,70,.12)",
+                      border: "1px solid rgba(220,110,110,.34)",
+                    }}
+                  >
+                    <p className="m-0 flex-1 text-xs font-semibold leading-[1.35] text-[#f0c9c9]">
+                      Obrisati grupu i sve članove iz nje?
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(false)}
+                      className="rounded-lg bg-transparent px-[9px] py-[6px] text-[11.5px] font-bold text-[#b7ccbf]"
+                      style={{ border: "1px solid rgba(169,194,179,.28)" }}
+                    >
+                      Ne
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void confirmDelete()}
+                      disabled={deletingGroup}
+                      className="rounded-lg border-none px-[11px] py-[6px] text-[11.5px] font-extrabold text-[#2a0c0c] disabled:opacity-60"
+                      style={{ background: "linear-gradient(180deg, #f0a3a3, #e07a7a)" }}
+                    >
+                      {deletingGroup ? "Brišem…" : "Obriši"}
+                    </button>
+                  </div>
+                ) : null}
+
+                {/* members */}
+                <div className="flex flex-wrap gap-[7px]">
+                  {groupPlayers.map((member) => {
+                    const { bg, fg } = avatarFor(member.id);
+                    return (
+                      <div
+                        key={member.id}
+                        className="flex items-center gap-[7px] rounded-full py-[5px] pl-[5px] pr-[6px]"
+                        style={{
+                          background: "rgba(6,20,16,.5)",
+                          border: "1px solid rgba(169,194,179,.16)",
+                        }}
+                      >
+                        <div
+                          className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-extrabold"
+                          style={{ background: bg, color: fg }}
+                        >
+                          {initialOf(member.username)}
+                        </div>
+                        <span className="text-[12.5px] font-semibold text-[#e6efe8]">
+                          {member.username}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void removePlayerFromSelectedGroup(member.id)}
+                          title="Ukloni"
+                          className="flex h-[18px] w-[18px] items-center justify-center rounded-full border-none bg-[rgba(255,255,255,.05)] p-0 text-[13px] leading-none text-[#8fa89b]"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {groupPlayers.length === 0 ? (
+                    <span className="py-1 text-xs text-[#7d9587]">
+                      Još nema igrača u ovoj grupi.
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* smart add player */}
+                <div className="relative">
+                  <div
+                    className="flex items-center gap-2 rounded-xl py-[3px] pl-3 pr-[3px]"
+                    style={{
+                      background: "rgba(6,20,16,.5)",
+                      border: addFocused
+                        ? "1px solid rgba(201,217,160,.45)"
+                        : "1px solid rgba(169,194,179,.16)",
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                      <circle cx="7" cy="7" r="5" stroke="#8fa89b" strokeWidth="1.3" />
+                      <path d="M11 11L14 14" stroke="#8fa89b" strokeWidth="1.3" strokeLinecap="round" />
+                    </svg>
+                    <input
+                      value={addInput}
+                      onChange={(event) => {
+                        setAddInput(event.target.value);
+                        setAddFocused(true);
+                      }}
+                      onFocus={() => setAddFocused(true)}
+                      onBlur={() => window.setTimeout(() => setAddFocused(false), 120)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") onAddEnter();
+                        if (event.key === "Escape") setAddFocused(false);
+                      }}
+                      placeholder="Dodaj igrača — traži ili upiši novog"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      className="min-w-0 flex-1 border-none bg-transparent py-[9px] text-[13px] font-medium text-[#eef3ee] outline-none"
+                    />
+                    {creatingPlayer || addingToGroup ? (
+                      <span className="mr-2 text-[11px] font-semibold text-[#8fa89b]">…</span>
+                    ) : null}
+                  </div>
+                  {showSuggest ? (
+                    <div
+                      onMouseDown={(event) => event.preventDefault()}
+                      className="absolute left-0 right-0 z-10 mt-[6px] max-h-[220px] overflow-y-auto rounded-xl p-[5px]"
+                      style={{
+                        top: "100%",
+                        background: "#0c241b",
+                        border: "1px solid rgba(169,194,179,.2)",
+                        boxShadow: "0 20px 40px -14px rgba(0,0,0,.7)",
+                      }}
+                    >
+                      {suggestions.map((suggestion) => {
+                        if (suggestion.kind === "create") {
+                          return (
+                            <div
+                              key="__create"
+                              onClick={() => void createAndAddPlayer(suggestion.name)}
+                              className="flex cursor-pointer items-center gap-[9px] rounded-[9px] px-[9px] py-2"
+                              style={{ background: "rgba(201,217,160,.06)" }}
+                            >
+                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[rgba(201,217,160,.16)] text-[11px] font-extrabold text-[#c9d9a0]">
+                                +
+                              </div>
+                              <span className="flex-1 text-[13px] font-semibold text-[#e6efe8]">
+                                &quot;{suggestion.name}&quot;
+                              </span>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#c9d9a0]">
+                                Kreiraj novog
+                              </span>
+                            </div>
+                          );
+                        }
+                        const { bg, fg } = avatarFor(suggestion.player.id);
+                        return (
+                          <div
+                            key={suggestion.player.id}
+                            onClick={() => void addPlayerToSelectedGroup(suggestion.player.id)}
+                            className="flex cursor-pointer items-center gap-[9px] rounded-[9px] px-[9px] py-2"
+                          >
+                            <div
+                              className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-extrabold"
+                              style={{ background: bg, color: fg }}
+                            >
+                              {initialOf(suggestion.player.username)}
+                            </div>
+                            <span className="flex-1 text-[13px] font-semibold text-[#e6efe8]">
+                              {suggestion.player.username}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             ) : null}
+
+            {/* counter + CTA */}
+            <div className="mt-4 flex flex-col gap-2">
+              <div
+                className="flex items-center justify-center gap-[6px] text-xs font-semibold"
+                style={{ color: counterColor }}
+              >
+                <span>{counterLabel}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (canContinue) setStep("setup");
+                }}
+                disabled={!canContinue}
+                className="btn-accent w-full rounded-2xl p-[15px] text-[15px] font-extrabold disabled:opacity-60"
+              >
+                {canContinue ? "Nastavi na postavu partije" : "Odaberi 4+ igrača"}
+              </button>
+            </div>
           </>
         ) : (
           <>
+            <h1 className="text-xl font-bold text-[#f7fbf6]">Nova partija</h1>
             <p className="text-sm text-[#a9c2b3]">
               Grupa: <span className="font-semibold text-[#f7fbf6]">{selectedGroup?.name ?? "-"}</span>
             </p>
@@ -572,39 +1007,6 @@ export default function NewGamePage() {
 
         {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
       </section>
-
-      {confirmDeleteGroup ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[#0a2019] p-4 shadow-2xl">
-            <h3 className="text-base font-bold text-[#f7fbf6]">Potvrda brisanja grupe</h3>
-            <p className="mt-2 text-sm text-[#dcece3]">
-              {confirmDeleteGroupStep === 1
-                ? `Želiš li obrisati grupu "${confirmDeleteGroup.name}"?`
-                : "Jesi li stvarno siguran? Ova radnja trajno briše grupu i članove iz te grupe."}
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirmDeleteGroup(null);
-                  setConfirmDeleteGroupStep(1);
-                }}
-                className="rounded-lg border border-[rgba(169,194,179,0.3)] px-3 py-2 text-sm font-semibold text-[#dcece3]"
-              >
-                Odustani
-              </button>
-              <button
-                type="button"
-                onClick={() => void deleteSelectedGroupConfirmed()}
-                disabled={deletingGroup}
-                className="rounded-lg border border-rose-400/70 bg-rose-900/30 px-3 py-2 text-sm font-semibold text-rose-200 disabled:opacity-60"
-              >
-                {confirmDeleteGroupStep === 1 ? "Nastavi" : deletingGroup ? "Brišem..." : "Obriši trajno"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </main>
   );
 }

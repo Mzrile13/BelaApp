@@ -59,6 +59,15 @@ a {
   border: 1px solid rgba(201, 217, 160, 0.14);
 }
 
+/* Hide scrollbar while keeping the area scrollable (e.g. the group grid at 5+ groups). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 .btn-accent {
   background: linear-gradient(180deg, #d7f1c7, var(--accent));
   color: #10261c;
