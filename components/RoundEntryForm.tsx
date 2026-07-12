@@ -24,12 +24,6 @@ interface RoundEntryFormProps {
 type PointsField = "pointsTeamA" | "pointsTeamB";
 type ZvanjaValue = 20 | 50 | 100 | 150 | 200;
 
-const keypadRows = [
-  ["1", "2", "3"],
-  ["4", "5", "6"],
-  ["7", "8", "9"],
-  ["0"],
-];
 const calledSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
 
 export function RoundEntryForm({
@@ -297,316 +291,311 @@ export function RoundEntryForm({
     syncZvanja(zvanjaTokensByPlayerA, nextMap);
   }
 
-  const sectionLabelClass =
-    "mb-[5px] text-[12px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]";
-  const teamPanelClass =
-    "rounded-[10px] border border-[rgba(169,194,179,0.14)] bg-[rgba(6,20,16,0.22)] p-1.5";
-  const teamPanelLabelClass =
-    "mb-1 text-center text-[10.5px] font-bold uppercase tracking-[0.03em] text-[#8fa89b]";
+  const stepPanelClass =
+    "flex flex-col gap-2.5 rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-3";
+  const stepBadgeClass =
+    "flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-[rgba(201,217,160,0.16)] text-[11px] font-extrabold text-[#c9d9a0]";
+  const stepTitleClass =
+    "text-[12px] font-bold uppercase tracking-[0.05em] text-[#8fa89b]";
+  const teamMiniLabelClass =
+    "mb-1 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-[#7d9587]";
+  const selectedChipClass =
+    "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]";
+  const offChipClass = "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]";
+
+  const activeZvanjaTokens =
+    (game.teams.teamA.includes(activeZvanjaPlayerId)
+      ? zvanjaTokensByPlayerA[activeZvanjaPlayerId]
+      : zvanjaTokensByPlayerB[activeZvanjaPlayerId]) ?? [];
 
   return (
-    <section className="rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-3">
-      <h2 className="mb-2 text-[15px] font-bold text-[#f2f5f0]">Unos nove ruke</h2>
-      {dealerName ? (
-        <p className="mb-2 text-[14.5px] font-semibold text-[#a9c2b3]">Dijeli: {dealerName}</p>
-      ) : null}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="col-span-2">
-          <p className={sectionLabelClass}>Tko je zvao</p>
-          <div className="grid grid-cols-2 gap-1.5">
-            <div className={teamPanelClass}>
-              <p className={teamPanelLabelClass}>Tim A</p>
-              <div className="grid grid-cols-2 gap-1">
-                {teamAPlayers.map((player) => (
-                  <button
-                    key={player.id}
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
-                    className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
-                      form.callerPlayerId === player.id
-                        ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
-                        : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
-                    }`}
-                  >
-                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
+    <section className="flex flex-col gap-3 rounded-[24px] border border-[rgba(255,255,255,0.05)] bg-[radial-gradient(120%_60%_at_85%_-10%,rgba(201,217,160,0.08)_0%,transparent_55%),linear-gradient(165deg,#0d2a20_0%,#071a14_55%,#061410_100%)] p-4">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-[16px] font-extrabold text-[#f7fbf6]">Unos nove ruke</h2>
+        {dealerName ? (
+          <p className="text-[13px] font-semibold text-[#a9c2b3]">Dijeli: {dealerName}</p>
+        ) : null}
+      </div>
 
-            <div className={teamPanelClass}>
-              <p className={teamPanelLabelClass}>Tim B</p>
-              <div className="grid grid-cols-2 gap-1">
-                {teamBPlayers.map((player) => (
-                  <button
-                    key={player.id}
-                    type="button"
-                    onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
-                    className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
-                      form.callerPlayerId === player.id
-                        ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
-                        : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
-                    }`}
-                  >
-                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* KORAK 1 — tko je zvao i koji znak */}
+      <div className={stepPanelClass}>
+        <div className="flex items-center gap-[7px]">
+          <span className={stepBadgeClass}>1</span>
+          <p className={stepTitleClass}>Tko je zvao i koji znak</p>
         </div>
 
-        <div className="col-span-2">
-          <p className={sectionLabelClass}>Zvani znak</p>
-          <div className="grid grid-cols-4 gap-[5px]">
-            {calledSuits.map((suit) => (
-              <button
-                key={suit}
-                type="button"
-                onClick={() => setForm((prev) => ({ ...prev, calledSuit: suit }))}
-                className="block"
-              >
-                <SuitBadge suit={suit} selected={form.calledSuit === suit} chip />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setActivePointsField("pointsTeamA")}
-          className={`rounded-[11px] border px-[9px] py-2 text-left ${
-            activePointsField === "pointsTeamA"
-              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-              : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-          }`}
-        >
-          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Bodovi Tim A</p>
-          <p className="mt-px font-mono text-[23px] font-extrabold text-[#f7fbf6]">
-            {form.pointsTeamA}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActivePointsField("pointsTeamB")}
-          className={`rounded-[11px] border px-[9px] py-2 text-left ${
-            activePointsField === "pointsTeamB"
-              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-              : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-          }`}
-        >
-          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Bodovi Tim B</p>
-          <p className="mt-px font-mono text-[23px] font-extrabold text-[#f7fbf6]">
-            {form.pointsTeamB}
-          </p>
-        </button>
-
-        <div className="col-span-2 rounded-[13px] bg-[rgba(6,20,16,0.4)] p-2">
-          <div className="space-y-1.5">
-            {keypadRows.slice(0, 3).map((row, rowIndex) => (
-              <div key={`row-${rowIndex}`} className="grid grid-cols-3 gap-1.5">
-                {row.map((digit) => (
-                  <button
-                    type="button"
-                    key={digit}
-                    onClick={() => appendDigitToPoints(digit)}
-                    className="rounded-[8px] bg-[rgba(255,255,255,0.05)] py-2 text-center font-mono text-[16px] font-bold text-[#eef3ee]"
-                  >
-                    {digit}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="mt-1.5 grid grid-cols-3 gap-1.5">
-            <button
-              type="button"
-              onClick={() => appendDigitToPoints("0")}
-              className="rounded-[8px] bg-[rgba(255,255,255,0.05)] py-2 text-center font-mono text-[16px] font-bold text-[#eef3ee]"
-            >
-              0
-            </button>
-            <button
-              type="button"
-              onClick={backspacePoints}
-              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[13px] font-bold text-[#c9d9a0]"
-            >
-              Del
-            </button>
-            <button
-              type="button"
-              onClick={clearPoints}
-              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[13px] font-bold text-[#c9d9a0]"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setActiveZvanjaPlayerId(teamAPlayers[0]?.id ?? "")}
-          className={`rounded-[11px] border px-[9px] py-2 text-left ${
-            game.teams.teamA.includes(activeZvanjaPlayerId)
-              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-              : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-          }`}
-        >
-          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Zvanja Tim A</p>
-          <p className="mt-px font-mono text-[20px] font-extrabold text-[#f7fbf6]">
-            {form.zvanjaTeamA}
-          </p>
-          <p className="mt-0.5 text-[11.5px] text-[#8fa89b]">
-            {teamAPlayers
-              .map((player) => ({
-                username: player.username,
-                total: (zvanjaTokensByPlayerA[player.id] ?? []).reduce(
-                  (sum, value) => sum + value,
-                  0,
-                ),
-              }))
-              .filter((entry) => entry.total > 0)
-              .map((entry) => `${entry.username}: ${entry.total}`)
-              .join(" | ") || "Nema zvanja"}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveZvanjaPlayerId(teamBPlayers[0]?.id ?? "")}
-          className={`rounded-[11px] border px-[9px] py-2 text-left ${
-            game.teams.teamB.includes(activeZvanjaPlayerId)
-              ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-              : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-          }`}
-        >
-          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Zvanja Tim B</p>
-          <p className="mt-px font-mono text-[20px] font-extrabold text-[#f7fbf6]">
-            {form.zvanjaTeamB}
-          </p>
-          <p className="mt-0.5 text-[11.5px] text-[#8fa89b]">
-            {teamBPlayers
-              .map((player) => ({
-                username: player.username,
-                total: (zvanjaTokensByPlayerB[player.id] ?? []).reduce(
-                  (sum, value) => sum + value,
-                  0,
-                ),
-              }))
-              .filter((entry) => entry.total > 0)
-              .map((entry) => `${entry.username}: ${entry.total}`)
-              .join(" | ") || "Nema zvanja"}
-          </p>
-        </button>
-
-        <div className="col-span-2 rounded-[13px] bg-[rgba(6,20,16,0.4)] p-2">
-          <p className="mb-1.5 text-[12px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
-            Odaberi igrača kojem upisuješ zvanje
-          </p>
-          <div className="grid grid-cols-1 gap-1.5">
-            <div className={teamPanelClass}>
-              <p className={teamPanelLabelClass}>Tim A</p>
-              <div className="grid grid-cols-2 gap-1">
-                {teamAPlayers.map((player) => {
-                  const playerTotal = (zvanjaTokensByPlayerA[player.id] ?? []).reduce(
-                    (sum, value) => sum + value,
-                    0,
-                  );
-                  return (
-                    <button
-                      key={player.id}
-                      type="button"
-                      onClick={() => setActiveZvanjaPlayerId(player.id)}
-                      className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
-                        activeZvanjaPlayerId === player.id
-                          ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
-                          : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
-                      }`}
-                    >
-                      <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                      <p className="text-[10.5px] text-[#8fa89b]">Zvanje: {playerTotal}</p>
-                    </button>
-                  );
-                })}
-              </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className={teamMiniLabelClass}>Tim A</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {teamAPlayers.map((player) => (
+                <button
+                  key={player.id}
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
+                  className={`rounded-[9px] border px-[3px] py-2 text-center ${
+                    form.callerPlayerId === player.id ? selectedChipClass : offChipClass
+                  }`}
+                >
+                  <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
+                </button>
+              ))}
             </div>
-
-            <div className={teamPanelClass}>
-              <p className={teamPanelLabelClass}>Tim B</p>
-              <div className="grid grid-cols-2 gap-1">
-                {teamBPlayers.map((player) => {
-                  const playerTotal = (zvanjaTokensByPlayerB[player.id] ?? []).reduce(
-                    (sum, value) => sum + value,
-                    0,
-                  );
-                  return (
-                    <button
-                      key={player.id}
-                      type="button"
-                      onClick={() => setActiveZvanjaPlayerId(player.id)}
-                      className={`rounded-[8px] border px-[3px] py-[7px] text-center ${
-                        activeZvanjaPlayerId === player.id
-                          ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]"
-                          : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
-                      }`}
-                    >
-                      <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                      <p className="text-[10.5px] text-[#8fa89b]">Zvanje: {playerTotal}</p>
-                    </button>
-                  );
-                })}
-              </div>
+          </div>
+          <div>
+            <p className={teamMiniLabelClass}>Tim B</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {teamBPlayers.map((player) => (
+                <button
+                  key={player.id}
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
+                  className={`rounded-[9px] border px-[3px] py-2 text-center ${
+                    form.callerPlayerId === player.id ? selectedChipClass : offChipClass
+                  }`}
+                >
+                  <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="col-span-2">
-          <p className={sectionLabelClass}>Zvanja</p>
-          <div className="grid grid-cols-5 gap-[5px]">
-            {[20, 50, 100, 150, 200].map((value) => (
-              <button
-                type="button"
-                key={value}
-                onClick={() => applyZvanja(value as ZvanjaValue)}
-                className="rounded-[8px] bg-[rgba(201,217,160,0.85)] py-[7px] text-center text-[12.5px] font-bold text-[#10261c]"
-              >
-                +{value}
-              </button>
-            ))}
-          </div>
-          <div className="mt-1.5 flex items-center justify-between gap-2 rounded-[10px] bg-[rgba(6,20,16,0.4)] px-2.5 py-2">
+        <div className="grid grid-cols-4 gap-1.5">
+          {calledSuits.map((suit) => (
             <button
+              key={suit}
               type="button"
-              onClick={applyStigliaForActivePointsTeam}
-              className={`shrink-0 rounded-[7px] px-[9px] py-[5px] text-[12px] font-bold whitespace-nowrap ${
-                form.stigliaTeam
-                  ? "bg-[rgba(201,217,160,0.85)] text-[#10261c]"
-                  : "bg-[rgba(6,20,16,0.5)] text-[#a9c2b3]"
-              }`}
+              onClick={() => setForm((prev) => ({ ...prev, calledSuit: suit }))}
+              className="block"
             >
-              Štiglja +90
+              <SuitBadge suit={suit} selected={form.calledSuit === suit} chip />
             </button>
-            <p className="min-w-0 flex-1 text-right text-[12.5px] text-[#a9c2b3]">
-              {form.stigliaTeam ? `Upisana: Tim ${form.stigliaTeam}` : "Nije upisana"}
-            </p>
-          </div>
+          ))}
+        </div>
+      </div>
+
+      {/* KORAK 2 — bodovi iz čiste igre */}
+      <div className={stepPanelClass}>
+        <div className="flex items-center gap-[7px]">
+          <span className={stepBadgeClass}>2</span>
+          <p className={stepTitleClass}>Bodovi iz čiste igre</p>
+          <span className="ml-auto text-[11px] font-semibold text-[#7d9587]">zbroj = 162</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={clearZvanjaForActivePlayer}
-            className="mt-1.5 w-full rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[13px] font-bold text-[#c9d9a0]"
+            onClick={() => setActivePointsField("pointsTeamA")}
+            className={`rounded-[11px] border px-[10px] py-2 text-left ${
+              activePointsField === "pointsTeamA"
+                ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
+                : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
+            }`}
           >
-            Reset aktivnog igrača
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-[#8fa89b]">Tim A</p>
+              {activePointsField === "pointsTeamA" ? (
+                <span className="text-[9px] font-extrabold tracking-[0.05em] text-[#c9d9a0]">
+                  ● UNOS
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-px font-mono text-[24px] font-extrabold text-[#f7fbf6]">
+              {form.pointsTeamA}
+            </p>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActivePointsField("pointsTeamB")}
+            className={`rounded-[11px] border px-[10px] py-2 text-left ${
+              activePointsField === "pointsTeamB"
+                ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
+                : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-[#8fa89b]">Tim B</p>
+              {activePointsField === "pointsTeamB" ? (
+                <span className="text-[9px] font-extrabold tracking-[0.05em] text-[#c9d9a0]">
+                  ● UNOS
+                </span>
+              ) : null}
+            </div>
+            <p className="mt-px font-mono text-[24px] font-extrabold text-[#f7fbf6]">
+              {form.pointsTeamB}
+            </p>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-1.5">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map((digit) => (
+            <button
+              type="button"
+              key={digit}
+              onClick={() => appendDigitToPoints(digit)}
+              className="rounded-[9px] bg-[rgba(255,255,255,0.05)] py-[9px] text-center font-mono text-[15px] font-bold text-[#eef3ee]"
+            >
+              {digit}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={backspacePoints}
+            className="rounded-[9px] bg-[rgba(201,217,160,0.12)] py-[9px] text-center text-[12px] font-bold text-[#c9d9a0]"
+          >
+            ⌫ Del
+          </button>
+          <button
+            type="button"
+            onClick={clearPoints}
+            className="rounded-[9px] bg-[rgba(201,217,160,0.12)] py-[9px] text-center text-[12px] font-bold text-[#c9d9a0]"
+          >
+            Clear
           </button>
         </div>
       </div>
 
-      {error ? <p className="mt-2 text-[14.5px] font-semibold text-rose-300">{error}</p> : null}
+      {/* KORAK 3 — zvanja */}
+      <div className={stepPanelClass}>
+        <div className="flex items-center gap-[7px]">
+          <span className={stepBadgeClass}>3</span>
+          <p className={stepTitleClass}>Zvanja</p>
+          <span className="ml-auto text-[11px] text-[#a9c2b3]">
+            A <b className="font-mono text-[#eef3ee]">{form.zvanjaTeamA}</b> · B{" "}
+            <b className="font-mono text-[#eef3ee]">{form.zvanjaTeamB}</b>
+          </span>
+        </div>
 
-      <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+        <p className="text-[10.5px] text-[#7d9587]">Odaberi igrača, pa dodaj vrijednost:</p>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className={teamMiniLabelClass}>Tim A</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {teamAPlayers.map((player) => {
+                const playerTotal = (zvanjaTokensByPlayerA[player.id] ?? []).reduce(
+                  (sum, value) => sum + value,
+                  0,
+                );
+                return (
+                  <button
+                    key={player.id}
+                    type="button"
+                    onClick={() => setActiveZvanjaPlayerId(player.id)}
+                    className={`rounded-[9px] border px-[3px] py-1.5 text-center ${
+                      activeZvanjaPlayerId === player.id ? selectedChipClass : offChipClass
+                    }`}
+                  >
+                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
+                    <p
+                      className={`mt-px font-mono text-[12px] font-bold ${
+                        playerTotal > 0 ? "text-[#c9d9a0]" : "text-[#5f7168]"
+                      }`}
+                    >
+                      {playerTotal}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className={teamMiniLabelClass}>Tim B</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {teamBPlayers.map((player) => {
+                const playerTotal = (zvanjaTokensByPlayerB[player.id] ?? []).reduce(
+                  (sum, value) => sum + value,
+                  0,
+                );
+                return (
+                  <button
+                    key={player.id}
+                    type="button"
+                    onClick={() => setActiveZvanjaPlayerId(player.id)}
+                    className={`rounded-[9px] border px-[3px] py-1.5 text-center ${
+                      activeZvanjaPlayerId === player.id ? selectedChipClass : offChipClass
+                    }`}
+                  >
+                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
+                    <p
+                      className={`mt-px font-mono text-[12px] font-bold ${
+                        playerTotal > 0 ? "text-[#c9d9a0]" : "text-[#5f7168]"
+                      }`}
+                    >
+                      {playerTotal}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-5 gap-1.5">
+          {[20, 50, 100, 150, 200].map((value) => {
+            const toggle = value === 150 || value === 200;
+            const active = toggle && activeZvanjaTokens.includes(value as ZvanjaValue);
+            return (
+              <button
+                type="button"
+                key={value}
+                onClick={() => applyZvanja(value as ZvanjaValue)}
+                className={`rounded-[8px] border py-2 text-center text-[12px] font-extrabold text-[#10261c] ${
+                  active
+                    ? "border-[rgba(255,255,255,0.55)] bg-[#d7f1c7]"
+                    : "border-transparent bg-[rgba(201,217,160,0.85)]"
+                }`}
+              >
+                +{value}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-stretch gap-1.5">
+          <button
+            type="button"
+            onClick={applyStigliaForActivePointsTeam}
+            className={`flex flex-1 items-center justify-between gap-2 rounded-[10px] border px-3 py-2 ${
+              form.stigliaTeam
+                ? "border-transparent bg-[rgba(201,217,160,0.85)]"
+                : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
+            }`}
+          >
+            <span
+              className={`text-[12px] font-extrabold ${
+                form.stigliaTeam ? "text-[#10261c]" : "text-[#dcece3]"
+              }`}
+            >
+              Štiglja +90
+            </span>
+            <span
+              className={`text-[10.5px] font-semibold ${
+                form.stigliaTeam ? "text-[rgba(16,38,28,0.75)]" : "text-[#7d9587]"
+              }`}
+            >
+              {form.stigliaTeam ? `Tim ${form.stigliaTeam}` : "Nije upisana"}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={clearZvanjaForActivePlayer}
+            className="flex flex-shrink-0 items-center rounded-[10px] bg-[rgba(6,20,16,0.5)] px-3 py-2 text-[11.5px] font-bold text-[#a9c2b3]"
+          >
+            Reset igrača
+          </button>
+        </div>
+      </div>
+
+      {error ? <p className="text-[14px] font-semibold text-rose-300">{error}</p> : null}
+
+      <div className="grid grid-cols-[1fr_1.6fr] gap-2">
         {onCancel ? (
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[11px] border border-[rgba(169,194,179,0.3)] py-[11px] text-center text-[14px] font-bold text-[#dcece3]"
+            className="rounded-[12px] border border-[rgba(169,194,179,0.3)] py-3 text-center text-[13px] font-bold text-[#dcece3]"
           >
             Nazad
           </button>
@@ -615,7 +604,7 @@ export function RoundEntryForm({
           type="button"
           onClick={submit}
           disabled={loading}
-          className={`btn-accent rounded-[11px] py-[11px] text-center text-[14px] font-bold disabled:opacity-60 ${
+          className={`btn-accent rounded-[12px] py-3 text-center text-[13px] font-extrabold disabled:opacity-60 ${
             onCancel ? "" : "col-span-2"
           }`}
         >
