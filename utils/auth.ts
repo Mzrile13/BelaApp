@@ -38,10 +38,14 @@ async function sign(payload: string) {
 }
 
 function timingSafeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let mismatch = 0;
-  for (let i = 0; i < a.length; i += 1) {
-    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  // Iteriramo uvijek preko duljeg niza (bez ranog izlaza na razlici duljine),
+  // pa vrijeme izvođenja ne otkriva podudaranje prefiksa ni duljinu tajne.
+  const len = Math.max(a.length, b.length);
+  let mismatch = a.length ^ b.length;
+  for (let i = 0; i < len; i += 1) {
+    const ca = i < a.length ? a.charCodeAt(i) : 0;
+    const cb = i < b.length ? b.charCodeAt(i) : 0;
+    mismatch |= ca ^ cb;
   }
   return mismatch === 0;
 }
