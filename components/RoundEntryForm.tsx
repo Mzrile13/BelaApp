@@ -298,17 +298,17 @@ export function RoundEntryForm({
   }
 
   const sectionLabelClass =
-    "mb-[5px] text-[10.5px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]";
+    "mb-[5px] text-[12px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]";
   const teamPanelClass =
     "rounded-[10px] border border-[rgba(169,194,179,0.14)] bg-[rgba(6,20,16,0.22)] p-1.5";
   const teamPanelLabelClass =
-    "mb-1 text-center text-[9px] font-bold uppercase tracking-[0.03em] text-[#8fa89b]";
+    "mb-1 text-center text-[10.5px] font-bold uppercase tracking-[0.03em] text-[#8fa89b]";
 
   return (
     <section className="rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-3">
-      <h2 className="mb-2 text-[13.5px] font-bold text-[#f2f5f0]">Unos nove ruke</h2>
+      <h2 className="mb-2 text-[15px] font-bold text-[#f2f5f0]">Unos nove ruke</h2>
       {dealerName ? (
-        <p className="mb-2 text-[13px] font-semibold text-[#a9c2b3]">Dijeli: {dealerName}</p>
+        <p className="mb-2 text-[14.5px] font-semibold text-[#a9c2b3]">Dijeli: {dealerName}</p>
       ) : null}
       <div className="grid grid-cols-2 gap-2">
         <div className="col-span-2">
@@ -328,7 +328,7 @@ export function RoundEntryForm({
                         : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                     }`}
                   >
-                    <p className="text-[10.5px] font-bold text-[#f7fbf6]">{player.username}</p>
+                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
                   </button>
                 ))}
               </div>
@@ -348,7 +348,7 @@ export function RoundEntryForm({
                         : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                     }`}
                   >
-                    <p className="text-[10.5px] font-bold text-[#f7fbf6]">{player.username}</p>
+                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
                   </button>
                 ))}
               </div>
@@ -381,8 +381,8 @@ export function RoundEntryForm({
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
-          <p className="text-[10px] font-semibold text-[#8fa89b]">Bodovi Tim A</p>
-          <p className="mt-px font-mono text-[22px] font-extrabold text-[#f7fbf6]">
+          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Bodovi Tim A</p>
+          <p className="mt-px font-mono text-[23px] font-extrabold text-[#f7fbf6]">
             {form.pointsTeamA}
           </p>
         </button>
@@ -395,8 +395,8 @@ export function RoundEntryForm({
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
-          <p className="text-[10px] font-semibold text-[#8fa89b]">Bodovi Tim B</p>
-          <p className="mt-px font-mono text-[22px] font-extrabold text-[#f7fbf6]">
+          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Bodovi Tim B</p>
+          <p className="mt-px font-mono text-[23px] font-extrabold text-[#f7fbf6]">
             {form.pointsTeamB}
           </p>
         </button>
@@ -410,7 +410,7 @@ export function RoundEntryForm({
                     type="button"
                     key={digit}
                     onClick={() => appendDigitToPoints(digit)}
-                    className="rounded-[8px] bg-[rgba(255,255,255,0.05)] py-2 text-center font-mono text-[14px] font-bold text-[#eef3ee]"
+                    className="rounded-[8px] bg-[rgba(255,255,255,0.05)] py-2 text-center font-mono text-[16px] font-bold text-[#eef3ee]"
                   >
                     {digit}
                   </button>
@@ -422,21 +422,21 @@ export function RoundEntryForm({
             <button
               type="button"
               onClick={() => appendDigitToPoints("0")}
-              className="rounded-[8px] bg-[rgba(255,255,255,0.05)] py-2 text-center font-mono text-[14px] font-bold text-[#eef3ee]"
+              className="rounded-[8px] bg-[rgba(255,255,255,0.05)] py-2 text-center font-mono text-[16px] font-bold text-[#eef3ee]"
             >
               0
             </button>
             <button
               type="button"
               onClick={backspacePoints}
-              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[11.5px] font-bold text-[#c9d9a0]"
+              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[13px] font-bold text-[#c9d9a0]"
             >
               Del
             </button>
             <button
               type="button"
               onClick={clearPoints}
-              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[11.5px] font-bold text-[#c9d9a0]"
+              className="rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[13px] font-bold text-[#c9d9a0]"
             >
               Clear
             </button>
@@ -452,11 +452,11 @@ export function RoundEntryForm({
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
-          <p className="text-[10px] font-semibold text-[#8fa89b]">Zvanja Tim A</p>
-          <p className="mt-px font-mono text-[18px] font-extrabold text-[#f7fbf6]">
+          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Zvanja Tim A</p>
+          <p className="mt-px font-mono text-[20px] font-extrabold text-[#f7fbf6]">
             {form.zvanjaTeamA}
           </p>
-          <p className="mt-0.5 text-[10px] text-[#8fa89b]">
+          <p className="mt-0.5 text-[11.5px] text-[#8fa89b]">
             {teamAPlayers
               .map((player) => ({
                 username: player.username,
@@ -479,11 +479,11 @@ export function RoundEntryForm({
               : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
           }`}
         >
-          <p className="text-[10px] font-semibold text-[#8fa89b]">Zvanja Tim B</p>
-          <p className="mt-px font-mono text-[18px] font-extrabold text-[#f7fbf6]">
+          <p className="text-[11.5px] font-semibold text-[#8fa89b]">Zvanja Tim B</p>
+          <p className="mt-px font-mono text-[20px] font-extrabold text-[#f7fbf6]">
             {form.zvanjaTeamB}
           </p>
-          <p className="mt-0.5 text-[10px] text-[#8fa89b]">
+          <p className="mt-0.5 text-[11.5px] text-[#8fa89b]">
             {teamBPlayers
               .map((player) => ({
                 username: player.username,
@@ -499,7 +499,7 @@ export function RoundEntryForm({
         </button>
 
         <div className="col-span-2 rounded-[13px] bg-[rgba(6,20,16,0.4)] p-2">
-          <p className="mb-1.5 text-[10.5px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
+          <p className="mb-1.5 text-[12px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
             Odaberi igrača kojem upisuješ zvanje
           </p>
           <div className="grid grid-cols-1 gap-1.5">
@@ -522,8 +522,8 @@ export function RoundEntryForm({
                           : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                       }`}
                     >
-                      <p className="text-[10.5px] font-bold text-[#f7fbf6]">{player.username}</p>
-                      <p className="text-[9px] text-[#8fa89b]">Zvanje: {playerTotal}</p>
+                      <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
+                      <p className="text-[10.5px] text-[#8fa89b]">Zvanje: {playerTotal}</p>
                     </button>
                   );
                 })}
@@ -549,8 +549,8 @@ export function RoundEntryForm({
                           : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]"
                       }`}
                     >
-                      <p className="text-[10.5px] font-bold text-[#f7fbf6]">{player.username}</p>
-                      <p className="text-[9px] text-[#8fa89b]">Zvanje: {playerTotal}</p>
+                      <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
+                      <p className="text-[10.5px] text-[#8fa89b]">Zvanje: {playerTotal}</p>
                     </button>
                   );
                 })}
@@ -567,7 +567,7 @@ export function RoundEntryForm({
                 type="button"
                 key={value}
                 onClick={() => applyZvanja(value as ZvanjaValue)}
-                className="rounded-[8px] bg-[rgba(201,217,160,0.85)] py-[7px] text-center text-[11px] font-bold text-[#10261c]"
+                className="rounded-[8px] bg-[rgba(201,217,160,0.85)] py-[7px] text-center text-[12.5px] font-bold text-[#10261c]"
               >
                 +{value}
               </button>
@@ -577,7 +577,7 @@ export function RoundEntryForm({
             <button
               type="button"
               onClick={applyStigliaForActivePointsTeam}
-              className={`shrink-0 rounded-[7px] px-[9px] py-[5px] text-[10.5px] font-bold whitespace-nowrap ${
+              className={`shrink-0 rounded-[7px] px-[9px] py-[5px] text-[12px] font-bold whitespace-nowrap ${
                 form.stigliaTeam
                   ? "bg-[rgba(201,217,160,0.85)] text-[#10261c]"
                   : "bg-[rgba(6,20,16,0.5)] text-[#a9c2b3]"
@@ -585,28 +585,28 @@ export function RoundEntryForm({
             >
               Štiglja +90
             </button>
-            <p className="min-w-0 flex-1 text-right text-[11px] text-[#a9c2b3]">
+            <p className="min-w-0 flex-1 text-right text-[12.5px] text-[#a9c2b3]">
               {form.stigliaTeam ? `Upisana: Tim ${form.stigliaTeam}` : "Nije upisana"}
             </p>
           </div>
           <button
             type="button"
             onClick={clearZvanjaForActivePlayer}
-            className="mt-1.5 w-full rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[11.5px] font-bold text-[#c9d9a0]"
+            className="mt-1.5 w-full rounded-[8px] bg-[rgba(201,217,160,0.12)] py-2 text-center text-[13px] font-bold text-[#c9d9a0]"
           >
             Reset aktivnog igrača
           </button>
         </div>
       </div>
 
-      {error ? <p className="mt-2 text-[13px] font-semibold text-rose-300">{error}</p> : null}
+      {error ? <p className="mt-2 text-[14.5px] font-semibold text-rose-300">{error}</p> : null}
 
       <div className="mt-2.5 grid grid-cols-2 gap-1.5">
         {onCancel ? (
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[11px] border border-[rgba(169,194,179,0.3)] py-[11px] text-center text-[12.5px] font-bold text-[#dcece3]"
+            className="rounded-[11px] border border-[rgba(169,194,179,0.3)] py-[11px] text-center text-[14px] font-bold text-[#dcece3]"
           >
             Nazad
           </button>
@@ -615,7 +615,7 @@ export function RoundEntryForm({
           type="button"
           onClick={submit}
           disabled={loading}
-          className={`btn-accent rounded-[11px] py-[11px] text-center text-[12.5px] font-bold disabled:opacity-60 ${
+          className={`btn-accent rounded-[11px] py-[11px] text-center text-[14px] font-bold disabled:opacity-60 ${
             onCancel ? "" : "col-span-2"
           }`}
         >
