@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import type { Player, PlayerGroup } from "@/lib/types";
@@ -11,9 +11,13 @@ interface PlayersPayload {
 
 interface GroupsPayload {
   groups: PlayerGroup[];
+  members?: Record<string, Player[]>;
 }
 
 type Step = "groups" | "setup";
+type SlotKey = "A0" | "A1" | "B0" | "B1";
+
+const SLOT_ORDER: SlotKey[] = ["A0", "A1", "B0", "B1"];
 
 const AVATAR_PALETTE: Array<[string, string]> = [
   ["#e7cd8e", "#10261c"],
@@ -47,6 +51,7 @@ export default function NewGamePage() {
   const [groupMembers, setGroupMembers] = useState<Record<string, Player[]>>({});
   const [step, setStep] = useState<Step>("groups");
   const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [activeSlot, setActiveSlot] = useState<SlotKey | null>("A0");
 
   const [groupQuery, setGroupQuery] = useState("");
   const [addingGroup, setAddingGroup] = useState(false);
@@ -76,14 +81,41 @@ export default function NewGamePage() {
     [groups, selectedGroupId],
   );
 
-  const selectedInTeams = useMemo(
-    () => [...form.teamA, ...form.teamB].filter((value) => value.length > 0),
+  const slots = useMemo<Record<SlotKey, string>>(
+    () => ({ A0: form.teamA[0], A1: form.teamA[1], B0: form.teamB[0], B1: form.teamB[1] }),
     [form],
   );
-  const playersOptionsKey = useMemo(
-    () => groupPlayers.map((player) => player.id).join("|"),
-    [groupPlayers],
+  const assignedIds = useMemo(
+    () => new Set(SLOT_ORDER.map((key) => slots[key]).filter(Boolean)),
+    [slots],
   );
+  const poolPlayers = useMemo(
+    () => groupPlayers.filter((player) => !assignedIds.has(player.id)),
+    [groupPlayers, assignedIds],
+  );
+  const allSlotsFilled = SLOT_ORDER.every((key) => !!slots[key]);
+  const dealerChipsPlayers = useMemo(
+    () =>
+      allSlotsFilled
+        ? SLOT_ORDER.map((key) => groupPlayers.find((player) => player.id === slots[key])).filter(
+            (player): player is Player => !!player,
+          )
+        : [],
+    [allSlotsFilled, groupPlayers, slots],
+  );
+  const teamsReady = allSlotsFilled && !!form.dealerPlayerId;
+  let setupCounterLabel: string;
+  let setupCounterColor: string;
+  if (!allSlotsFilled) {
+    setupCounterLabel = "Rasporedi sva 4 mjesta u timovima";
+    setupCounterColor = "#d0a97a";
+  } else if (!form.dealerPlayerId) {
+    setupCounterLabel = "Odaberi prvog djelitelja";
+    setupCounterColor = "#d0a97a";
+  } else {
+    setupCounterLabel = "✓ Spremno za partiju";
+    setupCounterColor = "#a9c98f";
+  }
 
   const visibleGroups = useMemo(() => {
     const query = groupQuery.trim().toLowerCase();
@@ -148,6 +180,7 @@ export default function NewGamePage() {
     const data = (await response.json()) as GroupsPayload;
     const nextGroups = data.groups ?? [];
     setGroups(nextGroups);
+    setGroupMembers((prev) => ({ ...prev, ...(data.members ?? {}) }));
     return nextGroups;
   }
 
@@ -157,13 +190,6 @@ export default function NewGamePage() {
     });
     const data = (await response.json()) as PlayersPayload;
     return data.players ?? [];
-  }
-
-  async function loadAllGroupMembers(list: PlayerGroup[]) {
-    const entries = await Promise.all(
-      list.map(async (group) => [group.id, await fetchGroupMembers(group.id)] as const),
-    );
-    setGroupMembers(Object.fromEntries(entries));
   }
 
   async function loadGroupPlayers(groupId: string) {
@@ -177,10 +203,7 @@ export default function NewGamePage() {
     setForm((prev) => ({
       ...prev,
       groupId,
-      dealerPlayerId:
-        nextPlayers.find((player) => player.id === prev.dealerPlayerId)?.id ??
-        nextPlayers[0]?.id ??
-        "",
+      dealerPlayerId: nextPlayers.find((player) => player.id === prev.dealerPlayerId)?.id ?? "",
       teamA: [
         nextPlayers.find((player) => player.id === prev.teamA[0])?.id ?? "",
         nextPlayers.find((player) => player.id === prev.teamA[1])?.id ?? "",
@@ -193,11 +216,7 @@ export default function NewGamePage() {
   }
 
   useEffect(() => {
-    void (async () => {
-      const [, nextGroups] = await Promise.all([loadPlayers(), loadGroups()]);
-      await loadAllGroupMembers(nextGroups);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void Promise.all([loadPlayers(), loadGroups()]);
   }, []);
 
   useEffect(() => {
@@ -208,6 +227,45 @@ export default function NewGamePage() {
     void loadGroupPlayers(selectedGroupId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroupId]);
+
+  useEffect(() => {
+    if (step === "setup") {
+      setActiveSlot(SLOT_ORDER.find((key) => !slots[key]) ?? null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  function clickSlot(key: SlotKey) {
+    const current = slots[key];
+    if (current) {
+      setForm((prev) => ({
+        ...prev,
+        teamA: key === "A0" ? ["", prev.teamA[1]] : key === "A1" ? [prev.teamA[0], ""] : prev.teamA,
+        teamB: key === "B0" ? ["", prev.teamB[1]] : key === "B1" ? [prev.teamB[0], ""] : prev.teamB,
+        dealerPlayerId: prev.dealerPlayerId === current ? "" : prev.dealerPlayerId,
+      }));
+    }
+    setActiveSlot(key);
+  }
+
+  function clickPoolPlayer(playerId: string) {
+    if (!activeSlot) return;
+    const key = activeSlot;
+    const next = { ...slots, [key]: playerId };
+    setForm((prev) => ({
+      ...prev,
+      teamA: [next.A0, next.A1],
+      teamB: [next.B0, next.B1],
+    }));
+    setActiveSlot(SLOT_ORDER.find((slotKey) => !next[slotKey]) ?? null);
+  }
+
+  function clickDealer(playerId: string) {
+    setForm((prev) => ({
+      ...prev,
+      dealerPlayerId: prev.dealerPlayerId === playerId ? "" : playerId,
+    }));
+  }
 
   function selectGroup(id: string) {
     setSelectedGroupId(id);
@@ -241,9 +299,8 @@ export default function NewGamePage() {
     const body = (await response.json()) as { group: PlayerGroup };
     setAddingGroup(false);
     setNewGroupName("");
-    const nextGroups = await loadGroups();
+    await loadGroups();
     setGroupMembers((prev) => ({ ...prev, [body.group.id]: prev[body.group.id] ?? [] }));
-    void loadAllGroupMembers(nextGroups);
     selectGroup(body.group.id);
   }
 
@@ -360,6 +417,7 @@ export default function NewGamePage() {
       setError("Odaberi grupu prije kreiranja partije.");
       return;
     }
+    if (!teamsReady) return;
     setLoading(true);
     setError("");
     const response = await fetch("/api/games", {
@@ -377,16 +435,6 @@ export default function NewGamePage() {
 
     const body = (await response.json()) as { game: { id: string } };
     router.push(`/game/${body.game.id}`);
-  }
-
-  function playerOption(player: Player, currentValue: string) {
-    const isTakenInAnotherTeamSlot =
-      selectedInTeams.includes(player.id) && currentValue !== player.id;
-    return (
-      <option key={player.id} value={player.id} disabled={isTakenInAnotherTeamSlot}>
-        {player.username}
-      </option>
-    );
   }
 
   function renderGroupCard(group: PlayerGroup) {
@@ -482,6 +530,121 @@ export default function NewGamePage() {
             {memberCountLabel(members.length)}
           </p>
         </div>
+      </div>
+    );
+  }
+
+  function renderTeamSlot(key: SlotKey) {
+    const playerId = slots[key];
+    const player = groupPlayers.find((candidate) => candidate.id === playerId) ?? null;
+    const isActive = activeSlot === key;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        clickSlot(key);
+      }
+    };
+    if (player) {
+      const { bg, fg } = avatarFor(player.id);
+      return (
+        <div
+          key={key}
+          role="button"
+          tabIndex={0}
+          onClick={() => clickSlot(key)}
+          onKeyDown={handleKeyDown}
+          className="flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl px-[10px] py-2 transition-colors"
+          style={{
+            border: isActive ? "1.5px solid #c9d9a0" : "1.5px solid rgba(169,194,179,.16)",
+            background: isActive ? "rgba(201,217,160,.08)" : "rgba(6,20,16,.4)",
+          }}
+        >
+          <div
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10.5px] font-extrabold"
+            style={{ background: bg, color: fg }}
+          >
+            {initialOf(player.username)}
+          </div>
+          <span className="min-w-0 flex-1 truncate text-[12.5px] font-bold text-[#f2f5f0]">
+            {player.username}
+          </span>
+          <span className="shrink-0 text-[10px] text-[#7d9587]">✕</span>
+        </div>
+      );
+    }
+    return (
+      <div
+        key={key}
+        role="button"
+        tabIndex={0}
+        onClick={() => clickSlot(key)}
+        onKeyDown={handleKeyDown}
+        className="flex min-h-[46px] cursor-pointer items-center gap-2 rounded-xl px-[10px] py-2 transition-colors"
+        style={{
+          border: isActive ? "1.5px solid #c9d9a0" : "1.5px dashed rgba(201,217,160,.32)",
+          background: isActive ? "rgba(201,217,160,.08)" : "rgba(201,217,160,.04)",
+        }}
+      >
+        <div
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[13px] leading-none"
+          style={{ border: "1.5px dashed rgba(201,217,160,.4)", color: "#c9d9a0" }}
+        >
+          +
+        </div>
+        <span
+          className="flex-1 text-xs font-semibold"
+          style={{ color: isActive ? "#c9d9a0" : "#6f857a" }}
+        >
+          {isActive ? "Odaberi igrača" : "Prazno mjesto"}
+        </span>
+      </div>
+    );
+  }
+
+  function renderDealerChip(player: Player) {
+    const { bg, fg } = avatarFor(player.id);
+    const selected = form.dealerPlayerId === player.id;
+    return (
+      <div
+        key={player.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => clickDealer(player.id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            clickDealer(player.id);
+          }
+        }}
+        className="relative cursor-pointer rounded-xl px-1 py-[9px] text-center transition-colors"
+        style={{
+          border: selected ? "1.5px solid #c9d9a0" : "1.5px solid rgba(169,194,179,.16)",
+          background: selected ? "rgba(201,217,160,.14)" : "rgba(6,20,16,.4)",
+        }}
+      >
+        <div
+          className="mx-auto mb-[5px] flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-extrabold"
+          style={{ background: bg, color: fg }}
+        >
+          {initialOf(player.username)}
+        </div>
+        <p className="m-0 truncate text-[11px] font-bold text-[#f2f5f0]">{player.username}</p>
+        {selected ? (
+          <div
+            className="absolute right-1 top-1 flex h-[13px] w-[13px] items-center justify-center rounded-full"
+            style={{ background: "linear-gradient(180deg, #d7f1c7, #c9d9a0)" }}
+          >
+            <svg width="7" height="7" viewBox="0 0 12 12" fill="none">
+              <path
+                d="M2.5 6.2L5 8.5L9.5 3.5"
+                stroke="#10261c"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -904,104 +1067,154 @@ export default function NewGamePage() {
           </>
         ) : (
           <>
-            <h1 className="text-xl font-bold text-[#f7fbf6]">Nova partija</h1>
-            <p className="text-sm text-[#a9c2b3]">
-              Grupa: <span className="font-semibold text-[#f7fbf6]">{selectedGroup?.name ?? "-"}</span>
-            </p>
-            <button
-              type="button"
-              className="mt-2 rounded-lg border border-[rgba(169,194,179,0.3)] px-3 py-2 text-sm font-semibold text-[#dcece3]"
-              onClick={() => setStep("groups")}
-            >
-              Natrag na grupe
-            </button>
-
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <label className="col-span-2 text-sm text-[#dcece3]">
-                Prvi djelitelj
-                <select
-                  key={`dealer-${playersOptionsKey}`}
-                  value={form.dealerPlayerId}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, dealerPlayerId: event.target.value }))
-                  }
-                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[rgba(201,217,160,.16)] text-xs font-extrabold text-[#c9d9a0]">
+                    2
+                  </span>
+                  <p className="m-0 text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa89b]">
+                    Korak 2 od 2 · Postava
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep("groups")}
+                  className="rounded-full border-none bg-transparent px-[2px] py-1 text-xs font-bold text-[#8fa89b]"
                 >
-                  <option value="">Odaberi igrača</option>
-                  {groupPlayers.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.username}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="text-sm text-[#dcece3]">
-                Tim A - Igrač 1
-                <select
-                  key={`teamA-0-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  value={form.teamA[0]}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, teamA: [event.target.value, prev.teamA[1]] }))
-                  }
-                >
-                  <option value="">Odaberi</option>
-                  {groupPlayers.map((player) => playerOption(player, form.teamA[0]))}
-                </select>
-              </label>
-              <label className="text-sm text-[#dcece3]">
-                Tim A - Igrač 2
-                <select
-                  key={`teamA-1-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  value={form.teamA[1]}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, teamA: [prev.teamA[0], event.target.value] }))
-                  }
-                >
-                  <option value="">Odaberi</option>
-                  {groupPlayers.map((player) => playerOption(player, form.teamA[1]))}
-                </select>
-              </label>
-              <label className="text-sm text-[#dcece3]">
-                Tim B - Igrač 1
-                <select
-                  key={`teamB-0-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  value={form.teamB[0]}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, teamB: [event.target.value, prev.teamB[1]] }))
-                  }
-                >
-                  <option value="">Odaberi</option>
-                  {groupPlayers.map((player) => playerOption(player, form.teamB[0]))}
-                </select>
-              </label>
-              <label className="text-sm text-[#dcece3]">
-                Tim B - Igrač 2
-                <select
-                  key={`teamB-1-${playersOptionsKey}`}
-                  className="mt-1 w-full rounded-xl border border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)] px-3 py-2 text-[#eef3ee]"
-                  value={form.teamB[1]}
-                  onChange={(event) =>
-                    setForm((prev) => ({ ...prev, teamB: [prev.teamB[0], event.target.value] }))
-                  }
-                >
-                  <option value="">Odaberi</option>
-                  {groupPlayers.map((player) => playerOption(player, form.teamB[1]))}
-                </select>
-              </label>
+                  ‹ Grupe
+                </button>
+              </div>
+              <h1 className="mt-2 text-xl font-extrabold text-[#f7fbf6]">Timovi i prvi djelitelj</h1>
+              <p className="mt-1 text-xs text-[#8fa89b]">
+                Grupa: <span className="font-bold text-[#c9d9a0]">{selectedGroup?.name ?? "-"}</span>
+              </p>
             </div>
 
-            <button
-              type="button"
-              onClick={createGame}
-              disabled={loading}
-              className="btn-accent mt-4 w-full rounded-xl py-3 font-semibold disabled:opacity-60"
+            {/* team slots + pool */}
+            <div
+              className="mt-4 flex flex-col gap-[10px] rounded-[18px] p-[14px]"
+              style={{ background: "rgba(15,50,36,.5)", border: "1px solid rgba(255,255,255,.06)" }}
             >
-              {loading ? "Kreiram..." : "Pokreni partiju"}
-            </button>
+              <div className="grid grid-cols-2 gap-[10px]">
+                <div className="flex flex-col gap-[7px]">
+                  <p className="m-0 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                    Tim A
+                  </p>
+                  {renderTeamSlot("A0")}
+                  {renderTeamSlot("A1")}
+                </div>
+                <div className="flex flex-col gap-[7px]">
+                  <p className="m-0 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                    Tim B
+                  </p>
+                  {renderTeamSlot("B0")}
+                  {renderTeamSlot("B1")}
+                </div>
+              </div>
+
+              <div className="mt-[2px] pt-[10px]" style={{ borderTop: "1px solid rgba(255,255,255,.06)" }}>
+                <p className="m-0 mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                  Igrači u grupi
+                </p>
+                <div className="flex flex-wrap gap-[7px]">
+                  {poolPlayers.map((player) => {
+                    const { bg, fg } = avatarFor(player.id);
+                    return (
+                      <div
+                        key={player.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => clickPoolPlayer(player.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            clickPoolPlayer(player.id);
+                          }
+                        }}
+                        className="flex cursor-pointer items-center gap-[7px] rounded-full py-[5px] pl-[5px] pr-[10px] transition-colors"
+                        style={{ background: "rgba(6,20,16,.5)", border: "1px solid rgba(169,194,179,.16)" }}
+                      >
+                        <div
+                          className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-extrabold"
+                          style={{ background: bg, color: fg }}
+                        >
+                          {initialOf(player.username)}
+                        </div>
+                        <span className="text-[12.5px] font-semibold text-[#e6efe8]">
+                          {player.username}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {poolPlayers.length === 0 ? (
+                    <span className="py-1 text-xs text-[#7d9587]">Svi igrači su raspoređeni.</span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {/* dealer */}
+            <div
+              className="mt-3 flex flex-col gap-[9px] rounded-[18px] p-[14px]"
+              style={{ background: "rgba(15,50,36,.5)", border: "1px solid rgba(255,255,255,.06)" }}
+            >
+              <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                Prvi djelitelj
+              </p>
+              {allSlotsFilled ? (
+                <div className="grid grid-cols-4 gap-[6px]">
+                  {dealerChipsPlayers.map((player) => renderDealerChip(player))}
+                </div>
+              ) : (
+                <p className="m-0 text-xs leading-[1.5] text-[#6f857a]">
+                  Dovrši postavu oba tima da odabereš prvog djelitelja.
+                </p>
+              )}
+            </div>
+
+            {/* counter + footer */}
+            <div className="mt-4 flex flex-col gap-2">
+              <div
+                className="flex items-center justify-center gap-[6px] text-xs font-semibold"
+                style={{ color: setupCounterColor }}
+              >
+                <span>{setupCounterLabel}</span>
+              </div>
+              <div className="grid grid-cols-[1fr_1.6fr] gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep("groups")}
+                  className="rounded-2xl p-[15px] text-[13px] font-bold text-[#dcece3]"
+                  style={{ border: "1px solid rgba(169,194,179,.3)", background: "transparent" }}
+                >
+                  Nazad
+                </button>
+                <button
+                  type="button"
+                  onClick={createGame}
+                  disabled={!teamsReady || loading}
+                  className="rounded-2xl p-[15px] text-[15px] font-extrabold transition-colors"
+                  style={
+                    teamsReady
+                      ? {
+                          background: "linear-gradient(180deg, #d7f1c7, #c9d9a0)",
+                          color: "#10261c",
+                          boxShadow: "0 14px 28px -10px rgba(201,217,160,.5)",
+                        }
+                      : { background: "rgba(255,255,255,.04)", color: "#5f7268" }
+                  }
+                >
+                  {loading
+                    ? "Kreiram…"
+                    : teamsReady
+                      ? "Pokreni partiju"
+                      : !allSlotsFilled
+                        ? "Rasporedi igrače"
+                        : "Odaberi djelitelja"}
+                </button>
+              </div>
+            </div>
           </>
         )}
 

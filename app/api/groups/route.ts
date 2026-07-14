@@ -3,8 +3,8 @@ import { getRepo } from "@/lib/supabase";
 
 export async function GET() {
   const repo = getRepo();
-  const groups = await repo.listGroups();
-  return NextResponse.json({ groups });
+  const [groups, members] = await Promise.all([repo.listGroups(), repo.listAllGroupMembers()]);
+  return NextResponse.json({ groups, members });
 }
 
 export async function POST(request: Request) {

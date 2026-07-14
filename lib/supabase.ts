@@ -25,6 +25,7 @@ interface BelaRepository {
   renameGroup(groupId: string, name: string): Promise<PlayerGroup>;
   deleteGroup(groupId: string): Promise<void>;
   listGroupPlayers(groupId: string): Promise<Player[]>;
+  listAllGroupMembers(): Promise<Record<string, Player[]>>;
   addPlayerToGroup(groupId: string, playerId: string): Promise<void>;
   removePlayerFromGroup(groupId: string, playerId: string): Promise<void>;
   listGames(): Promise<Game[]>;
@@ -114,6 +115,20 @@ class InMemoryRepo implements BelaRepository {
     return this.players
       .filter((player) => memberIds.includes(player.id))
       .sort((a, b) => a.username.localeCompare(b.username));
+  }
+
+  async listAllGroupMembers() {
+    const playersById = new Map(this.players.map((player) => [player.id, player]));
+    const map: Record<string, Player[]> = {};
+    for (const row of this.groupPlayers) {
+      const player = playersById.get(row.playerId);
+      if (!player) continue;
+      (map[row.groupId] ??= []).push(player);
+    }
+    for (const members of Object.values(map)) {
+      members.sort((a, b) => a.username.localeCompare(b.username));
+    }
+    return map;
   }
 
   async addPlayerToGroup(groupId: string, playerId: string) {
@@ -399,6 +414,21 @@ class FileRepo implements BelaRepository {
     return db.players
       .filter((player) => memberIds.includes(player.id))
       .sort((a, b) => a.username.localeCompare(b.username));
+  }
+
+  async listAllGroupMembers() {
+    const db = await this.readDb();
+    const playersById = new Map(db.players.map((player) => [player.id, player]));
+    const map: Record<string, Player[]> = {};
+    for (const row of db.groupPlayers) {
+      const player = playersById.get(row.playerId);
+      if (!player) continue;
+      (map[row.groupId] ??= []).push(player);
+    }
+    for (const members of Object.values(map)) {
+      members.sort((a, b) => a.username.localeCompare(b.username));
+    }
+    return map;
   }
 
   async addPlayerToGroup(groupId: string, playerId: string) {
@@ -733,6 +763,26 @@ export function getRepo(): BelaRepository {
         })
         .filter((row): row is Player => row !== null)
         .sort((a, b) => a.username.localeCompare(b.username));
+    },
+    async listAllGroupMembers() {
+      const { data, error } = await supabase
+        .from("group_players")
+        .select("group_id, players!inner(id, username, created_at)");
+      if (error) throw error;
+      const map: Record<string, Player[]> = {};
+      for (const row of data ?? []) {
+        const player = Array.isArray(row.players) ? row.players[0] : row.players;
+        if (!player) continue;
+        (map[row.group_id] ??= []).push({
+          id: player.id as string,
+          username: player.username as string,
+          createdAt: player.created_at as string,
+        });
+      }
+      for (const members of Object.values(map)) {
+        members.sort((a, b) => a.username.localeCompare(b.username));
+      }
+      return map;
     },
     async addPlayerToGroup(groupId: string, playerId: string) {
       const { error } = await supabase
