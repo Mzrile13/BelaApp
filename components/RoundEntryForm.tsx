@@ -49,6 +49,8 @@ export function RoundEntryForm({
     () => players.filter((player) => game.teams.teamB.includes(player.id)),
     [players, game.teams.teamB],
   );
+  const teamAName = teamAPlayers.map((player) => player.username).join(" & ") || "Tim A";
+  const teamBName = teamBPlayers.map((player) => player.username).join(" & ") || "Tim B";
 
   const initialTokensA = useMemo(() => {
     const map: Record<string, ZvanjaValue[]> = {};
@@ -394,7 +396,7 @@ export function RoundEntryForm({
             }`}
           >
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-[#8fa89b]">Tim A</p>
+              <p className="text-[11px] font-semibold text-[#8fa89b]">{teamAName}</p>
               {activePointsField === "pointsTeamA" ? (
                 <span className="text-[9px] font-extrabold tracking-[0.05em] text-[#c9d9a0]">
                   ● UNOS
@@ -415,7 +417,7 @@ export function RoundEntryForm({
             }`}
           >
             <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-[#8fa89b]">Tim B</p>
+              <p className="text-[11px] font-semibold text-[#8fa89b]">{teamBName}</p>
               {activePointsField === "pointsTeamB" ? (
                 <span className="text-[9px] font-extrabold tracking-[0.05em] text-[#c9d9a0]">
                   ● UNOS

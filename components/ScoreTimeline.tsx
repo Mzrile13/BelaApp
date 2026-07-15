@@ -38,7 +38,7 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
           <>
             <div className="pointer-events-none absolute top-5 bottom-5 left-[26px] w-[1.5px] bg-gradient-to-b from-[rgba(201,217,160,0.5)] to-[rgba(201,217,160,0.05)]" />
             <div className="mt-2.5 flex flex-col gap-3.5">
-              {roundsWithTotals.map(({ round, cumulativeA, cumulativeB }) => {
+              {[...roundsWithTotals].reverse().map(({ round, cumulativeA, cumulativeB }) => {
                 const resolvedPoints = resolveRoundPoints(round);
                 const dealerId = getDealerForRound(game, round.roundNumber);
                 const dealer = playersById.get(dealerId)?.username ?? "Unknown";
