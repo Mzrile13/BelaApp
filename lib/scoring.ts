@@ -175,3 +175,40 @@ export function getWinningTeam(
   }
   return reachedA ? "A" : "B";
 }
+
+/**
+ * Indeksira runde po partiji. Više modula treba isti grupiranje, a naivni
+ * `rounds.filter(...)` unutar petlje po partijama je O(partije × runde).
+ */
+export function groupRoundsByGame(rounds: Round[]) {
+  const byGame = new Map<string, Round[]>();
+  for (const round of rounds) {
+    const bucket = byGame.get(round.gameId);
+    if (bucket) bucket.push(round);
+    else byGame.set(round.gameId, [round]);
+  }
+  for (const bucket of byGame.values()) {
+    bucket.sort((a, b) => a.roundNumber - b.roundNumber);
+  }
+  return byGame;
+}
+
+/**
+ * Partija se broji kao završena ako ima `finishedAt` ili ako je netko stvarno
+ * stigao do 1001. Nezavršene partije ne ulaze ni u rejting ni u statistiku —
+ * njihova margina nije usporediva s utrkom do cilja.
+ */
+export function getFinishedGameIds(games: Game[], rounds: Round[]) {
+  const roundsByGameId = groupRoundsByGame(rounds);
+  const finished = new Set<string>();
+  for (const game of games) {
+    if (game.finishedAt) {
+      finished.add(game.id);
+      continue;
+    }
+    if (getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? []))) {
+      finished.add(game.id);
+    }
+  }
+  return finished;
+}

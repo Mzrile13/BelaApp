@@ -1,16 +1,24 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
-import type { PlayerStats } from "@/lib/types";
+import { RatingSparkline } from "@/components/RatingSparkline";
+import type { CalledSuit, PlayerStats } from "@/lib/types";
 
-const suitName: Record<"karo" | "herc" | "pik" | "tref", string> = {
+const suitName: Record<CalledSuit, string> = {
   karo: "karo",
   herc: "herc",
   pik: "pik",
   tref: "tref",
 };
 
+function signed(value: number, digits = 0) {
+  return `${value > 0 ? "+" : ""}${value.toFixed(digits)}`;
+}
+
+function percent(value: number, digits = 1) {
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
 export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
-  const winRate =
-    stats.gamesPlayed > 0 ? ((stats.gamesWon / stats.gamesPlayed) * 100).toFixed(1) : "0.0";
+  const winRate = stats.gamesPlayed > 0 ? percent(stats.gamesWon / stats.gamesPlayed) : "0.0%";
   const avgStigliaPerGame =
     stats.gamesPlayed > 0 ? (stats.stigliaCount / stats.gamesPlayed).toFixed(2) : "0.00";
   const avgPlusMinusPerGame =
@@ -29,27 +37,49 @@ export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
 
   const statPairs: Array<[string, string]> = [
     ["Odigrane partije", String(stats.gamesPlayed)],
-    ["Pobjede", `${winRate}%`],
+    ["Pobjede", winRate],
+    ["Najviši rejting", String(Math.round(stats.peakRating))],
+    ["Forma (10 partija)", signed(stats.formDelta)],
     ["Bodovi po ruci", String(stats.avgPoints)],
     ["Plus minus", avgPlusMinusPerGame],
     ["Prosj. štiglji", avgStigliaPerGame],
     ["Prosj. zvanja", String(stats.avgZvanja)],
-    ["Zvao po ruci", stats.callsPerRoundAvg.toFixed(2)],
-    ["Prolaznost", `${(stats.callerSuccessRate * 100).toFixed(1)}%`],
+    ["Zvao iz volje", percent(stats.voluntaryCallRate)],
+    ["Prolaznost iz volje", percent(stats.voluntaryCallerSuccessRate, 0)],
+    ["Prolaznost iz mora", percent(stats.forcedCallerSuccessRate, 0)],
+    ["Vrijednost zvanja", `${signed(stats.callValueAdded, 1)}/partiji`],
+    ["Završnica", stats.clutchRounds > 0 ? percent(stats.clutchIndex, 0) : "-"],
+    ["Stabilnost", stats.consistencyIndex.toFixed(1)],
+    ["Najveći preokret", String(stats.biggestComeback)],
     ["Trenutni streak", streakLabel],
     ["Max win streak", `W${stats.bestWinStreak}`],
     ["Najdraži znak", stats.favoriteCalledSuit ? suitName[stats.favoriteCalledSuit] : "-"],
-    ["Clutch", `${(stats.clutchIndex * 100).toFixed(1)}%`],
   ];
 
   return (
     <article className="rounded-[18px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-4">
-      <div className="mb-2.5 flex items-center justify-between">
-        <h3 className="text-[18px] font-bold text-[#f7fbf6]">{stats.username}</h3>
-        <span className="rounded-full bg-[#c9d9a0] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
-          MVP {stats.mvpScore}
-        </span>
+      <div className="mb-2.5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-1.5 text-[18px] font-bold text-[#f7fbf6]">
+            <span className="truncate">{stats.username}</span>
+            {stats.provisional ? (
+              <span className="shrink-0 rounded-full bg-[rgba(169,194,179,0.18)] px-1.5 py-px text-[9px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
+                novo
+              </span>
+            ) : null}
+          </h3>
+          <p className="mt-0.5 text-[11px] text-[#8fa89b]">
+            Rejting je korigiran na partnera i protivnika
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <RatingSparkline values={stats.ratingTrail} />
+          <span className="rounded-full bg-[#c9d9a0] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
+            {Math.round(stats.rating)} ±{Math.round(stats.sigma)}
+          </span>
+        </div>
       </div>
+
       <div className="mb-2.5 grid grid-cols-2 gap-x-2.5 gap-y-1.5">
         {statPairs.map(([label, value]) => (
           <p key={label} className="flex justify-between text-[12px] text-[#a9c2b3]">
@@ -58,6 +88,27 @@ export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
           </p>
         ))}
       </div>
+
+      {stats.bestPartnerUsername || stats.nemesisUsername ? (
+        <div className="mb-2.5 grid gap-1.5 sm:grid-cols-2">
+          {stats.bestPartnerUsername ? (
+            <p className="flex justify-between rounded-[10px] bg-[rgba(6,20,16,0.45)] px-2.5 py-[7px] text-[11.5px] text-[#a9c2b3]">
+              <span>Najbolji partner</span>
+              <b className="font-semibold text-[#eef3ee]">
+                {stats.bestPartnerUsername} ({signed(stats.bestPartnerChemistry * 100, 0)}%)
+              </b>
+            </p>
+          ) : null}
+          {stats.nemesisUsername ? (
+            <p className="flex justify-between rounded-[10px] bg-[rgba(6,20,16,0.45)] px-2.5 py-[7px] text-[11.5px] text-[#a9c2b3]">
+              <span>Nezgodan protivnik</span>
+              <b className="font-semibold text-[#eef3ee]">
+                {stats.nemesisUsername} ({signed(stats.nemesisDelta * 100, 0)}%)
+              </b>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex items-center justify-between rounded-[12px] bg-[rgba(6,20,16,0.45)] py-[9px]">
         <p className="flex items-center gap-1.5 pl-2.5 text-[12px] font-semibold text-[#dcece3]">

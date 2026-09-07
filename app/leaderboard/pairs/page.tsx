@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
+import { LeaderboardTabs } from "@/components/LeaderboardTabs";
 import { getCachedPairStats } from "@/lib/cachedStats";
 import { requireAccountId } from "@/lib/session";
 import type { PairStats } from "@/lib/types";
@@ -14,45 +15,52 @@ function queryParamToString(value: string | string[] | undefined) {
   return value ?? "";
 }
 
-function renderPairRow(row: PairStats, rank: number | null) {
-  const muted = rank === null;
-  const streakLabel =
-    row.currentStreak > 0
-      ? `W${row.currentStreak}`
-      : row.currentStreak < 0
-        ? `L${Math.abs(row.currentStreak)}`
-        : "-";
+function formatChemistry(value: number) {
+  const pct = value * 100;
+  return `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`;
+}
+
+function renderPairRow(row: PairStats, rank: number) {
+  const chemistryClass =
+    row.chemistry > 0.01
+      ? "text-[#c9d9a0]"
+      : row.chemistry < -0.01
+        ? "text-rose-300"
+        : "text-[#dcece3]";
+
   return (
     <Link
       key={`${row.playerAId}-${row.playerBId}`}
       href={`/pairs/${row.playerAId}__${row.playerBId}`}
       className={`flex items-center justify-between rounded-[14px] px-3.5 py-3 ${
-        muted ? "bg-[rgba(6,20,16,0.28)]" : "bg-[rgba(6,20,16,0.45)]"
+        row.provisional ? "bg-[rgba(6,20,16,0.28)]" : "bg-[rgba(6,20,16,0.45)]"
       }`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         <span
           className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold ${
-            muted
+            row.provisional
               ? "bg-[rgba(169,194,179,0.18)] text-[#8fa89b]"
               : "bg-[#c9d9a0] text-[#10261c]"
           }`}
         >
-          {muted ? "·" : rank}
+          {rank}
         </span>
-        <div>
-          <p className="text-[13.5px] font-bold text-[#f2f5f0]">
+        <div className="min-w-0">
+          <p className="truncate text-[13.5px] font-bold text-[#f2f5f0]">
             {row.playerAUsername} + {row.playerBUsername}
           </p>
-          <p className="mt-px text-[11.5px] text-[#8fa89b]">
-            Win {row.winsTogether}/{row.gamesTogether} ({(row.winRate * 100).toFixed(1)}%) ·{" "}
-            {streakLabel}
+          <p className="mt-px truncate text-[11.5px] text-[#8fa89b]">
+            {(row.winRate * 100).toFixed(0)}% stvarno · {(row.expectedWinRate * 100).toFixed(0)}%
+            očekivano · {row.gamesTogether} partija
           </p>
         </div>
       </div>
-      <div className="text-right">
-        <p className="text-[13px] font-bold text-[#c9d9a0]">MVP {row.mvpScore}</p>
-        {muted ? <p className="text-[10px] text-[#8fa89b]">premalo partija</p> : null}
+      <div className="shrink-0 text-right">
+        <p className={`text-[14px] font-extrabold ${chemistryClass}`}>
+          {formatChemistry(row.chemistry)}
+        </p>
+        <p className="text-[10.5px] text-[#8fa89b]">kemija</p>
       </div>
     </Link>
   );
@@ -69,25 +77,13 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
     const label = `${row.playerAUsername} ${row.playerBUsername}`.toLowerCase();
     return label.includes(query);
   });
-  const ranked = leaderboard.filter((row) => !row.insufficientSample);
-  const insufficient = leaderboard.filter((row) => row.insufficientSample);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/" className="mb-3" />
       <h1 className="mb-3.5 text-[20px] font-extrabold text-[#f7fbf6]">Leaderboard</h1>
 
-      <div className="mb-3.5 flex gap-1.5 rounded-[12px] border border-[rgba(255,255,255,0.05)] bg-[rgba(6,20,16,0.5)] p-1">
-        <Link
-          href="/leaderboard"
-          className="flex-1 rounded-[9px] py-[9px] text-center text-[12.5px] font-bold text-[#a9c2b3]"
-        >
-          Igrači
-        </Link>
-        <span className="flex-1 rounded-[9px] bg-[#c9d9a0] py-[9px] text-center text-[12.5px] font-bold text-[#10261c]">
-          Parovi
-        </span>
-      </div>
+      <LeaderboardTabs active="/leaderboard/pairs" />
 
       <form method="GET" className="mb-3.5">
         <input
@@ -105,22 +101,17 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
             Nema podataka za parove.
           </p>
         ) : (
-          ranked.map((row, index) => renderPairRow(row, index + 1))
+          leaderboard.map((row, index) => renderPairRow(row, index + 1))
         )}
-
-        {insufficient.length > 0 ? (
-          <>
-            <div className="flex items-center gap-2 pt-3 pb-0.5">
-              <span className="h-px flex-1 bg-[rgba(255,255,255,0.08)]" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#8fa89b]">
-                Nedovoljno odigranih partija
-              </span>
-              <span className="h-px flex-1 bg-[rgba(255,255,255,0.08)]" />
-            </div>
-            {insufficient.map((row) => renderPairRow(row, null))}
-          </>
-        ) : null}
       </div>
+
+      <p className="mt-3.5 px-1 text-[11px] leading-relaxed text-[#8fa89b]">
+        Parovi se rangiraju po kemiji, a ne po broju pobjeda — inače bi par dvojice
+        najboljih igrača uvijek vodio, što već znaš iz liste igrača. Kemija je razlika
+        između stvarnog i očekivanog postotka pobjeda, gdje očekivani dolazi iz
+        pojedinačnih rejtinga te dvojice protiv stvarnih protivnika. Plus znači da
+        zajedno igraju bolje nego što su im rejtinzi.
+      </p>
     </main>
   );
 }

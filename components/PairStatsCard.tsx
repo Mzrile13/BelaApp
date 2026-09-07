@@ -1,16 +1,22 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
-import type { PairStats } from "@/lib/types";
+import type { CalledSuit, PairStats } from "@/lib/types";
 
-const suitName: Record<"karo" | "herc" | "pik" | "tref", string> = {
+const suitName: Record<CalledSuit, string> = {
   karo: "karo",
   herc: "herc",
   pik: "pik",
   tref: "tref",
 };
 
+function signed(value: number, digits = 0) {
+  return `${value > 0 ? "+" : ""}${value.toFixed(digits)}`;
+}
+
+function percent(value: number, digits = 1) {
+  return `${(value * 100).toFixed(digits)}%`;
+}
+
 export function PairStatsCard({ stats }: { stats: PairStats }) {
-  const winRate =
-    stats.gamesTogether > 0 ? ((stats.winsTogether / stats.gamesTogether) * 100).toFixed(1) : "0.0";
   const avgStigliaPerGame =
     stats.gamesTogether > 0 ? (stats.stigliaCount / stats.gamesTogether).toFixed(2) : "0.00";
   const streakLabel =
@@ -22,30 +28,54 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
   const winsInLast10 = stats.last10GameResults.filter((result) => result === "W").length;
   const lossesInLast10 = stats.last10GameResults.filter((result) => result === "L").length;
   const losses = Math.max(0, stats.gamesTogether - stats.winsTogether);
+  const chemistryClass =
+    stats.chemistry > 0.01
+      ? "bg-[#c9d9a0] text-[#10261c]"
+      : stats.chemistry < -0.01
+        ? "bg-[rgba(196,90,74,0.85)] text-[#f7fbf6]"
+        : "bg-[rgba(169,194,179,0.25)] text-[#eef3ee]";
 
   const statPairs: Array<[string, string]> = [
     ["Odigrane partije", String(stats.gamesTogether)],
-    ["Pobjede", `${winRate}%`],
+    ["Pobjede", percent(stats.winRate)],
+    ["Očekivano", percent(stats.expectedWinRate)],
+    ["Zajednički rejting", String(Math.round(stats.combinedRating))],
     ["Bodovi po ruci", String(stats.avgPoints)],
     ["Plus minus", stats.avgPlusMinusPerGame.toFixed(2)],
     ["Prosj. štiglji", avgStigliaPerGame],
     ["Prosj. zvanja", String(stats.avgZvanja)],
     ["Zvali po ruci", stats.callsPerRoundAvg.toFixed(2)],
-    ["Prolaznost", `${(stats.callerSuccessRate * 100).toFixed(1)}%`],
+    ["Zvanja iz volje", `${stats.voluntaryCalls} / ${stats.timesCalled}`],
+    ["Prolaznost", percent(stats.callerSuccessRate, 0)],
+    ["Vrijednost zvanja", `${signed(stats.callValueAdded, 1)}/partiji`],
+    ["Završnica", stats.clutchRounds > 0 ? percent(stats.clutchIndex, 0) : "-"],
     ["Trenutni streak", streakLabel],
     ["Max win streak", `W${stats.bestWinStreak}`],
     ["Najdraži znak", stats.favoriteCalledSuit ? suitName[stats.favoriteCalledSuit] : "-"],
-    ["Clutch", `${(stats.clutchIndex * 100).toFixed(1)}%`],
   ];
 
   return (
     <article className="rounded-[18px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-4">
-      <div className="mb-2.5 flex items-center justify-between">
-        <h3 className="text-[15px] font-bold text-[#f7fbf6]">
-          {stats.playerAUsername} + {stats.playerBUsername}
-        </h3>
-        <span className="rounded-full bg-[#c9d9a0] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
-          MVP {stats.mvpScore}
+      <div className="mb-2.5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-1.5 text-[15px] font-bold text-[#f7fbf6]">
+            <span className="truncate">
+              {stats.playerAUsername} + {stats.playerBUsername}
+            </span>
+            {stats.provisional ? (
+              <span className="shrink-0 rounded-full bg-[rgba(169,194,179,0.18)] px-1.5 py-px text-[9px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
+                novo
+              </span>
+            ) : null}
+          </h3>
+          <p className="mt-0.5 text-[11px] text-[#8fa89b]">
+            Kemija = stvarni minus očekivani postotak pobjeda
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${chemistryClass}`}
+        >
+          {signed(stats.chemistry * 100, 1)}%
         </span>
       </div>
 

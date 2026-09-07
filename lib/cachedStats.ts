@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { getRepo } from "@/lib/supabase";
-import { computePairStats, computePlayerStats } from "@/lib/stats";
+import { computeAllStats } from "@/lib/stats";
 import type { PairStats, PlayerStats } from "@/lib/types";
 
 /**
@@ -31,32 +31,31 @@ async function loadAll(accountId: string) {
 // ključ zato da dvije grupe ne dijele istu cache stavku. Ovo je i razlog zašto
 // se accountId prosljeđuje izvana — dokumentacija zabranjuje čitanje
 // cookies()/headers() unutar cache scopea.
-function playerStatsFor(accountId: string) {
+function allStatsFor(accountId: string) {
   return unstable_cache(
-    async (): Promise<PlayerStats[]> => {
+    async (): Promise<{ players: PlayerStats[]; pairs: PairStats[]; season: string | null }> => {
       const { players, games, rounds } = await loadAll(accountId);
-      return computePlayerStats(players, games, rounds);
+      // Igrači i parovi dijele jedan prolaz kroz povijest (rejting para se
+      // izvodi iz rejtinga igrača), pa se cachiraju zajedno — prije su se dvije
+      // cache stavke računale odvojeno i svaka je iznutra radila oba posla.
+      const { players: playerStats, pairs, rating } = computeAllStats(players, games, rounds);
+      // `rating` sadrži Mapove pa se ne serijalizira u cache — prosljeđuje se
+      // samo skalarni podatak koji UI treba.
+      return { players: playerStats, pairs, season: rating.currentSeason };
     },
-    ["player-leaderboard", accountId],
+    ["leaderboard", accountId],
     { revalidate: STATS_TTL_SECONDS, tags: [statsTag(accountId)] },
   );
 }
 
-function pairStatsFor(accountId: string) {
-  return unstable_cache(
-    async (): Promise<PairStats[]> => {
-      const { players, games, rounds } = await loadAll(accountId);
-      return computePairStats(players, games, rounds);
-    },
-    ["pair-leaderboard", accountId],
-    { revalidate: STATS_TTL_SECONDS, tags: [statsTag(accountId)] },
-  );
+export function getCachedAllStats(accountId: string) {
+  return allStatsFor(accountId)();
 }
 
-export function getCachedPlayerStats(accountId: string) {
-  return playerStatsFor(accountId)();
+export async function getCachedPlayerStats(accountId: string) {
+  return (await getCachedAllStats(accountId)).players;
 }
 
-export function getCachedPairStats(accountId: string) {
-  return pairStatsFor(accountId)();
+export async function getCachedPairStats(accountId: string) {
+  return (await getCachedAllStats(accountId)).pairs;
 }
