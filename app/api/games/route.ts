@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { getRepo } from "@/lib/supabase";
+import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { createGameSchema } from "@/lib/validation";
 
 export async function GET() {
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   const games = await repo.listGames();
   return NextResponse.json({ games });
 }
@@ -35,7 +38,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   const groupPlayers = await repo.listGroupPlayers(parsed.data.groupId);
   const allowedIds = new Set(groupPlayers.map((player) => player.id));
   if (![a1, a2, b1, b2].every((playerId) => allowedIds.has(playerId))) {

@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { getRepo } from "@/lib/supabase";
+import { getSessionAccountId, unauthorized } from "@/lib/session";
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   const players = await repo.listGroupPlayers(id);
   return NextResponse.json({ players });
 }
@@ -20,7 +23,9 @@ export async function POST(
   if (!body.playerId) {
     return NextResponse.json({ error: "Nedostaje playerId" }, { status: 400 });
   }
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   try {
     await repo.addPlayerToGroup(id, body.playerId);
     return NextResponse.json({ ok: true }, { status: 201 });
@@ -38,7 +43,9 @@ export async function DELETE(
   if (!body.playerId) {
     return NextResponse.json({ error: "Nedostaje playerId" }, { status: 400 });
   }
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   try {
     await repo.removePlayerFromGroup(id, body.playerId);
     return NextResponse.json({ ok: true });

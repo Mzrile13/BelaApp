@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRepo } from "@/lib/supabase";
+import { getSessionAccountId, unauthorized } from "@/lib/session";
 
 export async function PATCH(
   request: Request,
@@ -11,7 +12,9 @@ export async function PATCH(
   if (!name || name.length < 2) {
     return NextResponse.json({ error: "Naziv grupe mora imati barem 2 znaka" }, { status: 400 });
   }
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   try {
     const group = await repo.renameGroup(id, name);
     return NextResponse.json({ group });
@@ -25,7 +28,9 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   try {
     await repo.deleteGroup(id);
     return NextResponse.json({ ok: true });

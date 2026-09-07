@@ -2,29 +2,17 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { AUTH_COOKIE, verifySessionToken } from "@/utils/auth";
 import { AuthTabs } from "@/components/AuthTabs";
-import { LoginForm } from "./LoginForm";
+import { RegisterForm } from "./RegisterForm";
 
 export const dynamic = "force-dynamic";
 
-function queryParamToString(value: string | string[] | undefined) {
-  if (Array.isArray(value)) return value[0] ?? "";
-  return value ?? "";
-}
-
-function safeRedirect(target: string) {
-  // Only allow same-origin app paths to avoid open-redirects.
-  return target.startsWith("/") && !target.startsWith("//") ? target : "/";
-}
-
-export default async function LoginPage(props: PageProps<"/login">) {
+export default async function RegisterPage() {
   const cookieStore = await cookies();
   const alreadyAuthed =
     (await verifySessionToken(cookieStore.get(AUTH_COOKIE)?.value)) !== null;
-  const searchParams = await props.searchParams;
-  const target = safeRedirect(queryParamToString(searchParams?.redirect));
 
   if (alreadyAuthed) {
-    redirect(target);
+    redirect("/");
   }
 
   return (
@@ -34,10 +22,11 @@ export default async function LoginPage(props: PageProps<"/login">) {
           Bela Tracker
         </h1>
         <p className="mt-1.5 mb-5 text-[13.5px] leading-[1.5] text-[#a9c2b3]">
-          Prijavi se za pristup statistici svoje grupe.
+          Napravi grupu za svoje društvo. Korisničko ime i lozinku dijelite među
+          sobom — statistika vaše grupe ostaje odvojena od svih ostalih.
         </p>
-        <AuthTabs current="login" />
-        <LoginForm redirectTo={target} />
+        <AuthTabs current="register" />
+        <RegisterForm />
       </div>
     </main>
   );

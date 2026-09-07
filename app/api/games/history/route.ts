@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { HISTORY_PAGE_SIZE, getHistoryPage } from "@/lib/history";
+import { getSessionAccountId, unauthorized } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ export async function GET(request: Request) {
   const limitRaw = Math.floor(Number(searchParams.get("limit")) || HISTORY_PAGE_SIZE);
   const limit = Math.min(50, Math.max(1, limitRaw));
 
-  const page = await getHistoryPage(offset, limit);
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const page = await getHistoryPage(accountId, offset, limit);
   return NextResponse.json(page);
 }

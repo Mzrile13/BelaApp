@@ -5,11 +5,13 @@ import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { RevealList } from "@/components/RevealList";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
+import { requireAccountId } from "@/lib/session";
 import { computePlayerStats } from "@/lib/stats";
 
 export default async function PlayerPage(props: PageProps<"/players/[username]">) {
   const { username } = await props.params;
-  const repo = getRepo();
+  const accountId = await requireAccountId();
+  const repo = getRepo(accountId);
   const players = await repo.listPlayers();
   const games = await repo.listGames();
   const rounds = await repo.listRoundsForGames(games.map((game) => game.id));

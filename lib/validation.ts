@@ -1,5 +1,35 @@
 import { z } from "zod";
 
+// Račun = jedna grupa prijatelja s dijeljenim korisničkim imenom i lozinkom.
+export const accountUsernameSchema = z
+  .string()
+  .trim()
+  .min(3, "Korisničko ime mora imati barem 3 znaka")
+  .max(24, "Korisničko ime je predugo")
+  .regex(
+    /^[a-zA-Z0-9._-]+$/,
+    "Dozvoljena su slova, brojevi, točka, underscore i crtica",
+  );
+
+export const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
+export const registerSchema = z
+  .object({
+    username: accountUsernameSchema,
+    password: z
+      .string()
+      .min(8, "Lozinka mora imati barem 8 znakova")
+      .max(200, "Lozinka je preduga"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Lozinke se ne podudaraju",
+    path: ["confirmPassword"],
+  });
+
 export const createPlayerSchema = z.object({
   username: z
     .string()

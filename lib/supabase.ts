@@ -45,12 +45,48 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+/**
+ * Račun u koji migracija 008 seli sve zatečene podatke. Lokalni fallback koristi
+ * isti id da dev baza zatečena bez `accountId` ostane vidljiva.
+ */
+export const LEGACY_ACCOUNT_ID = "00000000-0000-0000-0000-000000000001";
+
+/** Redak kakav se sprema lokalno — javni tipovi ne nose `accountId`. */
+type Owned<T> = T & { accountId: string };
+
+export interface MemoryStore {
+  players: Owned<Player>[];
+  groups: Owned<PlayerGroup>[];
+  groupPlayers: Array<{ groupId: string; playerId: string; accountId: string }>;
+  games: Owned<Game>[];
+  rounds: Owned<Round>[];
+}
+
+export function createMemoryStore(): MemoryStore {
+  return { players: [], groups: [], groupPlayers: [], games: [], rounds: [] };
+}
+
 class InMemoryRepo implements BelaRepository {
-  private readonly players: Player[] = [];
-  private readonly groups: PlayerGroup[] = [];
-  private readonly groupPlayers: Array<{ groupId: string; playerId: string }> = [];
-  private readonly games: Game[] = [];
-  private readonly rounds: Round[] = [];
+  constructor(
+    private readonly accountId: string,
+    private readonly store: MemoryStore,
+  ) {}
+
+  private get players() {
+    return this.store.players.filter((row) => row.accountId === this.accountId);
+  }
+  private get groups() {
+    return this.store.groups.filter((row) => row.accountId === this.accountId);
+  }
+  private get groupPlayers() {
+    return this.store.groupPlayers.filter((row) => row.accountId === this.accountId);
+  }
+  private get games() {
+    return this.store.games.filter((row) => row.accountId === this.accountId);
+  }
+  private get rounds() {
+    return this.store.rounds.filter((row) => row.accountId === this.accountId);
+  }
 
   async listPlayers() {
     return [...this.players].sort((a, b) => a.username.localeCompare(b.username));
@@ -62,12 +98,13 @@ class InMemoryRepo implements BelaRepository {
     );
     if (exists) return exists;
 
-    const player: Player = {
+    const player: Owned<Player> = {
       id: crypto.randomUUID(),
       username,
       createdAt: nowIso(),
+      accountId: this.accountId,
     };
-    this.players.push(player);
+    this.store.players.push(player);
     return player;
   }
 
@@ -80,12 +117,13 @@ class InMemoryRepo implements BelaRepository {
       (group) => group.name.toLowerCase() === name.toLowerCase(),
     );
     if (existing) return existing;
-    const group: PlayerGroup = {
+    const group: Owned<PlayerGroup> = {
       id: crypto.randomUUID(),
       name,
       createdAt: nowIso(),
+      accountId: this.accountId,
     };
-    this.groups.push(group);
+    this.store.groups.push(group);
     return group;
   }
 
@@ -99,16 +137,15 @@ class InMemoryRepo implements BelaRepository {
   }
 
   async deleteGroup(groupId: string) {
-    this.groupPlayers.splice(
-      0,
-      this.groupPlayers.length,
-      ...this.groupPlayers.filter((row) => row.groupId !== groupId),
+    if (!this.groups.some((row) => row.id === groupId)) return;
+    this.store.groupPlayers = this.store.groupPlayers.filter(
+      (row) => row.groupId !== groupId,
     );
-    const groupIndex = this.groups.findIndex((row) => row.id === groupId);
-    if (groupIndex >= 0) this.groups.splice(groupIndex, 1);
+    this.store.groups = this.store.groups.filter((row) => row.id !== groupId);
   }
 
   async listGroupPlayers(groupId: string) {
+    if (!this.groups.some((row) => row.id === groupId)) return [];
     const memberIds = this.groupPlayers
       .filter((row) => row.groupId === groupId)
       .map((row) => row.playerId);
@@ -136,20 +173,23 @@ class InMemoryRepo implements BelaRepository {
     if (!group) throw new Error("Grupa nije pronađena");
     const player = this.players.find((row) => row.id === playerId);
     if (!player) throw new Error("Igrač nije pronađen");
-    const exists = this.groupPlayers.some(
+    const exists = this.store.groupPlayers.some(
       (row) => row.groupId === groupId && row.playerId === playerId,
     );
     if (!exists) {
-      this.groupPlayers.push({ groupId, playerId });
+      this.store.groupPlayers.push({ groupId, playerId, accountId: this.accountId });
     }
   }
 
   async removePlayerFromGroup(groupId: string, playerId: string) {
-    const index = this.groupPlayers.findIndex(
-      (row) => row.groupId === groupId && row.playerId === playerId,
+    const index = this.store.groupPlayers.findIndex(
+      (row) =>
+        row.groupId === groupId &&
+        row.playerId === playerId &&
+        row.accountId === this.accountId,
     );
     if (index >= 0) {
-      this.groupPlayers.splice(index, 1);
+      this.store.groupPlayers.splice(index, 1);
     }
   }
 
@@ -170,25 +210,22 @@ class InMemoryRepo implements BelaRepository {
   }
 
   async createGame(input: NewGameInput) {
-    const game: Game = {
+    const game: Owned<Game> = {
       id: crypto.randomUUID(),
       dealerPlayerId: input.dealerPlayerId,
       createdAt: nowIso(),
       finishedAt: null,
       teams: { teamA: input.teamA, teamB: input.teamB },
+      accountId: this.accountId,
     };
-    this.games.push(game);
+    this.store.games.push(game);
     return game;
   }
 
   async deleteGame(gameId: string) {
-    this.rounds.splice(
-      0,
-      this.rounds.length,
-      ...this.rounds.filter((round) => round.gameId !== gameId),
-    );
-    const gameIndex = this.games.findIndex((game) => game.id === gameId);
-    if (gameIndex >= 0) this.games.splice(gameIndex, 1);
+    if (!this.games.some((game) => game.id === gameId)) return;
+    this.store.rounds = this.store.rounds.filter((round) => round.gameId !== gameId);
+    this.store.games = this.store.games.filter((game) => game.id !== gameId);
   }
 
   async finishGame(gameId: string) {
@@ -224,13 +261,14 @@ class InMemoryRepo implements BelaRepository {
     const computed = computeRound(game, input);
     const currentRounds = await this.listRounds(input.gameId);
 
-    const row: Round = {
+    const row: Owned<Round> = {
       id: crypto.randomUUID(),
       roundNumber: currentRounds.length + 1,
       createdAt: nowIso(),
       ...computed,
+      accountId: this.accountId,
     };
-    this.rounds.push(row);
+    this.store.rounds.push(row);
     return row;
   }
 
@@ -239,32 +277,33 @@ class InMemoryRepo implements BelaRepository {
     if (!game) {
       throw new Error("Partija nije pronađena");
     }
-    const roundIndex = this.rounds.findIndex((round) => round.id === roundId);
-    if (roundIndex < 0) {
+    const existing = this.rounds.find((round) => round.id === roundId);
+    if (!existing) {
       throw new Error("Ruka nije pronađena");
     }
-    const existing = this.rounds[roundIndex];
     if (existing.gameId !== input.gameId) {
       throw new Error("Ruka ne pripada partiji");
     }
     const computed = computeRound(game, input);
-    const updated: Round = {
-      ...existing,
-      ...computed,
+    Object.assign(existing, computed, {
       calledSuit: input.calledSuit,
       stigliaTeam: input.stigliaTeam,
-    };
-    this.rounds[roundIndex] = updated;
-    return updated;
+    });
+    return existing;
   }
 }
 
+/** Repozitorij nad dijeljenim in-memory storeom — koriste ga testovi. */
+export function createMemoryRepo(accountId: string, store: MemoryStore): BelaRepository {
+  return new InMemoryRepo(accountId, store);
+}
+
 interface LocalDb {
-  players: Player[];
-  groups: PlayerGroup[];
-  groupPlayers: Array<{ groupId: string; playerId: string }>;
-  games: Game[];
-  rounds: Round[];
+  players: Owned<Player>[];
+  groups: Owned<PlayerGroup>[];
+  groupPlayers: Array<{ groupId: string; playerId: string; accountId: string }>;
+  games: Owned<Game>[];
+  rounds: Owned<Round>[];
 }
 
 const allowedSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
@@ -272,7 +311,9 @@ const allowedSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
 class FileRepo implements BelaRepository {
   private readonly dbPath = path.join(process.cwd(), ".data", "bela-db.json");
 
-  private normalizeRound(round: Round): Round {
+  constructor(private readonly accountId: string) {}
+
+  private normalizeRound(round: Owned<Round>): Owned<Round> {
     const calledSuit =
       typeof (round as Partial<Round>).calledSuit === "string" &&
       allowedSuits.includes((round as Partial<Round>).calledSuit as CalledSuit)
@@ -329,12 +370,18 @@ class FileRepo implements BelaRepository {
     try {
       const raw = await readFile(this.dbPath, "utf-8");
       const parsed = JSON.parse(raw) as LocalDb;
+      // Redci zapisani prije multi-tenancyja nemaju accountId; pripadaju
+      // legacy računu, isto kao u migraciji 008.
+      const own = <T extends { accountId?: string }>(row: T) => ({
+        ...row,
+        accountId: row.accountId ?? LEGACY_ACCOUNT_ID,
+      });
       return {
-        players: parsed.players ?? [],
-        groups: parsed.groups ?? [],
-        groupPlayers: parsed.groupPlayers ?? [],
-        games: parsed.games ?? [],
-        rounds: (parsed.rounds ?? []).map((round) => this.normalizeRound(round)),
+        players: (parsed.players ?? []).map(own),
+        groups: (parsed.groups ?? []).map(own),
+        groupPlayers: (parsed.groupPlayers ?? []).map(own),
+        games: (parsed.games ?? []).map(own),
+        rounds: (parsed.rounds ?? []).map((round) => this.normalizeRound(own(round))),
       };
     } catch {
       return { players: [], groups: [], groupPlayers: [], games: [], rounds: [] };
@@ -346,21 +393,26 @@ class FileRepo implements BelaRepository {
     await writeFile(this.dbPath, JSON.stringify(db, null, 2), "utf-8");
   }
 
+  private mine<T extends { accountId: string }>(rows: T[]) {
+    return rows.filter((row) => row.accountId === this.accountId);
+  }
+
   async listPlayers() {
     const db = await this.readDb();
-    return [...db.players].sort((a, b) => a.username.localeCompare(b.username));
+    return this.mine(db.players).sort((a, b) => a.username.localeCompare(b.username));
   }
 
   async createPlayer(username: string) {
     const db = await this.readDb();
-    const exists = db.players.find(
+    const exists = this.mine(db.players).find(
       (player) => player.username.toLowerCase() === username.toLowerCase(),
     );
     if (exists) return exists;
-    const player: Player = {
+    const player: Owned<Player> = {
       id: crypto.randomUUID(),
       username,
       createdAt: nowIso(),
+      accountId: this.accountId,
     };
     db.players.push(player);
     await this.writeDb(db);
@@ -369,17 +421,20 @@ class FileRepo implements BelaRepository {
 
   async listGroups() {
     const db = await this.readDb();
-    return [...db.groups].sort((a, b) => a.name.localeCompare(b.name));
+    return this.mine(db.groups).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async createGroup(name: string) {
     const db = await this.readDb();
-    const existing = db.groups.find((group) => group.name.toLowerCase() === name.toLowerCase());
+    const existing = this.mine(db.groups).find(
+      (group) => group.name.toLowerCase() === name.toLowerCase(),
+    );
     if (existing) return existing;
-    const group: PlayerGroup = {
+    const group: Owned<PlayerGroup> = {
       id: crypto.randomUUID(),
       name,
       createdAt: nowIso(),
+      accountId: this.accountId,
     };
     db.groups.push(group);
     await this.writeDb(db);
@@ -388,18 +443,15 @@ class FileRepo implements BelaRepository {
 
   async deleteGroup(groupId: string) {
     const db = await this.readDb();
-    const nextGroups = db.groups.filter((row) => row.id !== groupId);
-    const nextGroupPlayers = db.groupPlayers.filter((row) => row.groupId !== groupId);
-    if (nextGroups.length !== db.groups.length || nextGroupPlayers.length !== db.groupPlayers.length) {
-      db.groups = nextGroups;
-      db.groupPlayers = nextGroupPlayers;
-      await this.writeDb(db);
-    }
+    if (!this.mine(db.groups).some((row) => row.id === groupId)) return;
+    db.groups = db.groups.filter((row) => row.id !== groupId);
+    db.groupPlayers = db.groupPlayers.filter((row) => row.groupId !== groupId);
+    await this.writeDb(db);
   }
 
   async renameGroup(groupId: string, name: string) {
     const db = await this.readDb();
-    const group = db.groups.find((row) => row.id === groupId);
+    const group = this.mine(db.groups).find((row) => row.id === groupId);
     if (!group) throw new Error("Grupa nije pronađena");
     group.name = name;
     await this.writeDb(db);
@@ -408,19 +460,20 @@ class FileRepo implements BelaRepository {
 
   async listGroupPlayers(groupId: string) {
     const db = await this.readDb();
-    const memberIds = db.groupPlayers
+    if (!this.mine(db.groups).some((row) => row.id === groupId)) return [];
+    const memberIds = this.mine(db.groupPlayers)
       .filter((row) => row.groupId === groupId)
       .map((row) => row.playerId);
-    return db.players
+    return this.mine(db.players)
       .filter((player) => memberIds.includes(player.id))
       .sort((a, b) => a.username.localeCompare(b.username));
   }
 
   async listAllGroupMembers() {
     const db = await this.readDb();
-    const playersById = new Map(db.players.map((player) => [player.id, player]));
+    const playersById = new Map(this.mine(db.players).map((player) => [player.id, player]));
     const map: Record<string, Player[]> = {};
-    for (const row of db.groupPlayers) {
+    for (const row of this.mine(db.groupPlayers)) {
       const player = playersById.get(row.playerId);
       if (!player) continue;
       (map[row.groupId] ??= []).push(player);
@@ -433,15 +486,15 @@ class FileRepo implements BelaRepository {
 
   async addPlayerToGroup(groupId: string, playerId: string) {
     const db = await this.readDb();
-    const group = db.groups.find((row) => row.id === groupId);
+    const group = this.mine(db.groups).find((row) => row.id === groupId);
     if (!group) throw new Error("Grupa nije pronađena");
-    const player = db.players.find((row) => row.id === playerId);
+    const player = this.mine(db.players).find((row) => row.id === playerId);
     if (!player) throw new Error("Igrač nije pronađen");
     const exists = db.groupPlayers.some(
       (row) => row.groupId === groupId && row.playerId === playerId,
     );
     if (!exists) {
-      db.groupPlayers.push({ groupId, playerId });
+      db.groupPlayers.push({ groupId, playerId, accountId: this.accountId });
       await this.writeDb(db);
     }
   }
@@ -449,7 +502,12 @@ class FileRepo implements BelaRepository {
   async removePlayerFromGroup(groupId: string, playerId: string) {
     const db = await this.readDb();
     const nextGroupPlayers = db.groupPlayers.filter(
-      (row) => !(row.groupId === groupId && row.playerId === playerId),
+      (row) =>
+        !(
+          row.groupId === groupId &&
+          row.playerId === playerId &&
+          row.accountId === this.accountId
+        ),
     );
     if (nextGroupPlayers.length !== db.groupPlayers.length) {
       db.groupPlayers = nextGroupPlayers;
@@ -459,12 +517,12 @@ class FileRepo implements BelaRepository {
 
   async listGames() {
     const db = await this.readDb();
-    return [...db.games].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return this.mine(db.games).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   async listFinishedGamesPage(limit: number, offset: number) {
     const db = await this.readDb();
-    const finished = db.games
+    const finished = this.mine(db.games)
       .filter((game) => game.finishedAt !== null)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     const games = finished.slice(offset, offset + limit);
@@ -473,17 +531,18 @@ class FileRepo implements BelaRepository {
 
   async getGame(id: string) {
     const db = await this.readDb();
-    return db.games.find((game) => game.id === id) ?? null;
+    return this.mine(db.games).find((game) => game.id === id) ?? null;
   }
 
   async createGame(input: NewGameInput) {
     const db = await this.readDb();
-    const game: Game = {
+    const game: Owned<Game> = {
       id: crypto.randomUUID(),
       dealerPlayerId: input.dealerPlayerId,
       createdAt: nowIso(),
       finishedAt: null,
       teams: { teamA: input.teamA, teamB: input.teamB },
+      accountId: this.accountId,
     };
     db.games.push(game);
     await this.writeDb(db);
@@ -492,18 +551,15 @@ class FileRepo implements BelaRepository {
 
   async deleteGame(gameId: string) {
     const db = await this.readDb();
-    const nextGames = db.games.filter((game) => game.id !== gameId);
-    const nextRounds = db.rounds.filter((round) => round.gameId !== gameId);
-    if (nextGames.length !== db.games.length || nextRounds.length !== db.rounds.length) {
-      db.games = nextGames;
-      db.rounds = nextRounds;
-      await this.writeDb(db);
-    }
+    if (!this.mine(db.games).some((game) => game.id === gameId)) return;
+    db.games = db.games.filter((game) => game.id !== gameId);
+    db.rounds = db.rounds.filter((round) => round.gameId !== gameId);
+    await this.writeDb(db);
   }
 
   async finishGame(gameId: string) {
     const db = await this.readDb();
-    const game = db.games.find((row) => row.id === gameId);
+    const game = this.mine(db.games).find((row) => row.id === gameId);
     if (!game || game.finishedAt) return;
     game.finishedAt = nowIso();
     await this.writeDb(db);
@@ -511,7 +567,7 @@ class FileRepo implements BelaRepository {
 
   async reopenGame(gameId: string) {
     const db = await this.readDb();
-    const game = db.games.find((row) => row.id === gameId);
+    const game = this.mine(db.games).find((row) => row.id === gameId);
     if (!game || game.finishedAt === null) return;
     game.finishedAt = null;
     await this.writeDb(db);
@@ -519,7 +575,7 @@ class FileRepo implements BelaRepository {
 
   async listRounds(gameId: string) {
     const db = await this.readDb();
-    return db.rounds
+    return this.mine(db.rounds)
       .filter((round) => round.gameId === gameId)
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }
@@ -527,28 +583,29 @@ class FileRepo implements BelaRepository {
   async listRoundsForGames(gameIds: string[]) {
     const db = await this.readDb();
     const gameIdSet = new Set(gameIds);
-    return db.rounds
+    return this.mine(db.rounds)
       .filter((round) => gameIdSet.has(round.gameId))
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }
 
   async createRound(input: RoundInput) {
     const db = await this.readDb();
-    const game = db.games.find((candidate) => candidate.id === input.gameId);
+    const game = this.mine(db.games).find((candidate) => candidate.id === input.gameId);
     if (!game) {
       throw new Error("Partija nije pronađena");
     }
     const computed = computeRound(game, input);
-    const currentRounds = db.rounds
+    const currentRounds = this.mine(db.rounds)
       .filter((round) => round.gameId === input.gameId)
       .sort((a, b) => a.roundNumber - b.roundNumber);
-    const row: Round = {
+    const row: Owned<Round> = {
       id: crypto.randomUUID(),
       roundNumber: currentRounds.length + 1,
       createdAt: nowIso(),
       ...computed,
       calledSuit: input.calledSuit,
-        stigliaTeam: input.stigliaTeam,
+      stigliaTeam: input.stigliaTeam,
+      accountId: this.accountId,
     };
     db.rounds.push(row);
     await this.writeDb(db);
@@ -557,39 +614,43 @@ class FileRepo implements BelaRepository {
 
   async updateRound(roundId: string, input: RoundInput) {
     const db = await this.readDb();
-    const game = db.games.find((candidate) => candidate.id === input.gameId);
+    const game = this.mine(db.games).find((candidate) => candidate.id === input.gameId);
     if (!game) {
       throw new Error("Partija nije pronađena");
     }
-    const roundIndex = db.rounds.findIndex((round) => round.id === roundId);
-    if (roundIndex < 0) {
+    const existing = this.mine(db.rounds).find((round) => round.id === roundId);
+    if (!existing) {
       throw new Error("Ruka nije pronađena");
     }
-    const existing = db.rounds[roundIndex];
     if (existing.gameId !== input.gameId) {
       throw new Error("Ruka ne pripada partiji");
     }
     const computed = computeRound(game, input);
-    const updated: Round = {
+    const updated: Owned<Round> = {
       ...existing,
       ...computed,
       calledSuit: input.calledSuit,
       stigliaTeam: input.stigliaTeam,
     };
-    db.rounds[roundIndex] = updated;
+    db.rounds = db.rounds.map((round) => (round.id === roundId ? updated : round));
     await this.writeDb(db);
     return updated;
   }
 }
 
-const memoryRepo =
-  (globalThis as { __belaMemoryRepo?: InMemoryRepo }).__belaMemoryRepo ??
-  new InMemoryRepo();
-(globalThis as { __belaMemoryRepo?: InMemoryRepo }).__belaMemoryRepo = memoryRepo;
+// Dev fallback: jedan FileRepo po računu, keširan preko HMR reloada.
+const fileRepos: Map<string, FileRepo> =
+  (globalThis as { __belaFileRepos?: Map<string, FileRepo> }).__belaFileRepos ??
+  new Map<string, FileRepo>();
+(globalThis as { __belaFileRepos?: Map<string, FileRepo> }).__belaFileRepos = fileRepos;
 
-const fileRepo =
-  (globalThis as { __belaFileRepo?: FileRepo }).__belaFileRepo ?? new FileRepo();
-(globalThis as { __belaFileRepo?: FileRepo }).__belaFileRepo = fileRepo;
+function scopedFileRepo(accountId: string): BelaRepository {
+  const existing = fileRepos.get(accountId);
+  if (existing) return existing;
+  const repo = new FileRepo(accountId);
+  fileRepos.set(accountId, repo);
+  return repo;
+}
 
 // Node's built-in fetch (undici) negotiates HTTP/2 with Supabase's Cloudflare
 // edge, which corrupts TLS records under Next.js's dev-mode fetch wrapping
@@ -668,7 +729,7 @@ function nodeHttp1Fetch(input: string | URL, init: RequestInit = {}): Promise<Re
   });
 }
 
-function getSupabaseAdmin() {
+export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRole) {
@@ -684,15 +745,48 @@ function getSupabaseAdmin() {
   });
 }
 
-export function getRepo(): BelaRepository {
+/**
+ * Repozitorij vezan uz jedan račun (grupu). Svaki upit filtrira po `account_id`,
+ * a svaki insert ga postavlja — izolacija između grupa živi ovdje, na jednom
+ * mjestu, umjesto da se ponavlja po rutama. RLS je uključen bez politika
+ * (007_enable_rls.sql) i sve ide preko service-role ključa, pa baza sama ne
+ * postavlja tu granicu.
+ */
+export function getRepo(accountId: string): BelaRepository {
+  if (!accountId) throw new Error("getRepo zahtijeva accountId");
   const supabase = getSupabaseAdmin();
-  if (!supabase) return fileRepo;
+  if (!supabase) return scopedFileRepo(accountId);
+
+  // group_players nema vlastiti account_id, pa se vlasništvo provjerava nad
+  // roditeljima prije svakog pisanja.
+  async function requireOwnedGroup(groupId: string) {
+    const { data, error } = await supabase!
+      .from("groups")
+      .select("id")
+      .eq("id", groupId)
+      .eq("account_id", accountId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error("Grupa nije pronađena");
+  }
+
+  async function requireOwnedPlayer(playerId: string) {
+    const { data, error } = await supabase!
+      .from("players")
+      .select("id")
+      .eq("id", playerId)
+      .eq("account_id", accountId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error("Igrač nije pronađen");
+  }
 
   return {
     async listPlayers() {
       const { data, error } = await supabase
         .from("players")
         .select("id, username, created_at")
+        .eq("account_id", accountId)
         .order("username", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((row) => ({
@@ -704,7 +798,7 @@ export function getRepo(): BelaRepository {
     async createPlayer(username: string) {
       const { data, error } = await supabase
         .from("players")
-        .insert({ username })
+        .insert({ username, account_id: accountId })
         .select("id, username, created_at")
         .single();
       if (error) throw error;
@@ -714,6 +808,7 @@ export function getRepo(): BelaRepository {
       const { data, error } = await supabase
         .from("groups")
         .select("id, name, created_at")
+        .eq("account_id", accountId)
         .order("name", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((row) => ({
@@ -725,7 +820,7 @@ export function getRepo(): BelaRepository {
     async createGroup(name: string) {
       const { data, error } = await supabase
         .from("groups")
-        .insert({ name })
+        .insert({ name, account_id: accountId })
         .select("id, name, created_at")
         .single();
       if (error) throw error;
@@ -736,20 +831,27 @@ export function getRepo(): BelaRepository {
         .from("groups")
         .update({ name })
         .eq("id", groupId)
+        .eq("account_id", accountId)
         .select("id, name, created_at")
         .single();
       if (error) throw error;
       return { id: data.id, name: data.name, createdAt: data.created_at };
     },
     async deleteGroup(groupId: string) {
-      const { error } = await supabase.from("groups").delete().eq("id", groupId);
+      const { error } = await supabase
+        .from("groups")
+        .delete()
+        .eq("id", groupId)
+        .eq("account_id", accountId);
       if (error) throw error;
     },
     async listGroupPlayers(groupId: string) {
       const { data, error } = await supabase
         .from("group_players")
-        .select("player_id, players!inner(id, username, created_at)")
-        .eq("group_id", groupId);
+        .select("player_id, players!inner(id, username, created_at), groups!inner(account_id)")
+        .eq("group_id", groupId)
+        .eq("groups.account_id", accountId)
+        .eq("players.account_id", accountId);
       if (error) throw error;
       return (data ?? [])
         .map((row) => {
@@ -767,7 +869,9 @@ export function getRepo(): BelaRepository {
     async listAllGroupMembers() {
       const { data, error } = await supabase
         .from("group_players")
-        .select("group_id, players!inner(id, username, created_at)");
+        .select("group_id, players!inner(id, username, created_at), groups!inner(account_id)")
+        .eq("groups.account_id", accountId)
+        .eq("players.account_id", accountId);
       if (error) throw error;
       const map: Record<string, Player[]> = {};
       for (const row of data ?? []) {
@@ -785,12 +889,17 @@ export function getRepo(): BelaRepository {
       return map;
     },
     async addPlayerToGroup(groupId: string, playerId: string) {
+      // Oba id-a dolaze od klijenta; bez ove provjere bi se igrač jednog računa
+      // mogao ubaciti u grupu drugog.
+      await requireOwnedGroup(groupId);
+      await requireOwnedPlayer(playerId);
       const { error } = await supabase
         .from("group_players")
         .insert({ group_id: groupId, player_id: playerId });
       if (error && error.code !== "23505") throw error;
     },
     async removePlayerFromGroup(groupId: string, playerId: string) {
+      await requireOwnedGroup(groupId);
       const { error } = await supabase
         .from("group_players")
         .delete()
@@ -802,6 +911,7 @@ export function getRepo(): BelaRepository {
       const { data, error } = await supabase
         .from("games")
         .select("id, dealer_player_id, created_at, finished_at, teams")
+        .eq("account_id", accountId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []).map((row) => ({
@@ -817,6 +927,7 @@ export function getRepo(): BelaRepository {
       const { data, error } = await supabase
         .from("games")
         .select("id, dealer_player_id, created_at, finished_at, teams")
+        .eq("account_id", accountId)
         .not("finished_at", "is", null)
         .order("created_at", { ascending: false })
         .range(offset, offset + limit);
@@ -837,6 +948,7 @@ export function getRepo(): BelaRepository {
         .from("games")
         .select("id, dealer_player_id, created_at, finished_at, teams")
         .eq("id", id)
+        .eq("account_id", accountId)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
@@ -854,6 +966,7 @@ export function getRepo(): BelaRepository {
         .insert({
           dealer_player_id: input.dealerPlayerId,
           teams: { teamA: input.teamA, teamB: input.teamB },
+          account_id: accountId,
         })
         .select("id, dealer_player_id, created_at, finished_at, teams")
         .single();
@@ -867,7 +980,11 @@ export function getRepo(): BelaRepository {
       };
     },
     async deleteGame(gameId: string) {
-      const { error } = await supabase.from("games").delete().eq("id", gameId);
+      const { error } = await supabase
+        .from("games")
+        .delete()
+        .eq("id", gameId)
+        .eq("account_id", accountId);
       if (error) throw error;
     },
     async finishGame(gameId: string) {
@@ -875,6 +992,7 @@ export function getRepo(): BelaRepository {
         .from("games")
         .update({ finished_at: nowIso() })
         .eq("id", gameId)
+        .eq("account_id", accountId)
         .is("finished_at", null);
       if (error) throw error;
     },
@@ -882,7 +1000,8 @@ export function getRepo(): BelaRepository {
       const { error } = await supabase
         .from("games")
         .update({ finished_at: null })
-        .eq("id", gameId);
+        .eq("id", gameId)
+        .eq("account_id", accountId);
       if (error) throw error;
     },
     async listRounds(gameId: string) {
@@ -892,6 +1011,7 @@ export function getRepo(): BelaRepository {
           "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
         )
         .eq("game_id", gameId)
+        .eq("account_id", accountId)
         .order("round_number", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((row) => ({
@@ -926,6 +1046,7 @@ export function getRepo(): BelaRepository {
           "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
         )
         .in("game_id", gameIds)
+        .eq("account_id", accountId)
         .order("round_number", { ascending: true });
       if (error) throw error;
       return (data ?? []).map((row) => ({
@@ -963,6 +1084,7 @@ export function getRepo(): BelaRepository {
         .from("rounds")
         .insert({
           game_id: input.gameId,
+          account_id: accountId,
           round_number: currentRounds.length + 1,
           caller_player_id: input.callerPlayerId,
           called_suit: input.calledSuit,
@@ -1037,6 +1159,8 @@ export function getRepo(): BelaRepository {
           caller_succeeded: computed.callerSucceeded,
         })
         .eq("id", roundId)
+        .eq("game_id", input.gameId)
+        .eq("account_id", accountId)
         .select(
           "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
         )

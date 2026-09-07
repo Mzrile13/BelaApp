@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCachedPairStats } from "@/lib/cachedStats";
+import { getSessionAccountId, unauthorized } from "@/lib/session";
 
 export async function GET() {
-  const stats = await getCachedPairStats();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const stats = await getCachedPairStats(accountId);
   return NextResponse.json({ stats });
 }

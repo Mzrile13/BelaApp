@@ -3,6 +3,7 @@ import { ActiveGamesList } from "@/components/ActiveGamesList";
 import { BackButton } from "@/components/BackButton";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
+import { requireAccountId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -10,7 +11,8 @@ export const fetchCache = "force-no-store";
 
 export default async function ActiveGamesPage() {
   noStore();
-  const repo = getRepo();
+  const accountId = await requireAccountId();
+  const repo = getRepo(accountId);
   const players = await repo.listPlayers();
   const games = await repo.listGames();
   const rounds = await repo.listRoundsForGames(games.map((game) => game.id));

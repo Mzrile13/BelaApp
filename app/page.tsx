@@ -6,6 +6,7 @@ import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import { getCachedPairStats, getCachedPlayerStats } from "@/lib/cachedStats";
+import { requireAccountId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,7 +16,8 @@ export default function Home() {
 }
 
 async function HomeContent() {
-  const repo = getRepo();
+  const accountId = await requireAccountId();
+  const repo = getRepo(accountId);
   const games = await repo.listGames();
   // Only unfinished games can be active; load rounds just for those instead of
   // scanning every round in the database.
@@ -33,8 +35,8 @@ async function HomeContent() {
     (game) => getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? [])) === null,
   );
   const [playerStats, pairStatsAll] = await Promise.all([
-    getCachedPlayerStats(),
-    getCachedPairStats(),
+    getCachedPlayerStats(accountId),
+    getCachedPairStats(accountId),
   ]);
   const pairStats = pairStatsAll.slice(0, 3);
 

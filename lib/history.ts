@@ -25,8 +25,12 @@ export const HISTORY_PAGE_SIZE = 20;
  * scores. Only the rounds of the games on this page are fetched, so the cost
  * stays flat as the total number of games grows.
  */
-export async function getHistoryPage(offset: number, limit: number): Promise<HistoryPageResult> {
-  const repo = getRepo();
+export async function getHistoryPage(
+  accountId: string,
+  offset: number,
+  limit: number,
+): Promise<HistoryPageResult> {
+  const repo = getRepo(accountId);
   const [{ games, hasMore }, players] = await Promise.all([
     repo.listFinishedGamesPage(limit, offset),
     repo.listPlayers(),

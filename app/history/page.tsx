@@ -2,6 +2,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
 import { HistoryList } from "@/components/HistoryList";
 import { HISTORY_PAGE_SIZE, getHistoryPage } from "@/lib/history";
+import { requireAccountId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -9,7 +10,7 @@ export const fetchCache = "force-no-store";
 
 export default async function HistoryPage() {
   noStore();
-  const page = await getHistoryPage(0, HISTORY_PAGE_SIZE);
+  const page = await getHistoryPage(await requireAccountId(), 0, HISTORY_PAGE_SIZE);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">

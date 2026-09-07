@@ -2,6 +2,7 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
 import { getCachedPlayerStats } from "@/lib/cachedStats";
+import { requireAccountId } from "@/lib/session";
 import type { PlayerStats } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +62,7 @@ export default async function LeaderboardPage(props: PageProps<"/leaderboard">) 
   const searchParams = await props.searchParams;
   const queryRaw = queryParamToString(searchParams?.q);
   const query = queryRaw.toLowerCase().trim();
-  const leaderboard = (await getCachedPlayerStats())
+  const leaderboard = (await getCachedPlayerStats(await requireAccountId()))
     .filter((row) => row.gamesPlayed > 0)
     .filter((row) => (query ? row.username.toLowerCase().includes(query) : true));
   const ranked = leaderboard.filter((row) => !row.insufficientSample);

@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# lokalne datoteke s kredencijalima (npr. hash za legacy racun)
+*.local.sql

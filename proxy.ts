@@ -4,12 +4,13 @@ import { AUTH_COOKIE, verifySessionToken } from "@/utils/auth";
 
 // Paths that must stay reachable without a session (the login screen itself
 // and the endpoint that creates the session).
-const PUBLIC_PATHS = new Set(["/login", "/api/login"]);
+const PUBLIC_PATHS = new Set(["/login", "/api/login", "/register", "/api/register"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.has(pathname);
-  const isAuthed = await verifySessionToken(request.cookies.get(AUTH_COOKIE)?.value);
+  const isAuthed =
+    (await verifySessionToken(request.cookies.get(AUTH_COOKIE)?.value)) !== null;
 
   if (!isAuthed && !isPublic) {
     if (pathname.startsWith("/api/")) {

@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 import {
   AUTH_COOKIE,
   SESSION_DURATION_MS,
-  checkCredentials,
   createSessionToken,
+  verifyPassword,
 } from "@/utils/auth";
+import { findAccountCredentials } from "@/lib/accounts";
 import { rateLimit } from "@/lib/rateLimit";
+import { loginSchema } from "@/lib/validation";
+
+// Hash koji sigurno ne odgovara nijednoj lozinci. Kad račun ne postoji svejedno
+// odradimo jedan puni PBKDF2, pa trajanje odgovora ne odaje postoji li ime.
+const DUMMY_HASH =
+  "pbkdf2$sha256$210000$AAAAAAAAAAAAAAAAAAAAAA==$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 function clientIp(request: Request) {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -14,8 +21,7 @@ function clientIp(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Ublažavanje brute-force napada na zajedničku lozinku: max 8 pokušaja / 10 min
-  // po IP-u.
+  // Ublažavanje brute-force napada: max 8 pokušaja / 10 min po IP-u.
   const limited = rateLimit(`login:${clientIp(request)}`, {
     limit: 8,
     windowMs: 10 * 60 * 1000,
@@ -30,18 +36,16 @@ export async function POST(request: Request) {
     );
   }
 
-  let body: { username?: unknown; password?: unknown } = {};
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    body = {};
-  }
+  const parsed = loginSchema.safeParse(await request.json().catch(() => ({})));
+  const username = parsed.success ? parsed.data.username : "";
+  const password = parsed.success ? parsed.data.password : "";
 
-  const username = typeof body.username === "string" ? body.username : "";
-  const password = typeof body.password === "string" ? body.password : "";
+  const account = username ? await findAccountCredentials(username) : null;
+  const passwordOk = await verifyPassword(password, account?.passwordHash ?? DUMMY_HASH);
 
-  if (!checkCredentials(username, password)) {
-    // Kratka odgoda dodatno usporava automatsko pogađanje.
+  if (!account || !passwordOk) {
+    // Kratka odgoda dodatno usporava automatsko pogađanje. Ista poruka za
+    // nepostojeći račun i krivu lozinku — da se ne otkriva koja imena postoje.
     await new Promise((resolve) => setTimeout(resolve, 400));
     return NextResponse.json(
       { error: "Neispravno korisničko ime ili lozinka" },
@@ -49,7 +53,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const token = await createSessionToken();
+  const token = await createSessionToken(account.id);
   const response = NextResponse.json({ ok: true });
   response.cookies.set(AUTH_COOKIE, token, {
     httpOnly: true,

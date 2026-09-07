@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
+import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import { STATS_CACHE_TAG } from "@/lib/cachedStats";
+import { statsTag } from "@/lib/cachedStats";
 import { createRoundSchema } from "@/lib/validation";
 
 function isAllowedZvanjaTotal(total: number) {
@@ -64,7 +65,9 @@ export async function PATCH(
     );
   }
 
-  const repo = getRepo();
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
   const game = await repo.getGame(parsed.data.gameId);
   if (!game) {
     return NextResponse.json({ error: "Partija nije pronađena" }, { status: 404 });
@@ -123,7 +126,7 @@ export async function PATCH(
   } else {
     await repo.reopenGame(game.id);
   }
-  revalidateTag(STATS_CACHE_TAG, "max");
+  revalidateTag(statsTag(accountId), "max");
 
   return NextResponse.json(
     { round, gameFinished: Boolean(winnerTeam), winnerTeam, score: scoreAfterUpdate },

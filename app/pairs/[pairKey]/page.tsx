@@ -6,13 +6,15 @@ import { RevealList } from "@/components/RevealList";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { computePairStats } from "@/lib/stats";
 import { getRepo } from "@/lib/supabase";
+import { requireAccountId } from "@/lib/session";
 
 export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
   const { pairKey } = await props.params;
   const [playerAId, playerBId] = pairKey.split("__");
   if (!playerAId || !playerBId) notFound();
 
-  const repo = getRepo();
+  const accountId = await requireAccountId();
+  const repo = getRepo(accountId);
   const players = await repo.listPlayers();
   const games = await repo.listGames();
   const rounds = await repo.listRoundsForGames(games.map((game) => game.id));

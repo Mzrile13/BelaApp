@@ -2,6 +2,7 @@ import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
 import { getCachedPairStats } from "@/lib/cachedStats";
+import { requireAccountId } from "@/lib/session";
 import type { PairStats } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
   const queryRaw = queryParamToString(searchParams?.q);
   const query = queryRaw.toLowerCase().trim();
 
-  const leaderboard = (await getCachedPairStats()).filter((row) => {
+  const leaderboard = (await getCachedPairStats(await requireAccountId())).filter((row) => {
     if (!query) return true;
     const label = `${row.playerAUsername} ${row.playerBUsername}`.toLowerCase();
     return label.includes(query);
