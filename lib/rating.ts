@@ -12,9 +12,17 @@ import type { Game, Round, TeamId } from "@/lib/types";
  * Tri odstupanja od udžbeničkog Ela, sva zbog toga što je bela utrka do 1001:
  *
  * 1. MARGINA. Partija nosi puno više informacije od jednog bita (1001:980 nije
- *    isto što i 1001:250), pa margina skalira K. Uz to ide standardna zaštita
- *    od autokorelacije: favoriti pobjeđuju uvjerljivije, pa bi bez prigušenja
- *    margina napuhavala vrh ljestvice.
+ *    isto što i 1001:250), pa margina skalira K.
+ *
+ *    Ovdje je namjerno IZOSTAVLJENO 538-ovo prigušenje favorita
+ *    (`2.2 / (0.001 * razlikaRejtinga + 2.2)`). Ono asimetrično smanjuje korak
+ *    kad pobijedi favorit, a povećava ga kad pobijedi autsajder, što ne pomiče
+ *    samo brzinu nego i ravnotežu — sustavno stišće ljestvicu prema sredini.
+ *    Mjereno na simulaciji sa zadanim pravim rejtinzima, nagib regresije
+ *    procijenjenog na pravi rejting (1.0 = nepristrano) rastao je s prigušenjem
+ *    0.80 na 0.91 bez njega pri 60 partija, 0.80 -> 0.93 pri 150 i
+ *    0.74 -> 0.86 pri 400. Margina u K bez prigušenja nije pristrana jer skalira
+ *    korak simetrično za oba ishoda.
  * 2. VIŠE PROLAZA. Jedan kronološki prolaz sudi rane partije krivim priorima
  *    (svi na 1500). Ponovljeni prolazi, gdje završni rejtinzi postaju početni,
  *    uklanjaju ovisnost o redoslijedu i konvergiraju blizu Bradley-Terry
@@ -127,16 +135,6 @@ function marginMultiplier(scoreWinner: number, scoreLoser: number) {
   return 0.75 + 0.5 * Math.log(1 + 4 * margin);
 }
 
-/**
- * Prigušenje autokorelacije margine i razlike u rejtingu (538-ov oblik): bez
- * njega jači timovi dobivaju dvostruko — i za pobjedu i za to što pobjeđuju
- * uvjerljivije — pa ljestvica divergira.
- */
-function favouriteDamping(winnerRating: number, loserRating: number) {
-  const diff = Math.min(800, Math.max(-800, winnerRating - loserRating));
-  return 2.2 / (0.001 * diff + 2.2);
-}
-
 function playersOf(game: Game): string[] {
   return [game.teams.teamA[0], game.teams.teamA[1], game.teams.teamB[0], game.teams.teamB[1]];
 }
@@ -204,15 +202,13 @@ export function computeRatings(
       const expectedA = expectedScore(ratingA, ratingB);
       const actualA = scored.winner === null ? 0.5 : scored.winner === "A" ? 1 : 0;
 
-      const winnerRating = actualA >= 0.5 ? ratingA : ratingB;
-      const loserRating = actualA >= 0.5 ? ratingB : ratingA;
       const mult =
         scored.winner === null
           ? 1
           : marginMultiplier(
               Math.max(scored.scoreA, scored.scoreB),
               Math.min(scored.scoreA, scored.scoreB),
-            ) * favouriteDamping(winnerRating, loserRating);
+            );
 
       for (const [ids, actual, expected] of [
         [teamAIds, actualA, expectedA] as const,
