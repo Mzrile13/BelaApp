@@ -1,93 +1,38 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BackButton } from "@/components/BackButton";
 import { RoundEntryForm } from "@/components/RoundEntryForm";
-import { getNextDealer } from "@/lib/dealer";
-import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import type { Game, Player, Round } from "@/lib/types";
+import type { Game, Player } from "@/lib/types";
 
-interface GamePayload {
+/**
+ * Sav podatak dolazi s poslužitelja kao prop — ovaj sloj postoji samo zbog
+ * navigacije nakon spremanja, pa forma više ne čeka dva fetcha nakon hydrationa.
+ */
+export function NewRoundPageClient({
+  game,
+  players,
+  dealerName,
+}: {
   game: Game;
-  rounds: Round[];
-}
-
-export function NewRoundPageClient({ gameId }: { gameId: string }) {
+  players: Player[];
+  dealerName: string;
+}) {
   const router = useRouter();
-  const [game, setGame] = useState<Game | null>(null);
-  const [rounds, setRounds] = useState<Round[]>([]);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [error, setError] = useState("");
 
-  async function load() {
-    const [playersResponse, gameResponse] = await Promise.all([
-      fetch("/api/players"),
-      fetch(`/api/games/${gameId}`),
-    ]);
-
-    if (!gameResponse.ok) {
-      setError("Partija nije pronađena");
-      return;
-    }
-
-    const playersBody = (await playersResponse.json()) as { players: Player[] };
-    const gameBody = (await gameResponse.json()) as GamePayload;
-
-    setPlayers(playersBody.players ?? []);
-    setGame(gameBody.game);
-    setRounds(gameBody.rounds ?? []);
-  }
-
-  useEffect(() => {
-    void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId]);
-
-  if (error) {
-    return <p className="p-4 text-rose-300">{error}</p>;
-  }
-
-  if (!game) {
-    return <p className="p-4 text-[#a9c2b3]">Učitavanje unosa...</p>;
-  }
-
-  const playersById = new Map(players.map((player) => [player.id, player]));
-  const nextDealerId = getNextDealer(game, rounds.length);
-  const dealerName = playersById.get(nextDealerId)?.username ?? "Unknown";
-  const winnerTeam = getWinningTeam(getGameScore(rounds));
-
-  if (game.finishedAt || winnerTeam) {
-    return (
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
-        <BackButton fallbackHref={`/game/${gameId}`} />
-        <section className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] p-4 text-[#eef6ea]">
-          <p className="text-lg font-bold">Partija je završena.</p>
-          {winnerTeam ? <p className="mt-1 text-sm">Pobjednik je Tim {winnerTeam}.</p> : null}
-          <button
-            type="button"
-            onClick={() => router.push(`/game/${gameId}`)}
-            className="btn-accent mt-3 w-full rounded-xl py-3 font-semibold"
-          >
-            Nazad na partiju
-          </button>
-        </section>
-      </main>
-    );
+  function backToGame() {
+    // `refresh` je nužan jer je stranica partije sada server-renderirana:
+    // bez njega bi se vratila iz klijentskog cachea, bez upravo upisane ruke.
+    router.push(`/game/${game.id}`);
+    router.refresh();
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
-      <BackButton fallbackHref={`/game/${gameId}`} />
-      <RoundEntryForm
-        game={game}
-        players={players}
-        dealerName={dealerName}
-        onSaved={() => {
-          router.push(`/game/${gameId}`);
-        }}
-        onCancel={() => router.push(`/game/${gameId}`)}
-      />
-    </main>
+    <RoundEntryForm
+      game={game}
+      players={players}
+      dealerName={dealerName}
+      onSaved={backToGame}
+      onCancel={backToGame}
+    />
   );
 }

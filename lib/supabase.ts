@@ -37,8 +37,19 @@ interface BelaRepository {
   reopenGame(gameId: string): Promise<void>;
   listRounds(gameId: string): Promise<Round[]>;
   listRoundsForGames(gameIds: string[]): Promise<Round[]>;
-  createRound(input: RoundInput): Promise<Round>;
-  updateRound(roundId: string, input: RoundInput): Promise<Round>;
+  createRound(input: RoundInput, context?: RoundWriteContext): Promise<Round>;
+  updateRound(roundId: string, input: RoundInput, context?: RoundWriteContext): Promise<Round>;
+}
+
+/**
+ * Rute za upis ruke ionako moraju dohvatiti partiju i njezine ruke da bi ih
+ * validirale. Bez ovoga bi ih repozitorij dohvatio drugi put (a `POST /api/rounds`
+ * treći put nakon inserta) — tri ista SELECT-a po jednom upisu. Ako pozivatelj
+ * već ima podatke, proslijedi ih ovuda.
+ */
+export interface RoundWriteContext {
+  game: Game;
+  existingRounds: Round[];
 }
 
 function nowIso() {
@@ -729,7 +740,26 @@ function nodeHttp1Fetch(input: string | URL, init: RequestInit = {}): Promise<Re
   });
 }
 
+// Klijent je bez stanja po zahtjevu (auth je isključen, sve ide kroz service
+// role), a `getRepo` se zove više puta po requestu. Jedna instanca po procesu
+// znači i da keep-alive pool iz `nodeHttp1Agent` stvarno drži otvorene veze
+// umjesto da svaki novi klijent kreće od nule. Preživljava HMR preko globalThis.
+function createAdminClient(url: string, serviceRole: string) {
+  return createClient(url, serviceRole, {
+    // Nema korisničke sesije za čuvati ni token za osvježavati — service role
+    // ključ je konstantan, a bez ovoga klijent drži nepotreban refresh timer.
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: nodeHttp1Fetch as unknown as typeof fetch },
+  });
+}
+
+const adminHolder = globalThis as {
+  __belaSupabaseAdmin?: ReturnType<typeof createAdminClient> | null;
+};
+
 export function getSupabaseAdmin() {
+  if (adminHolder.__belaSupabaseAdmin !== undefined) return adminHolder.__belaSupabaseAdmin;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRole) {
@@ -738,11 +768,11 @@ export function getSupabaseAdmin() {
         "Supabase env varijable nedostaju u produkciji. Postavi NEXT_PUBLIC_SUPABASE_URL i SUPABASE_SERVICE_ROLE_KEY.",
       );
     }
+    adminHolder.__belaSupabaseAdmin = null;
     return null;
   }
-  return createClient(url, serviceRole, {
-    global: { fetch: nodeHttp1Fetch as unknown as typeof fetch },
-  });
+  adminHolder.__belaSupabaseAdmin = createAdminClient(url, serviceRole);
+  return adminHolder.__belaSupabaseAdmin;
 }
 
 /**
@@ -1073,13 +1103,13 @@ export function getRepo(accountId: string): BelaRepository {
         createdAt: row.created_at,
       }));
     },
-    async createRound(input: RoundInput) {
-      const game = await this.getGame(input.gameId);
+    async createRound(input: RoundInput, context?: RoundWriteContext) {
+      const game = context?.game ?? (await this.getGame(input.gameId));
       if (!game) {
         throw new Error("Partija nije pronađena");
       }
       const computed = computeRound(game, input);
-      const currentRounds = await this.listRounds(input.gameId);
+      const currentRounds = context?.existingRounds ?? (await this.listRounds(input.gameId));
       const { data, error } = await supabase
         .from("rounds")
         .insert({
@@ -1130,12 +1160,12 @@ export function getRepo(accountId: string): BelaRepository {
         createdAt: data.created_at,
       };
     },
-    async updateRound(roundId: string, input: RoundInput) {
-      const game = await this.getGame(input.gameId);
+    async updateRound(roundId: string, input: RoundInput, context?: RoundWriteContext) {
+      const game = context?.game ?? (await this.getGame(input.gameId));
       if (!game) {
         throw new Error("Partija nije pronađena");
       }
-      const existingRounds = await this.listRounds(input.gameId);
+      const existingRounds = context?.existingRounds ?? (await this.listRounds(input.gameId));
       const existingRound = existingRounds.find((round) => round.id === roundId);
       if (!existingRound) {
         throw new Error("Ruka nije pronađena");

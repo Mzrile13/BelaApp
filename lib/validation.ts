@@ -66,6 +66,38 @@ export const createGameSchema = z.object({
   teamB: z.tuple([z.string().uuid(), z.string().uuid()]),
 });
 
+/**
+ * Zvanja se plaćaju samo u koracima 20/50/100/150/200 (bela, terca, ... , četiri
+ * dečka), pa je legalan ukupan zbroj svaka kombinacija tih vrijednosti unutar
+ * broja karata koje jedan tim može držati.
+ *
+ * Prije se ovo provjeravalo peterostrukom petljom (~17k iteracija) i to do šest
+ * puta po upisu ruke. Skup dosezivih zbrojeva je konstanta, pa se izračuna
+ * jednom pri učitavanju modula, a sama provjera postane O(1).
+ */
+const ZVANJA_MAX = 700; // isti gornji limit kao u shemi ispod
+const ALLOWED_ZVANJA_TOTALS: ReadonlySet<number> = (() => {
+  const totals = new Set<number>();
+  for (let count200 = 0; count200 <= 1; count200 += 1) {
+    for (let count150 = 0; count150 <= 1; count150 += 1) {
+      for (let count100 = 0; count100 <= 7; count100 += 1) {
+        for (let count50 = 0; count50 <= 14; count50 += 1) {
+          for (let count20 = 0; count20 <= 35; count20 += 1) {
+            const sum =
+              count20 * 20 + count50 * 50 + count100 * 100 + count150 * 150 + count200 * 200;
+            if (sum <= ZVANJA_MAX) totals.add(sum);
+          }
+        }
+      }
+    }
+  }
+  return totals;
+})();
+
+export function isAllowedZvanjaTotal(total: number) {
+  return ALLOWED_ZVANJA_TOTALS.has(total);
+}
+
 export const createRoundSchema = z.object({
   gameId: z.string().uuid("Neispravan game ID"),
   callerPlayerId: z.string().uuid("Neispravan caller ID"),

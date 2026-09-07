@@ -13,9 +13,14 @@ export default async function ActiveGamesPage() {
   noStore();
   const accountId = await requireAccountId();
   const repo = getRepo(accountId);
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  const [players, games] = await Promise.all([repo.listPlayers(), repo.listGames()]);
+  // Aktivna partija je po definiciji nezavršena, pa se ruke dohvaćaju samo za
+  // njih. Prije se povlačila svaka ruka svake partije u računu, uključujući
+  // cijelu arhivu, da bi ih se odmah odbacilo filtrom ispod.
+  const unfinishedGames = games.filter((game) => game.finishedAt === null);
+  const rounds = unfinishedGames.length
+    ? await repo.listRoundsForGames(unfinishedGames.map((game) => game.id))
+    : [];
   const roundsByGameId = new Map<string, typeof rounds>();
   for (const round of rounds) {
     const bucket = roundsByGameId.get(round.gameId) ?? [];
@@ -24,14 +29,13 @@ export default async function ActiveGamesPage() {
   }
   const playersById = new Map(players.map((player) => [player.id, player.username]));
 
-  const activeGames = games
+  const activeGames = unfinishedGames
     .map((game) => {
       const gameRounds = roundsByGameId.get(game.id) ?? [];
       const score = getGameScore(gameRounds);
-      const winner = getWinningTeam(score);
-      return { game, rounds: gameRounds, score, winner };
+      return { game, rounds: gameRounds, score, winner: getWinningTeam(score) };
     })
-    .filter(({ game, winner }) => game.finishedAt === null && winner === null);
+    .filter(({ winner }) => winner === null);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">

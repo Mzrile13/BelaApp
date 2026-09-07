@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { getRepo } from "@/lib/supabase";
 import { computeAllStats } from "@/lib/stats";
-import type { PairStats, PlayerStats } from "@/lib/types";
+import type { Game, PairStats, Player, PlayerStats, Round } from "@/lib/types";
 
 /**
  * Tag za invalidaciju statistike jednog računa. Mora biti po računu — inače bi
@@ -13,12 +13,32 @@ export function statsTag(accountId: string) {
 
 const STATS_TTL_SECONDS = 30;
 
-async function loadAll(accountId: string) {
-  const repo = getRepo(accountId);
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
-  return { players, games, rounds };
+export interface AccountDataset {
+  players: Player[];
+  games: Game[];
+  rounds: Round[];
+}
+
+// Cjelovita povijest računa. Stranice igrača i para trebaju iste te retke kao i
+// leaderboard, pa ih dijele kroz ovaj cache umjesto da svaka radi vlastiti puni
+// scan. Isti tag kao statistika: svaka izmjena partije/ruke ruši oboje.
+function datasetFor(accountId: string) {
+  return unstable_cache(
+    async (): Promise<AccountDataset> => {
+      const repo = getRepo(accountId);
+      const [players, games] = await Promise.all([repo.listPlayers(), repo.listGames()]);
+      const rounds = games.length
+        ? await repo.listRoundsForGames(games.map((game) => game.id))
+        : [];
+      return { players, games, rounds };
+    },
+    ["dataset", accountId],
+    { revalidate: STATS_TTL_SECONDS, tags: [statsTag(accountId)] },
+  );
+}
+
+export function getCachedDataset(accountId: string) {
+  return datasetFor(accountId)();
 }
 
 // The leaderboard computations scan every round for every player/pair on each
@@ -34,7 +54,7 @@ async function loadAll(accountId: string) {
 function allStatsFor(accountId: string) {
   return unstable_cache(
     async (): Promise<{ players: PlayerStats[]; pairs: PairStats[]; season: string | null }> => {
-      const { players, games, rounds } = await loadAll(accountId);
+      const { players, games, rounds } = await getCachedDataset(accountId);
       // Igrači i parovi dijele jedan prolaz kroz povijest (rejting para se
       // izvodi iz rejtinga igrača), pa se cachiraju zajedno — prije su se dvije
       // cache stavke računale odvojeno i svaka je iznutra radila oba posla.

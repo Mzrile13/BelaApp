@@ -4,24 +4,7 @@ import { getRepo } from "@/lib/supabase";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { statsTag } from "@/lib/cachedStats";
-import { createRoundSchema } from "@/lib/validation";
-
-function isAllowedZvanjaTotal(total: number) {
-  for (let count200 = 0; count200 <= 1; count200 += 1) {
-    for (let count150 = 0; count150 <= 1; count150 += 1) {
-      for (let count100 = 0; count100 <= 7; count100 += 1) {
-        for (let count50 = 0; count50 <= 14; count50 += 1) {
-          for (let count20 = 0; count20 <= 35; count20 += 1) {
-            const sum =
-              count20 * 20 + count50 * 50 + count100 * 100 + count150 * 150 + count200 * 200;
-            if (sum === total) return true;
-          }
-        }
-      }
-    }
-  }
-  return false;
-}
+import { createRoundSchema, isAllowedZvanjaTotal } from "@/lib/validation";
 
 export async function PATCH(
   request: Request,
@@ -68,7 +51,10 @@ export async function PATCH(
   const accountId = await getSessionAccountId();
   if (!accountId) return unauthorized();
   const repo = getRepo(accountId);
-  const game = await repo.getGame(parsed.data.gameId);
+  const [game, existingRounds] = await Promise.all([
+    repo.getGame(parsed.data.gameId),
+    repo.listRounds(parsed.data.gameId),
+  ]);
   if (!game) {
     return NextResponse.json({ error: "Partija nije pronađena" }, { status: 404 });
   }
@@ -117,8 +103,10 @@ export async function PATCH(
     }
   }
 
-  const round = await repo.updateRound(id, parsed.data);
-  const roundsAfterUpdate = await repo.listRounds(game.id);
+  // Ruke su gore već dohvaćene: repozitorij ih dobiva umjesto da ih čita opet,
+  // a novi rezultat se sklopi lokalno zamjenom izmijenjene ruke.
+  const round = await repo.updateRound(id, parsed.data, { game, existingRounds });
+  const roundsAfterUpdate = existingRounds.map((row) => (row.id === round.id ? round : row));
   const scoreAfterUpdate = getGameScore(roundsAfterUpdate);
   const winnerTeam = getWinningTeam(scoreAfterUpdate);
   if (winnerTeam) {

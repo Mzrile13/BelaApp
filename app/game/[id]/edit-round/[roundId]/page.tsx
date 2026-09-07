@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
-import { getRepo } from "@/lib/supabase";
+import { BackButton } from "@/components/BackButton";
+import { getDealerForRound } from "@/lib/dealer";
+import { loadGameBundle } from "@/lib/gameData";
 import { requireAccountId } from "@/lib/session";
 import { EditRoundPageClient } from "./EditRoundPageClient";
 
@@ -7,10 +9,26 @@ export default async function EditRoundPage(
   props: PageProps<"/game/[id]/edit-round/[roundId]">,
 ) {
   const params = await props.params;
-  const repo = getRepo(await requireAccountId());
-  if (!(await repo.getGame(params.id))) notFound();
+  const bundle = await loadGameBundle(await requireAccountId(), params.id);
+  if (!bundle) notFound();
+
+  const { game, rounds, players } = bundle;
   // Ruka mora pripadati baš toj partiji, ne samo istom računu.
-  const rounds = await repo.listRounds(params.id);
-  if (!rounds.some((round) => round.id === params.roundId)) notFound();
-  return <EditRoundPageClient gameId={params.id} roundId={params.roundId} />;
+  const round = rounds.find((row) => row.id === params.roundId);
+  if (!round) notFound();
+
+  const dealerId = getDealerForRound(game, round.roundNumber);
+  const dealerName = players.find((player) => player.id === dealerId)?.username ?? "Unknown";
+
+  return (
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
+      <BackButton fallbackHref={`/game/${params.id}`} />
+      <EditRoundPageClient
+        game={game}
+        players={players}
+        round={round}
+        dealerName={dealerName}
+      />
+    </main>
+  );
 }

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
+import { statsTag } from "@/lib/cachedStats";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { createGameSchema } from "@/lib/validation";
 
@@ -50,5 +52,8 @@ export async function POST(request: Request) {
     );
   }
   const game = await repo.createGame(parsed.data);
+  // Popis partija računa je keširan zajedno sa statistikom, pa i nova partija
+  // (koja još nema nijednu ruku) mora srušiti tu stavku da se odmah vidi.
+  revalidateTag(statsTag(accountId), "max");
   return NextResponse.json({ game }, { status: 201 });
 }

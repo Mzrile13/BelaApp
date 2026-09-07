@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { PairStatsCard } from "@/components/PairStatsCard";
 import { RevealList } from "@/components/RevealList";
+import { getCachedAllStats, getCachedDataset } from "@/lib/cachedStats";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import { computePairStats } from "@/lib/stats";
-import { getRepo } from "@/lib/supabase";
 import { requireAccountId } from "@/lib/session";
 
 export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
@@ -14,18 +13,18 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
   if (!playerAId || !playerBId) notFound();
 
   const accountId = await requireAccountId();
-  const repo = getRepo(accountId);
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  // Isto kao na stranici igrača: povijest i statistika parova dolaze iz istog
+  // cachea koji puni leaderboard, umjesto punog scana po otvaranju. Redoslijed
+  // je bitan — statistika se gradi nad datasetom, pa mu prvi await puni cache.
+  const { players, games, rounds } = await getCachedDataset(accountId);
+  const allStats = await getCachedAllStats(accountId);
   const roundsByGameId = new Map<string, typeof rounds>();
   for (const round of rounds) {
     const bucket = roundsByGameId.get(round.gameId) ?? [];
     bucket.push(round);
     roundsByGameId.set(round.gameId, bucket);
   }
-  const allPairStats = computePairStats(players, games, rounds);
-  const stats = allPairStats.find(
+  const stats = allStats.pairs.find(
     (row) =>
       (row.playerAId === playerAId && row.playerBId === playerBId) ||
       (row.playerAId === playerBId && row.playerBId === playerAId),

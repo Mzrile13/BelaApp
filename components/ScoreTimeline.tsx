@@ -14,18 +14,22 @@ interface ScoreTimelineProps {
 export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false }: ScoreTimelineProps) {
   const allowedSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
 
+  // Bodovi ruke i tekući zbroj se izračunaju u jednom prolazu i odmah se slože
+  // obrnutim redoslijedom (najnovija ruka gore). Prije se `resolveRoundPoints`
+  // zvao dvaput po ruci, a lista se kopirala samo da bi se okrenula.
   const roundsWithTotals: Array<{
     round: Round;
+    points: { teamA: number; teamB: number };
     cumulativeA: number;
     cumulativeB: number;
   }> = [];
   let cumulativeA = 0;
   let cumulativeB = 0;
   for (const round of rounds) {
-    const resolvedPoints = resolveRoundPoints(round);
-    cumulativeA += resolvedPoints.teamA;
-    cumulativeB += resolvedPoints.teamB;
-    roundsWithTotals.push({ round, cumulativeA, cumulativeB });
+    const points = resolveRoundPoints(round);
+    cumulativeA += points.teamA;
+    cumulativeB += points.teamB;
+    roundsWithTotals.unshift({ round, points, cumulativeA, cumulativeB });
   }
 
   return (
@@ -38,8 +42,7 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
           <>
             <div className="pointer-events-none absolute top-5 bottom-5 left-[26px] w-[1.5px] bg-gradient-to-b from-[rgba(201,217,160,0.5)] to-[rgba(201,217,160,0.05)]" />
             <div className="mt-2.5 flex flex-col gap-3.5">
-              {[...roundsWithTotals].reverse().map(({ round, cumulativeA, cumulativeB }) => {
-                const resolvedPoints = resolveRoundPoints(round);
+              {roundsWithTotals.map(({ round, points: resolvedPoints, cumulativeA, cumulativeB }) => {
                 const dealerId = getDealerForRound(game, round.roundNumber);
                 const dealer = playersById.get(dealerId)?.username ?? "Unknown";
                 const callerName = playersById.get(round.callerPlayerId)?.username ?? "Unknown";

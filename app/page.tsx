@@ -6,7 +6,7 @@ import { PlayerSummaryCard } from "@/components/PlayerSummaryCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import { getAccountById } from "@/lib/accounts";
-import { getCachedPairStats, getCachedPlayerStats } from "@/lib/cachedStats";
+import { getCachedAllStats } from "@/lib/cachedStats";
 import { requireAccountId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -19,27 +19,35 @@ export default function Home() {
 async function HomeContent() {
   const accountId = await requireAccountId();
   const repo = getRepo(accountId);
-  const games = await repo.listGames();
-  // Only unfinished games can be active; load rounds just for those instead of
-  // scanning every round in the database.
-  const unfinishedGames = games.filter((game) => game.finishedAt === null);
-  const unfinishedRounds = unfinishedGames.length
-    ? await repo.listRoundsForGames(unfinishedGames.map((game) => game.id))
-    : [];
-  const roundsByGameId = new Map<string, typeof unfinishedRounds>();
-  for (const round of unfinishedRounds) {
-    const bucket = roundsByGameId.get(round.gameId) ?? [];
-    bucket.push(round);
-    roundsByGameId.set(round.gameId, bucket);
-  }
-  const activeGames = unfinishedGames.filter(
-    (game) => getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? [])) === null,
-  );
-  const [playerStats, pairStatsAll, account] = await Promise.all([
-    getCachedPlayerStats(accountId),
-    getCachedPairStats(accountId),
-    getAccountById(accountId),
-  ]);
+
+  // Tri neovisna izvora: broj aktivnih partija, statistika i ime računa. Idu
+  // usporedno — prije su partije i ruke blokirale statistiku koja ih ne treba.
+  // Statistika je uz to jedan cache pogodak umjesto dva (igrači i parovi dijele
+  // istu stavku).
+  const [activeGames, { players: playerStats, pairs: pairStatsAll }, account] =
+    await Promise.all([
+      (async () => {
+        const games = await repo.listGames();
+        // Only unfinished games can be active; load rounds just for those instead
+        // of scanning every round in the database.
+        const unfinishedGames = games.filter((game) => game.finishedAt === null);
+        if (unfinishedGames.length === 0) return [];
+        const rounds = await repo.listRoundsForGames(
+          unfinishedGames.map((game) => game.id),
+        );
+        const roundsByGameId = new Map<string, typeof rounds>();
+        for (const round of rounds) {
+          const bucket = roundsByGameId.get(round.gameId) ?? [];
+          bucket.push(round);
+          roundsByGameId.set(round.gameId, bucket);
+        }
+        return unfinishedGames.filter(
+          (game) => getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? [])) === null,
+        );
+      })(),
+      getCachedAllStats(accountId),
+      getAccountById(accountId),
+    ]);
   // Naslovnica primjenjuje isti prag kao leaderboard, ali nema sekciju za
   // nedovoljan uzorak. Dok se ne kvalificiraju barem tri, pada natrag na puni
   // popis — inače bi nova grupa mjesecima gledala prazan blok.

@@ -4,28 +4,7 @@ import { getRepo } from "@/lib/supabase";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { statsTag } from "@/lib/cachedStats";
-import { createRoundSchema } from "@/lib/validation";
-
-function isAllowedZvanjaTotal(total: number) {
-  for (let count200 = 0; count200 <= 1; count200 += 1) {
-    for (let count150 = 0; count150 <= 1; count150 += 1) {
-      for (let count100 = 0; count100 <= 7; count100 += 1) {
-        for (let count50 = 0; count50 <= 14; count50 += 1) {
-          for (let count20 = 0; count20 <= 35; count20 += 1) {
-            const sum =
-              count20 * 20 +
-              count50 * 50 +
-              count100 * 100 +
-              count150 * 150 +
-              count200 * 200;
-            if (sum === total) return true;
-          }
-        }
-      }
-    }
-  }
-  return false;
-}
+import { createRoundSchema, isAllowedZvanjaTotal } from "@/lib/validation";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -76,12 +55,16 @@ export async function POST(request: Request) {
   const accountId = await getSessionAccountId();
   if (!accountId) return unauthorized();
   const repo = getRepo(accountId);
-  const game = await repo.getGame(parsed.data.gameId);
+  // Oba upita su neovisna i oba su svakako potrebna — idu paralelno umjesto u nizu.
+  // `listRounds` je već ograničen na account_id, pa ne curi ništa ako partija ne postoji.
+  const [game, existingRounds] = await Promise.all([
+    repo.getGame(parsed.data.gameId),
+    repo.listRounds(parsed.data.gameId),
+  ]);
   if (!game) {
     return NextResponse.json({ error: "Partija nije pronađena" }, { status: 404 });
   }
 
-  const existingRounds = await repo.listRounds(game.id);
   const existingScore = getGameScore(existingRounds);
   const existingWinner = getWinningTeam(existingScore);
   if (game.finishedAt || existingWinner) {
@@ -142,9 +125,10 @@ export async function POST(request: Request) {
     }
   }
 
-  const round = await repo.createRound(parsed.data);
-  const roundsAfterInsert = await repo.listRounds(game.id);
-  const scoreAfterInsert = getGameScore(roundsAfterInsert);
+  // Partija i njezine ruke su gore već dohvaćene; prosljeđujemo ih repozitoriju
+  // i rezultat računamo lokalno, umjesto da isti SELECT ide još dva puta.
+  const round = await repo.createRound(parsed.data, { game, existingRounds });
+  const scoreAfterInsert = getGameScore([...existingRounds, round]);
   const winnerTeam = getWinningTeam(scoreAfterInsert);
   if (winnerTeam) {
     await repo.finishGame(game.id);

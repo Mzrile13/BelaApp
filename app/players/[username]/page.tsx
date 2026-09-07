@@ -3,26 +3,31 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { RevealList } from "@/components/RevealList";
+import { getCachedAllStats, getCachedDataset } from "@/lib/cachedStats";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import { getRepo } from "@/lib/supabase";
 import { requireAccountId } from "@/lib/session";
-import { computePlayerStats } from "@/lib/stats";
 
 export default async function PlayerPage(props: PageProps<"/players/[username]">) {
   const { username } = await props.params;
   const accountId = await requireAccountId();
-  const repo = getRepo(accountId);
-  const players = await repo.listPlayers();
-  const games = await repo.listGames();
-  const rounds = await repo.listRoundsForGames(games.map((game) => game.id));
+  // Prije je ova stranica pri svakom otvaranju povukla cijelu povijest računa i
+  // iznova izračunala statistiku svih igrača. Oboje je isto što leaderboard već
+  // ima izračunato i keširano, pa se sada samo čita iz istog cachea.
+  //
+  // Namjerno u nizu, a ne u Promise.all: statistika se i sama gradi nad ovim
+  // datasetom, pa mu prvi await napuni cache koji drugi onda samo pročita. U
+  // paraleli bi hladan cache značio dva ista dohvata iz baze.
+  const { players, games, rounds } = await getCachedDataset(accountId);
+  const stats = await getCachedAllStats(accountId);
   const roundsByGameId = new Map<string, typeof rounds>();
   for (const round of rounds) {
     const bucket = roundsByGameId.get(round.gameId) ?? [];
     bucket.push(round);
     roundsByGameId.set(round.gameId, bucket);
   }
-  const stats = computePlayerStats(players, games, rounds);
-  const row = stats.find((item) => item.username.toLowerCase() === username.toLowerCase());
+  const row = stats.players.find(
+    (item) => item.username.toLowerCase() === username.toLowerCase(),
+  );
 
   if (!row) notFound();
 
