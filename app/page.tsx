@@ -40,10 +40,15 @@ async function HomeContent() {
     getCachedPairStats(accountId),
     getAccountById(accountId),
   ]);
-  // Isti prag kao na leaderboardu — naslovnica nema sekciju "nedovoljno partija",
-  // pa se neispunjeni uzorak ovdje jednostavno ne prikazuje.
-  const topPlayers = playerStats.filter((row) => !row.provisional).slice(0, 3);
-  const pairStats = pairStatsAll.filter((row) => !row.provisional).slice(0, 3);
+  // Naslovnica primjenjuje isti prag kao leaderboard, ali nema sekciju za
+  // nedovoljan uzorak. Dok se ne kvalificiraju barem tri, pada natrag na puni
+  // popis — inače bi nova grupa mjesecima gledala prazan blok.
+  const qualifiedFirst = <T extends { provisional: boolean }>(rows: T[]) => {
+    const qualified = rows.filter((row) => !row.provisional);
+    return (qualified.length >= 3 ? qualified : rows).slice(0, 3);
+  };
+  const topPlayers = qualifiedFirst(playerStats.filter((row) => row.gamesPlayed > 0));
+  const pairStats = qualifiedFirst(pairStatsAll);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 p-4 pb-20">
@@ -127,9 +132,7 @@ async function HomeContent() {
         <div className="space-y-3">
           {topPlayers.length === 0 ? (
             <p className="text-sm text-[#a9c2b3]">
-              {playerStats.some((row) => row.gamesPlayed > 0)
-                ? "Još nitko nema 15 odigranih partija za ulazak u poredak."
-                : "Još nema podataka. Dodaj igrače i pokreni prvu partiju."}
+              Još nema podataka. Dodaj igrače i pokreni prvu partiju.
             </p>
           ) : (
             topPlayers.map((stats) => (
@@ -145,9 +148,7 @@ async function HomeContent() {
         </h2>
         <div className="space-y-2.5">
           {pairStats.length === 0 ? (
-            <p className="text-sm text-[#a9c2b3]">
-              Još nema para s 10 zajedničkih partija.
-            </p>
+            <p className="text-sm text-[#a9c2b3]">Nema dovoljno podataka za parove.</p>
           ) : (
             pairStats.map((pair) => (
               <div
