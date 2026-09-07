@@ -155,9 +155,18 @@ poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
           znanjem koje sustav ima danas, a redoslijed partija više ne utječe na rezultat.
         </StatEntry>
 
-        <StatEntry name="Sezone">
-          Sezona je kalendarska godina. Na prijelazu se svi povuku 25% prema 1500 — tko
-          je bio 1800 kreće novu sezonu na 1725. Prošlost se ne briše, samo blijedi.
+        <StatEntry
+          name="Sezone"
+          reading={
+            <>
+              Sezona 25/26 obuhvaća sve odigrano od 1. listopada 2025. do 30. rujna 2026.
+            </>
+          }
+        >
+          Sezona traje od 1. listopada do 30. rujna i označava se kao 25/26 — ne poklapa
+          se s kalendarskom godinom da nova sezona ne bi počinjala usred zime, kad se
+          najviše igra. Na prijelazu se svi povuku 25% prema 1500, pa tko je bio 1800
+          kreće novu sezonu na 1725. Prošlost se ne briše, samo blijedi.
         </StatEntry>
 
         <DataTable
@@ -167,7 +176,7 @@ poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
             ["K, prvih 10 partija", "48"],
             ["K, nakon toga", "24"],
             ["Prolazaka kroz povijest", "4"],
-            ["Sezonska regresija", "25%"],
+            ["Sezonska regresija", "25% (1. listopada)"],
           ]}
         />
 
@@ -545,6 +554,7 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
         <DataTable
           columns={["Pojam", "Značenje"]}
           rows={[
+            ["Sezona", "1. listopada do 30. rujna, npr. 25/26"],
             ["Partija", "igra do 1001 boda, sastoji se od više ruku"],
             ["Ruka", "jedno dijeljenje i odigravanje svih karata"],
             ["Mus", "djelitelj mora zvati ako su svi prije njega dalje"],

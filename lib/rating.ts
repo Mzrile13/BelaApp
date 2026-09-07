@@ -121,9 +121,24 @@ export function expectedScore(teamRating: number, opponentRating: number) {
   return 1 / (1 + 10 ** ((opponentRating - teamRating) / 400));
 }
 
-/** Sezona je kalendarska godina partije. */
+/** Mjesec u kojem počinje nova sezona (10 = listopad). */
+export const SEASON_START_MONTH = 10;
+
+/**
+ * Sezona ide od 1. listopada do 30. rujna i označava se kao "25/26".
+ * Ne poklapa se s kalendarskom godinom da nova sezona ne bi počinjala usred
+ * zime, kad se najviše igra.
+ *
+ * Oznaka služi samo za usporedbu na jednakost i za prikaz — partije su već
+ * kronološki poredane, pa se sezone nikad ne sortiraju po tekstu.
+ */
 export function seasonOf(createdAt: string) {
-  return createdAt.slice(0, 4);
+  const year = Number(createdAt.slice(0, 4));
+  const month = Number(createdAt.slice(5, 7));
+  if (!Number.isFinite(year) || !Number.isFinite(month)) return createdAt.slice(0, 4);
+  const startYear = month >= SEASON_START_MONTH ? year : year - 1;
+  const short = (value: number) => String(((value % 100) + 100) % 100).padStart(2, "0");
+  return `${short(startYear)}/${short(startYear + 1)}`;
 }
 
 /**

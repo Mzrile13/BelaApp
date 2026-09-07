@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeRatings, DEFAULT_RATING_CONFIG, expectedScore } from "../lib/rating";
+import { computeRatings, DEFAULT_RATING_CONFIG, expectedScore, seasonOf } from "../lib/rating";
 import { computePlayerStats } from "../lib/stats";
 import { mkFinishedGame, mkPlayer, repeatGames } from "./factories";
 import type { Game, Round } from "../lib/types";
@@ -223,10 +223,10 @@ describe("rating", () => {
 
     const result = computeRatings(games, rounds);
     const history = result.byPlayer.get(S.id)?.history ?? [];
-    const lastOfSeason1 = history.filter((entry) => entry.season === "2026").at(-1);
-    const firstOfSeason2 = history.find((entry) => entry.season === "2027");
+    const lastOfSeason1 = history.filter((entry) => entry.season === "25/26").at(-1);
+    const firstOfSeason2 = history.find((entry) => entry.season === "26/27");
 
-    expect(result.currentSeason).toBe("2027");
+    expect(result.currentSeason).toBe("26/27");
     expect(firstOfSeason2?.ratingBefore ?? 0).toBeLessThan(lastOfSeason1?.ratingAfter ?? 0);
     // Povučeno je točno za zadani udio prema početnom rejtingu.
     const expectedAfterRegression =
@@ -234,6 +234,51 @@ describe("rating", () => {
       ((lastOfSeason1?.ratingAfter ?? 0) - DEFAULT_RATING_CONFIG.initialRating) *
         (1 - DEFAULT_RATING_CONFIG.seasonRegression);
     expect(firstOfSeason2?.ratingBefore ?? 0).toBeCloseTo(expectedAfterRegression, 6);
+  });
+
+  it("sezona ide od listopada do rujna", () => {
+    // Ista kalendarska godina, a dvije različite sezone.
+    expect(seasonOf("2025-09-30T23:00:00.000Z")).toBe("24/25");
+    expect(seasonOf("2025-10-01T00:00:00.000Z")).toBe("25/26");
+    expect(seasonOf("2026-01-15T12:00:00.000Z")).toBe("25/26");
+    expect(seasonOf("2026-09-30T12:00:00.000Z")).toBe("25/26");
+    expect(seasonOf("2026-10-01T00:00:00.000Z")).toBe("26/27");
+    // Prijelaz stoljeća ostaje dvoznamenkast.
+    expect(seasonOf("2099-10-01T00:00:00.000Z")).toBe("99/00");
+  });
+
+  it("regresija se okida na 1. listopada, ne na Novu godinu", () => {
+    const games: Game[] = [];
+    const rounds: Round[] = [];
+    const add = (id: string, createdAt: string) => {
+      const built = mkFinishedGame(id, [S.id, N1.id], [N2.id, N3.id], 1001, 400, createdAt);
+      games.push(built.game);
+      rounds.push(...built.rounds);
+    };
+
+    // Cijela sezona 25/26 unutar dvije kalendarske godine.
+    for (let i = 0; i < 10; i += 1) add(`a${i}`, `2025-11-${String(i + 1).padStart(2, "0")}T12:00:00.000Z`);
+    for (let i = 0; i < 10; i += 1) add(`b${i}`, `2026-02-${String(i + 1).padStart(2, "0")}T12:00:00.000Z`);
+    // Prva partija nove sezone.
+    add("c0", "2026-10-02T12:00:00.000Z");
+
+    const history = computeRatings(games, rounds).byPlayer.get(S.id)?.history ?? [];
+    const newYear = history.find((entry) => entry.gameId === "b0");
+    const newSeason = history.find((entry) => entry.gameId === "c0");
+    const lastOfOldSeason = history.filter((entry) => entry.season === "25/26").at(-1);
+
+    // Nova kalendarska godina NE okida regresiju — rejting samo nastavlja rasti.
+    expect(newYear?.ratingBefore ?? 0).toBeGreaterThan(
+      history.find((entry) => entry.gameId === "a9")?.ratingBefore ?? 0,
+    );
+    // Listopad okida.
+    expect(newSeason?.season).toBe("26/27");
+    expect(newSeason?.ratingBefore ?? 0).toBeCloseTo(
+      DEFAULT_RATING_CONFIG.initialRating +
+        ((lastOfOldSeason?.ratingAfter ?? 0) - DEFAULT_RATING_CONFIG.initialRating) *
+          (1 - DEFAULT_RATING_CONFIG.seasonRegression),
+      6,
+    );
   });
 
   it("expectedScore je simetričan i monoton", () => {
