@@ -117,7 +117,7 @@ export default async function CategoriesPage() {
 
         <CategoryBoard
           title="Zvanje aduta"
-          description={`Bodovi razlike iznad ligaškog prosjeka, po partiji. Iz volje i iz mora mjere se protiv vlastite osnovice. Min. ${CALL_MIN_CALLS} zvanja.`}
+          description={`Bodovi razlike iznad ligaškog prosjeka, po partiji. Iz volje i na mus mjere se protiv vlastite osnovice. Min. ${CALL_MIN_CALLS} zvanja.`}
           entries={playerBoard(
             played,
             (row) => row.timesCalled >= CALL_MIN_CALLS,
@@ -129,7 +129,7 @@ export default async function CategoriesPage() {
 
         <CategoryBoard
           title="Hrabrost"
-          description={`Koliko često zove kad ne mora (djelitelj mora zvati). Min. ${ROUND_MIN_ROUNDS} ruku.`}
+          description={`Koliko često zove kad nije na musu (djelitelj je uvijek na musu). Min. ${ROUND_MIN_ROUNDS} ruku.`}
           entries={playerBoard(
             played,
             (row) => row.roundsPlayed >= ROUND_MIN_ROUNDS,

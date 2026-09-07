@@ -18,8 +18,9 @@ import type { CalledSuit, Game, PairStats, Player, PlayerStats, Round, TeamId } 
 
 /** Koliko zajedničkih partija treba da se kemija para prestane stiskati prema 0. */
 const CHEMISTRY_SHRINK_GAMES = 6;
-const PROVISIONAL_PLAYER_GAMES = 5;
-const PROVISIONAL_PAIR_GAMES = 4;
+/** Ispod ovoga igrač/par ne ulazi u glavni poredak, nego u odvojenu sekciju. */
+const PROVISIONAL_PLAYER_GAMES = 15;
+const PROVISIONAL_PAIR_GAMES = 10;
 /** Završnica partije: netko je blizu cilja, a razlika je još nadoknadiva. */
 const CLUTCH_LEAD_THRESHOLD = 0.7 * GAME_TARGET_SCORE;
 const CLUTCH_MARGIN_THRESHOLD = 0.15 * GAME_TARGET_SCORE;
@@ -116,7 +117,7 @@ function zvanjaForPlayer(roundRow: Round, playerId: string) {
 
 /**
  * Runda s izvedenim kontekstom koji jedna runda sama o sebi ne zna: tko je te
- * ruke dijelio (a time i tko je zvao "iz mora") i je li se igralo u završnici.
+ * ruke dijelio (a time i tko je zvao na mus) i je li se igralo u završnici.
  */
 interface RoundContext {
   round: Round;
@@ -124,7 +125,7 @@ interface RoundContext {
   pointsB: number;
   /** Djelitelj te ruke; rotira unutar partije, vidi lib/dealer.ts. */
   dealerPlayerId: string;
-  /** Zvao je djelitelj, tj. svi prije njega su dalje — zvanje nije bilo izbor. */
+  /** Zvao je djelitelj, tj. bio je na musu — zvanje nije bilo izbor. */
   forcedCall: boolean;
   /** Rezultat PRIJE ove ruke je bio u završnici. */
   clutch: boolean;
@@ -325,9 +326,9 @@ export function computeAllStats(players: Player[], games: Game[], rounds: Round[
 
   const overallNet =
     (voluntaryNetSum + forcedNetSum) / Math.max(1, voluntaryNetCount + forcedNetCount);
-  // Zvanje iz mora ima bitno lošiju očekivanu vrijednost od zvanja iz volje, pa
+  // Zvanje na mus ima bitno lošiju očekivanu vrijednost od zvanja iz volje, pa
   // se mjeri protiv vlastite osnovice — inače bi djelitelj bio kažnjen za to
-  // što je morao zvati.
+  // što je bio na musu.
   const baselineVoluntary = voluntaryNetCount ? voluntaryNetSum / voluntaryNetCount : overallNet;
   const baselineForced = forcedNetCount ? forcedNetSum / forcedNetCount : overallNet;
 

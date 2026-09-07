@@ -21,7 +21,8 @@ function formatDelta(value: number) {
   return `${rounded > 0 ? "+" : ""}${rounded}`;
 }
 
-function renderPlayerRow(row: PlayerStats, rank: number) {
+function renderPlayerRow(row: PlayerStats, rank: number | null) {
+  const muted = rank === null;
   const streakLabel =
     row.currentStreak > 0
       ? `W${row.currentStreak}`
@@ -40,28 +41,21 @@ function renderPlayerRow(row: PlayerStats, rank: number) {
       key={row.playerId}
       href={`/players/${row.username}`}
       className={`flex items-center justify-between rounded-[14px] px-3.5 py-3 ${
-        row.provisional ? "bg-[rgba(6,20,16,0.28)]" : "bg-[rgba(6,20,16,0.45)]"
+        muted ? "bg-[rgba(6,20,16,0.28)]" : "bg-[rgba(6,20,16,0.45)]"
       }`}
     >
       <div className="flex min-w-0 items-center gap-3">
         <span
           className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold ${
-            row.provisional
+            muted
               ? "bg-[rgba(169,194,179,0.18)] text-[#8fa89b]"
               : "bg-[#c9d9a0] text-[#10261c]"
           }`}
         >
-          {rank}
+          {muted ? "·" : rank}
         </span>
         <div className="min-w-0">
-          <p className="flex items-center gap-1.5 text-[13.5px] font-bold text-[#f2f5f0]">
-            <span className="truncate">{row.username}</span>
-            {row.provisional ? (
-              <span className="shrink-0 rounded-full bg-[rgba(169,194,179,0.18)] px-1.5 py-px text-[9px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
-                novo
-              </span>
-            ) : null}
-          </p>
+          <p className="truncate text-[13.5px] font-bold text-[#f2f5f0]">{row.username}</p>
           <p className="mt-px truncate text-[11.5px] text-[#8fa89b]">
             {row.gamesWon}W / {Math.max(0, row.gamesPlayed - row.gamesWon)}L (
             {((row.gamesWon / Math.max(1, row.gamesPlayed)) * 100).toFixed(0)}%) · {streakLabel}
@@ -89,6 +83,8 @@ export default async function LeaderboardPage(props: PageProps<"/leaderboard">) 
   const leaderboard = (await getCachedPlayerStats(await requireAccountId()))
     .filter((row) => row.gamesPlayed > 0)
     .filter((row) => (query ? row.username.toLowerCase().includes(query) : true));
+  const ranked = leaderboard.filter((row) => !row.provisional);
+  const insufficient = leaderboard.filter((row) => row.provisional);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
@@ -113,14 +109,27 @@ export default async function LeaderboardPage(props: PageProps<"/leaderboard">) 
             Još nema završenih partija za leaderboard.
           </p>
         ) : (
-          leaderboard.map((row, index) => renderPlayerRow(row, index + 1))
+          ranked.map((row, index) => renderPlayerRow(row, index + 1))
         )}
+
+        {insufficient.length > 0 ? (
+          <>
+            <div className="flex items-center gap-2 pt-3 pb-0.5">
+              <span className="h-px flex-1 bg-[rgba(255,255,255,0.08)]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#8fa89b]">
+                Nedovoljno odigranih partija
+              </span>
+              <span className="h-px flex-1 bg-[rgba(255,255,255,0.08)]" />
+            </div>
+            {insufficient.map((row) => renderPlayerRow(row, null))}
+          </>
+        ) : null}
       </div>
 
       <p className="mt-3.5 px-1 text-[11px] leading-relaxed text-[#8fa89b]">
         Rejting je ekipni Elo: korigiran je na jačinu partnera i protivnika, a razlika u
         rezultatu utječe na veličinu promjene. Poredak ide po rejtingu umanjenom za
-        nesigurnost (±), pa tko je odigrao malo partija ne skače na vrh.
+        nesigurnost (±). Za ulazak u poredak treba 15 odigranih partija.
       </p>
     </main>
   );

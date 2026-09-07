@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trophy, Users } from "lucide-react";
 import { ProfileButton } from "@/components/ProfileButton";
-import { PlayerStatsCard } from "@/components/PlayerStatsCard";
+import { PlayerSummaryCard } from "@/components/PlayerSummaryCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import { getAccountById } from "@/lib/accounts";
@@ -40,7 +40,10 @@ async function HomeContent() {
     getCachedPairStats(accountId),
     getAccountById(accountId),
   ]);
-  const pairStats = pairStatsAll.slice(0, 3);
+  // Isti prag kao na leaderboardu — naslovnica nema sekciju "nedovoljno partija",
+  // pa se neispunjeni uzorak ovdje jednostavno ne prikazuje.
+  const topPlayers = playerStats.filter((row) => !row.provisional).slice(0, 3);
+  const pairStats = pairStatsAll.filter((row) => !row.provisional).slice(0, 3);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 p-4 pb-20">
@@ -122,13 +125,15 @@ async function HomeContent() {
           <Trophy size={16} className="text-[#c9d9a0]" /> Top igrači
         </h2>
         <div className="space-y-3">
-          {playerStats.length === 0 ? (
+          {topPlayers.length === 0 ? (
             <p className="text-sm text-[#a9c2b3]">
-              Još nema podataka. Dodaj igrače i pokreni prvu partiju.
+              {playerStats.some((row) => row.gamesPlayed > 0)
+                ? "Još nitko nema 15 odigranih partija za ulazak u poredak."
+                : "Još nema podataka. Dodaj igrače i pokreni prvu partiju."}
             </p>
           ) : (
-            playerStats.slice(0, 3).map((stats) => (
-              <PlayerStatsCard key={stats.playerId} stats={stats} />
+            topPlayers.map((stats) => (
+              <PlayerSummaryCard key={stats.playerId} stats={stats} />
             ))
           )}
         </div>
@@ -140,7 +145,9 @@ async function HomeContent() {
         </h2>
         <div className="space-y-2.5">
           {pairStats.length === 0 ? (
-            <p className="text-sm text-[#a9c2b3]">Nema dovoljno podataka za parove.</p>
+            <p className="text-sm text-[#a9c2b3]">
+              Još nema para s 10 zajedničkih partija.
+            </p>
           ) : (
             pairStats.map((pair) => (
               <div
@@ -153,6 +160,22 @@ async function HomeContent() {
                 <p className="mt-[3px] text-[11.5px] text-[#8fa89b]">
                   Pobjede {pair.winsTogether}/{pair.gamesTogether} ·{" "}
                   {(pair.winRate * 100).toFixed(1)}%
+                </p>
+                <p className="mt-[3px] text-[11.5px] text-[#8fa89b]">
+                  Kemija{" "}
+                  <b
+                    className={`font-semibold ${
+                      pair.chemistry > 0.01
+                        ? "text-[#c9d9a0]"
+                        : pair.chemistry < -0.01
+                          ? "text-rose-300"
+                          : "text-[#dcece3]"
+                    }`}
+                  >
+                    {pair.chemistry > 0 ? "+" : ""}
+                    {(pair.chemistry * 100).toFixed(1)}%
+                  </b>{" "}
+                  · očekivano {(pair.expectedWinRate * 100).toFixed(0)}%
                 </p>
               </div>
             ))

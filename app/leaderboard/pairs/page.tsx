@@ -20,7 +20,8 @@ function formatChemistry(value: number) {
   return `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`;
 }
 
-function renderPairRow(row: PairStats, rank: number) {
+function renderPairRow(row: PairStats, rank: number | null) {
+  const muted = rank === null;
   const chemistryClass =
     row.chemistry > 0.01
       ? "text-[#c9d9a0]"
@@ -33,18 +34,18 @@ function renderPairRow(row: PairStats, rank: number) {
       key={`${row.playerAId}-${row.playerBId}`}
       href={`/pairs/${row.playerAId}__${row.playerBId}`}
       className={`flex items-center justify-between rounded-[14px] px-3.5 py-3 ${
-        row.provisional ? "bg-[rgba(6,20,16,0.28)]" : "bg-[rgba(6,20,16,0.45)]"
+        muted ? "bg-[rgba(6,20,16,0.28)]" : "bg-[rgba(6,20,16,0.45)]"
       }`}
     >
       <div className="flex min-w-0 items-center gap-3">
         <span
           className={`flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full text-[12px] font-extrabold ${
-            row.provisional
+            muted
               ? "bg-[rgba(169,194,179,0.18)] text-[#8fa89b]"
               : "bg-[#c9d9a0] text-[#10261c]"
           }`}
         >
-          {rank}
+          {muted ? "·" : rank}
         </span>
         <div className="min-w-0">
           <p className="truncate text-[13.5px] font-bold text-[#f2f5f0]">
@@ -77,6 +78,8 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
     const label = `${row.playerAUsername} ${row.playerBUsername}`.toLowerCase();
     return label.includes(query);
   });
+  const ranked = leaderboard.filter((row) => !row.provisional);
+  const insufficient = leaderboard.filter((row) => row.provisional);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
@@ -101,8 +104,21 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
             Nema podataka za parove.
           </p>
         ) : (
-          leaderboard.map((row, index) => renderPairRow(row, index + 1))
+          ranked.map((row, index) => renderPairRow(row, index + 1))
         )}
+
+        {insufficient.length > 0 ? (
+          <>
+            <div className="flex items-center gap-2 pt-3 pb-0.5">
+              <span className="h-px flex-1 bg-[rgba(255,255,255,0.08)]" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#8fa89b]">
+                Nedovoljno odigranih partija
+              </span>
+              <span className="h-px flex-1 bg-[rgba(255,255,255,0.08)]" />
+            </div>
+            {insufficient.map((row) => renderPairRow(row, null))}
+          </>
+        ) : null}
       </div>
 
       <p className="mt-3.5 px-1 text-[11px] leading-relaxed text-[#8fa89b]">
@@ -110,7 +126,8 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
         najboljih igrača uvijek vodio, što već znaš iz liste igrača. Kemija je razlika
         između stvarnog i očekivanog postotka pobjeda, gdje očekivani dolazi iz
         pojedinačnih rejtinga te dvojice protiv stvarnih protivnika. Plus znači da
-        zajedno igraju bolje nego što su im rejtinzi.
+        zajedno igraju bolje nego što su im rejtinzi. Za ulazak u poredak treba 10
+        zajedničkih partija.
       </p>
     </main>
   );

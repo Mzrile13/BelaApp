@@ -85,7 +85,7 @@ export interface PlayerStats {
   sigma: number;
   /** 0–1, raste s brojem odigranih partija. */
   confidence: number;
-  /** Premalo partija da bi rejting bio ozbiljan — samo UI oznaka, ne skriva igrača. */
+  /** Premalo partija za glavni poredak; prikazuje se u odvojenoj sekciji. */
   provisional: boolean;
   peakRating: number;
   /** Promjena rejtinga kroz zadnjih 10 partija. */
@@ -111,16 +111,16 @@ export interface PlayerStats {
   callsPerRoundAvg: number;
   /** Zvanja iz volje (igrač nije bio djelitelj te runde). */
   voluntaryCalls: number;
-  /** Zvanja "iz mora" — djelitelj mora zvati ako svi prije njega dalju. */
+  /** Zvanja na mus — djelitelj mora zvati ako svi prije njega dalju. */
   forcedCalls: number;
-  /** Udio ruku u kojima je igrač zvao iako nije morao. */
+  /** Udio ruku u kojima je igrač zvao iako nije bio na musu. */
   voluntaryCallRate: number;
   callerSuccessRate: number;
   voluntaryCallerSuccessRate: number;
   forcedCallerSuccessRate: number;
   /**
    * Call Value Added po partiji: koliko je bodova razlike igračevo zvanje
-   * donijelo iznad ligaškog prosjeka za istu vrstu zvanja (iz volje / iz mora).
+   * donijelo iznad ligaškog prosjeka za istu vrstu zvanja (iz volje / na mus).
    * Zamjena za prolaznost, koja je nagrađivala pasivnost.
    */
   callValueAdded: number;

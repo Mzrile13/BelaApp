@@ -38,9 +38,9 @@ function multiRoundGame(
 }
 
 describe("stats — zvanje aduta", () => {
-  it("prepoznaje zvanje 'iz mora' po djelitelju te ruke", () => {
+  it("prepoznaje zvanje na mus po djelitelju te ruke", () => {
     // Rotacija djelitelja je [teamA0, teamB0, teamA1, teamB1], pa 1. ruku dijeli
-    // p1 (zvao je => iz mora), a 2. ruku p3 (p1 je zvao dobrovoljno).
+    // p1 (zvao je => na mus), a 2. ruku p3 (p1 je zvao dobrovoljno).
     const built = multiRoundGame("g1", "2026-01-01T12:00:00.000Z", [
       [100, 62, p1.id],
       [100, 62, p1.id],
@@ -208,6 +208,36 @@ describe("stats — parovi", () => {
     expect(duo?.gamesTogether).toBe(20);
     expect(duo?.chemistry ?? 0).toBeGreaterThan(0);
     expect(pairs[0].chemistry).toBeGreaterThanOrEqual(pairs[pairs.length - 1].chemistry);
+  });
+});
+
+describe("stats — prag za poredak", () => {
+  const build = (count: number) =>
+    repeatGames(count, (i) => ({
+      teamA: [p1.id, p2.id] as [string, string],
+      teamB: [p3.id, p4.id] as [string, string],
+      scoreA: i % 2 === 0 ? 1001 : 500,
+      scoreB: i % 2 === 0 ? 500 : 1001,
+    }));
+
+  it("igrač ulazi u poredak na 15 partija, par na 10", () => {
+    const nine = build(9);
+    const ten = build(10);
+    const fifteen = build(15);
+
+    const at9 = computeAllStats(players, nine.games, nine.rounds);
+    const at10 = computeAllStats(players, ten.games, ten.rounds);
+    const at15 = computeAllStats(players, fifteen.games, fifteen.rounds);
+
+    expect(at9.players.every((row) => row.provisional)).toBe(true);
+    expect(at9.pairs.every((row) => row.provisional)).toBe(true);
+
+    // Par se kvalificira ranije od igrača — pragovi su neovisni.
+    expect(at10.players.every((row) => row.provisional)).toBe(true);
+    expect(at10.pairs.every((row) => row.provisional)).toBe(false);
+
+    expect(at15.players.every((row) => row.provisional)).toBe(false);
+    expect(at15.pairs.every((row) => row.provisional)).toBe(false);
   });
 });
 

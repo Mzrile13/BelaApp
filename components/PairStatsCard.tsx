@@ -46,6 +46,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
     ["Prosj. zvanja", String(stats.avgZvanja)],
     ["Zvali po ruci", stats.callsPerRoundAvg.toFixed(2)],
     ["Zvanja iz volje", `${stats.voluntaryCalls} / ${stats.timesCalled}`],
+    ["Zvanja na mus", `${stats.forcedCalls} / ${stats.timesCalled}`],
     ["Prolaznost", percent(stats.callerSuccessRate, 0)],
     ["Vrijednost zvanja", `${signed(stats.callValueAdded, 1)}/partiji`],
     ["Završnica", stats.clutchRounds > 0 ? percent(stats.clutchIndex, 0) : "-"],
@@ -58,15 +59,8 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
     <article className="rounded-[18px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-4">
       <div className="mb-2.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-1.5 text-[15px] font-bold text-[#f7fbf6]">
-            <span className="truncate">
-              {stats.playerAUsername} + {stats.playerBUsername}
-            </span>
-            {stats.provisional ? (
-              <span className="shrink-0 rounded-full bg-[rgba(169,194,179,0.18)] px-1.5 py-px text-[9px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
-                novo
-              </span>
-            ) : null}
+          <h3 className="truncate text-[15px] font-bold text-[#f7fbf6]">
+            {stats.playerAUsername} + {stats.playerBUsername}
           </h3>
           <p className="mt-0.5 text-[11px] text-[#8fa89b]">
             Kemija = stvarni minus očekivani postotak pobjeda

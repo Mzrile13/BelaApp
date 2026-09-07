@@ -1,30 +1,17 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { RatingSparkline } from "@/components/RatingSparkline";
-import type { CalledSuit, PlayerStats } from "@/lib/types";
-
-const suitName: Record<CalledSuit, string> = {
-  karo: "karo",
-  herc: "herc",
-  pik: "pik",
-  tref: "tref",
-};
+import type { PlayerStats } from "@/lib/types";
 
 function signed(value: number, digits = 0) {
   return `${value > 0 ? "+" : ""}${value.toFixed(digits)}`;
 }
 
-function percent(value: number, digits = 1) {
-  return `${(value * 100).toFixed(digits)}%`;
-}
-
-export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
-  const winRate = stats.gamesPlayed > 0 ? percent(stats.gamesWon / stats.gamesPlayed) : "0.0%";
-  const avgStigliaPerGame =
-    stats.gamesPlayed > 0 ? (stats.stigliaCount / stats.gamesPlayed).toFixed(2) : "0.00";
-  const avgPlusMinusPerGame =
-    stats.gamesPlayed > 0
-      ? ((stats.pointsWon - stats.pointsAgainst) / stats.gamesPlayed).toFixed(2)
-      : "0.00";
+/**
+ * Skraćena kartica za naslovnicu: samo rejting, kretanje i odnosi. Puna
+ * statistika je na profilu igrača — na naslovnici je bila predugačka da bi se
+ * tri igrača vidjela bez skrolanja.
+ */
+export function PlayerSummaryCard({ stats }: { stats: PlayerStats }) {
   const streakLabel =
     stats.currentStreak > 0
       ? `W${stats.currentStreak}`
@@ -35,51 +22,16 @@ export function PlayerStatsCard({ stats }: { stats: PlayerStats }) {
   const lossesInLast10 = stats.last10GameResults.filter((result) => result === "L").length;
   const losses = Math.max(0, stats.gamesPlayed - stats.gamesWon);
 
-  const statPairs: Array<[string, string]> = [
-    ["Odigrane partije", String(stats.gamesPlayed)],
-    ["Pobjede", winRate],
-    ["Najviši rejting", String(Math.round(stats.peakRating))],
-    ["Forma (10 partija)", signed(stats.formDelta)],
-    ["Bodovi po ruci", String(stats.avgPoints)],
-    ["Plus minus", avgPlusMinusPerGame],
-    ["Prosj. štiglji", avgStigliaPerGame],
-    ["Prosj. zvanja", String(stats.avgZvanja)],
-    ["Zvao iz volje", percent(stats.voluntaryCallRate)],
-    ["Prolaznost iz volje", percent(stats.voluntaryCallerSuccessRate, 0)],
-    ["Prolaznost na musu", percent(stats.forcedCallerSuccessRate, 0)],
-    ["Vrijednost zvanja", `${signed(stats.callValueAdded, 1)}/partiji`],
-    ["Završnica", stats.clutchRounds > 0 ? percent(stats.clutchIndex, 0) : "-"],
-    ["Stabilnost", stats.consistencyIndex.toFixed(1)],
-    ["Najveći preokret", String(stats.biggestComeback)],
-    ["Trenutni streak", streakLabel],
-    ["Max win streak", `W${stats.bestWinStreak}`],
-    ["Najdraži znak", stats.favoriteCalledSuit ? suitName[stats.favoriteCalledSuit] : "-"],
-  ];
-
   return (
     <article className="rounded-[18px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-4">
-      <div className="mb-2.5 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-[18px] font-bold text-[#f7fbf6]">{stats.username}</h3>
-          <p className="mt-0.5 text-[11px] text-[#8fa89b]">
-            Rejting je korigiran na partnera i protivnika
-          </p>
-        </div>
+      <div className="mb-2.5 flex items-center justify-between gap-3">
+        <h3 className="truncate text-[16px] font-bold text-[#f7fbf6]">{stats.username}</h3>
         <div className="flex shrink-0 items-center gap-2">
           <RatingSparkline values={stats.ratingTrail} />
           <span className="rounded-full bg-[#c9d9a0] px-2.5 py-1 text-[11px] font-extrabold text-[#10261c]">
             {Math.round(stats.rating)} ±{Math.round(stats.sigma)}
           </span>
         </div>
-      </div>
-
-      <div className="mb-2.5 grid grid-cols-2 gap-x-2.5 gap-y-1.5">
-        {statPairs.map(([label, value]) => (
-          <p key={label} className="flex justify-between text-[12px] text-[#a9c2b3]">
-            <span>{label}</span>
-            <b className="font-semibold text-[#eef3ee]">{value}</b>
-          </p>
-        ))}
       </div>
 
       {stats.bestPartnerUsername || stats.nemesisUsername ? (
