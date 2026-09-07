@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Trophy, Users } from "lucide-react";
+import { Info, Trophy, Users } from "lucide-react";
 import { ProfileButton } from "@/components/ProfileButton";
 import { PlayerSummaryCard } from "@/components/PlayerSummaryCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
@@ -183,6 +183,14 @@ async function HomeContent() {
           )}
         </div>
       </section>
+
+      <Link
+        href="/informacije"
+        className="flex items-center justify-center gap-2 rounded-[16px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] p-[15px] text-[13.5px] font-semibold text-[#dcece3]"
+      >
+        <Info size={16} className="text-[#c9d9a0]" />
+        Informacije
+      </Link>
     </main>
   );
 }
