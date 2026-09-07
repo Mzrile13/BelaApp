@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Trophy, Users } from "lucide-react";
-import { LogoutButton } from "@/components/LogoutButton";
+import { ProfileButton } from "@/components/ProfileButton";
 import { PlayerStatsCard } from "@/components/PlayerStatsCard";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
+import { getAccountById } from "@/lib/accounts";
 import { getCachedPairStats, getCachedPlayerStats } from "@/lib/cachedStats";
 import { requireAccountId } from "@/lib/session";
 
@@ -34,9 +35,10 @@ async function HomeContent() {
   const activeGames = unfinishedGames.filter(
     (game) => getWinningTeam(getGameScore(roundsByGameId.get(game.id) ?? [])) === null,
   );
-  const [playerStats, pairStatsAll] = await Promise.all([
+  const [playerStats, pairStatsAll, account] = await Promise.all([
     getCachedPlayerStats(accountId),
     getCachedPairStats(accountId),
+    getAccountById(accountId),
   ]);
   const pairStats = pairStatsAll.slice(0, 3);
 
@@ -59,7 +61,7 @@ async function HomeContent() {
               Bela Tracker
             </h1>
           </div>
-          <LogoutButton />
+          <ProfileButton username={account?.username ?? "Profil"} />
         </div>
         <p className="mt-1.5 mb-[18px] text-[13.5px] leading-[1.5] text-[#a9c2b3]">
           Live praćenje partija, ruku i naprednih statistika.

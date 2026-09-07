@@ -102,3 +102,61 @@ export async function createAccount(username: string, passwordHash: string): Pro
   if (error) throw error;
   return { id: data.id, username: data.username, createdAt: data.created_at };
 }
+
+/** Ime računa za prikaz (npr. u gumbu Profil). */
+export async function getAccountById(accountId: string): Promise<Account | null> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
+    const account = (await readDevAccounts()).find((row) => row.id === accountId);
+    return account
+      ? { id: account.id, username: account.username, createdAt: account.createdAt }
+      : null;
+  }
+
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("id, username, created_at")
+    .eq("id", accountId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return { id: data.id, username: data.username, createdAt: data.created_at };
+}
+
+/** Hash prijavljenog računa — za provjeru stare lozinke kod promjene. */
+export async function findAccountCredentialsById(
+  accountId: string,
+): Promise<AccountCredentials | null> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
+    const account = (await readDevAccounts()).find((row) => row.id === accountId);
+    return account ? { id: account.id, passwordHash: account.passwordHash } : null;
+  }
+
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("id, password_hash")
+    .eq("id", accountId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return { id: data.id, passwordHash: data.password_hash };
+}
+
+export async function updateAccountPassword(accountId: string, passwordHash: string) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) {
+    const accounts = await readDevAccounts();
+    const account = accounts.find((row) => row.id === accountId);
+    if (!account) return;
+    account.passwordHash = passwordHash;
+    await writeDevAccounts(accounts);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("accounts")
+    .update({ password_hash: passwordHash })
+    .eq("id", accountId);
+  if (error) throw error;
+}

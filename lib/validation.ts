@@ -30,6 +30,24 @@ export const registerSchema = z
     path: ["confirmPassword"],
   });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Upišite trenutnu lozinku"),
+    newPassword: z
+      .string()
+      .min(8, "Nova lozinka mora imati barem 8 znakova")
+      .max(200, "Lozinka je preduga"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Lozinke se ne podudaraju",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.newPassword !== data.currentPassword, {
+    message: "Nova lozinka mora biti različita od trenutne",
+    path: ["newPassword"],
+  });
+
 export const createPlayerSchema = z.object({
   username: z
     .string()
