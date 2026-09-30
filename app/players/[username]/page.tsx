@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import { PlayerStatsCard } from "@/components/PlayerStatsCard";
-import { RevealList } from "@/components/RevealList";
+import { HistoryList } from "@/components/HistoryList";
 import { getCachedAllStats, getCachedDataset } from "@/lib/cachedStats";
-import { getGameScore, getWinningTeam } from "@/lib/scoring";
+import { HISTORY_PAGE_SIZE, getHistoryFilterOptions, getHistoryPage } from "@/lib/history";
 import { requireAccountId } from "@/lib/session";
 
 export default async function PlayerPage(props: PageProps<"/players/[username]">) {
@@ -17,14 +16,8 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
   // Namjerno u nizu, a ne u Promise.all: statistika se i sama gradi nad ovim
   // datasetom, pa mu prvi await napuni cache koji drugi onda samo pročita. U
   // paraleli bi hladan cache značio dva ista dohvata iz baze.
-  const { players, games, rounds } = await getCachedDataset(accountId);
+  const { players } = await getCachedDataset(accountId);
   const stats = await getCachedAllStats(accountId);
-  const roundsByGameId = new Map<string, typeof rounds>();
-  for (const round of rounds) {
-    const bucket = roundsByGameId.get(round.gameId) ?? [];
-    bucket.push(round);
-    roundsByGameId.set(round.gameId, bucket);
-  }
   const row = stats.players.find(
     (item) => item.username.toLowerCase() === username.toLowerCase(),
   );
@@ -33,65 +26,24 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
 
   const player = players.find((item) => item.id === row.playerId);
   if (!player) notFound();
-  const playersById = new Map(players.map((item) => [item.id, item.username]));
-  const playerGames = games
-    .map((game) => ({
-      game,
-      rounds: roundsByGameId.get(game.id) ?? [],
-    }))
-    .filter(({ game }) => game.teams.teamA.includes(player.id) || game.teams.teamB.includes(player.id))
-    .map(({ game, rounds }) => ({
-      game,
-      rounds,
-      score: getGameScore(rounds),
-    }))
-    .sort((a, b) => b.game.createdAt.localeCompare(a.game.createdAt));
+  const [page, filterOptions] = await Promise.all([
+    getHistoryPage(accountId, { playerId: player.id }, 0, HISTORY_PAGE_SIZE),
+    getHistoryFilterOptions(accountId, player.id),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/leaderboard" className="mb-3" />
       <PlayerStatsCard stats={row} />
-      <section className="card mt-4 p-4">
-        <h2 className="text-lg font-semibold text-[#f7fbf6]">Partije igrača</h2>
-        <div className="mt-3">
-          {playerGames.length === 0 ? (
-            <p className="text-sm text-[#a9c2b3]">Igrač još nema odigranih partija.</p>
-          ) : (
-            <RevealList
-              listClassName="space-y-2"
-              items={playerGames.map(({ game, score }) => {
-                const winner = getWinningTeam(score);
-                const finished = game.finishedAt !== null || winner !== null;
-                return (
-                  <div
-                    key={game.id}
-                    className="flex items-center justify-between rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3 py-2"
-                  >
-                  <div>
-                    <p className="text-sm font-medium text-[#f2f5f0]">
-                      {new Date(game.createdAt).toLocaleString("hr-HR")}
-                    </p>
-                    <p className="text-xs text-[#dcece3]">
-                      A {score.teamA} : {score.teamB} B · {finished ? "završena" : "u tijeku"}
-                    </p>
-                    <p className="text-xs text-[#8fa89b]">
-                      {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")} vs{" "}
-                      {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/game/${game.id}?from=history`}
-                    className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
-                  >
-                    Otvori
-                  </Link>
-                </div>
-                );
-              })}
-            />
-          )}
-        </div>
-      </section>
+      <h2 className="mb-3 mt-4 text-lg font-semibold text-[#f7fbf6]">Partije igrača</h2>
+      <HistoryList
+        initialRows={page.rows}
+        initialHasMore={page.hasMore}
+        initialNextOffset={page.nextOffset}
+        pageSize={HISTORY_PAGE_SIZE}
+        filterOptions={filterOptions}
+        lockedPlayerId={player.id}
+      />
     </main>
   );
 }

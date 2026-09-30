@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
 import { HistoryList } from "@/components/HistoryList";
-import { HISTORY_PAGE_SIZE, getHistoryPage } from "@/lib/history";
+import { HISTORY_PAGE_SIZE, getHistoryFilterOptions, getHistoryPage } from "@/lib/history";
 import { requireAccountId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,11 @@ export const fetchCache = "force-no-store";
 
 export default async function HistoryPage() {
   noStore();
-  const page = await getHistoryPage(await requireAccountId(), 0, HISTORY_PAGE_SIZE);
+  const accountId = await requireAccountId();
+  const [page, filterOptions] = await Promise.all([
+    getHistoryPage(accountId, {}, 0, HISTORY_PAGE_SIZE),
+    getHistoryFilterOptions(accountId),
+  ]);
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
@@ -26,6 +30,7 @@ export default async function HistoryPage() {
           initialHasMore={page.hasMore}
           initialNextOffset={page.nextOffset}
           pageSize={HISTORY_PAGE_SIZE}
+          filterOptions={filterOptions}
         />
       </div>
     </main>

@@ -5,6 +5,7 @@ import { PairStatsCard } from "@/components/PairStatsCard";
 import { RevealList } from "@/components/RevealList";
 import { getCachedAllStats, getCachedDataset } from "@/lib/cachedStats";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
+import { getRepo } from "@/lib/supabase";
 import { requireAccountId } from "@/lib/session";
 
 export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
@@ -52,6 +53,13 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
     }))
     .sort((a, b) => b.game.createdAt.localeCompare(a.game.createdAt));
 
+  // Komentari su zaseban stupac; bez migracije stranica radi bez njih.
+  const comments = pairGames.length
+    ? await getRepo(accountId)
+        .listGameComments(pairGames.map(({ game }) => game.id))
+        .catch((): Record<string, string> => ({}))
+    : {};
+
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/leaderboard/pairs" className="mb-3" />
@@ -84,6 +92,11 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
                       {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")} vs{" "}
                       {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     </p>
+                    {comments[game.id] ? (
+                      <p className="mt-1 whitespace-pre-wrap break-words text-xs italic text-[#c9d9a0]">
+                        “{comments[game.id]}”
+                      </p>
+                    ) : null}
                   </div>
                   <Link
                     href={`/game/${game.id}?from=history`}
