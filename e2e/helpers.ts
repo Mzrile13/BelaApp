@@ -19,6 +19,10 @@ async function postJson<T>(request: APIRequestContext, url: string, data: unknow
 /** Registrira račun kroz UI formu, da je i taj tok pokriven. */
 export async function registerAccount(page: Page, username = uniqueName("e2e")) {
   const password = "lozinka-za-test";
+  // Registracija je ograničena na 5 po IP-u na sat, a ruta čita IP iz
+  // x-forwarded-for. Svaki test dobije svoju (testnu) adresu.
+  const ip = `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`;
+  await page.context().setExtraHTTPHeaders({ "x-forwarded-for": ip });
   await page.goto("/register");
   await page.getByLabel(/korisničko ime/i).fill(username);
   await page.getByLabel(/^lozinka$/i).fill(password);
