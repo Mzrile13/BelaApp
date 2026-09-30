@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { getSupabaseAdmin, localDataDir } from "@/lib/supabase";
 
 // Račun = jedna grupa prijatelja. Jedan dijeljeni username i lozinka; svi igrači,
 // partije i statistika vise o njegovom id-u.
@@ -26,7 +26,7 @@ export class UsernameTakenError extends Error {
 
 // Dev fallback kad Supabase env varijable nisu postavljene — isti obrazac kao
 // FileRepo u lib/supabase.ts.
-const devDbPath = path.join(process.cwd(), ".data", "bela-accounts.json");
+const devDbPath = path.join(localDataDir(), "bela-accounts.json");
 
 interface DevAccount extends Account {
   usernameLc: string;

@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { BottomNav } from "@/components/BottomNav";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,12 +27,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bela Tracker",
   description: "Praćenje rezultata i naprednih statistika za belot",
+  appleWebApp: { capable: true, title: "Bela", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
   // Boja adresne trake na mobitelu — inače bijela traka iznad tamne aplikacije.
   themeColor: "#082f24",
   colorScheme: "dark",
+  // Sadržaj ide ispod notcha/home-indikatora; donja navigacija sama dodaje razmak.
+  viewportFit: "cover",
 };
 
 // Godina u podnožju: mijenja se jednom godišnje, pa se računa jednom po
@@ -44,8 +49,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="hr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+      {/* Donji padding = visina BottomNav + safe area, da zadnji sadržaj nije pod njom. */}
+      <body className="min-h-full flex flex-col pb-[calc(64px+env(safe-area-inset-bottom))]">
         {children}
+        <BottomNav />
+        <ServiceWorkerRegister />
         <footer className="mt-auto px-4 py-5 text-center text-[12px] text-dim">
           © {COPYRIGHT_YEAR} Marko Zrilić. Sva prava pridržana.
         </footer>

@@ -1,4 +1,3 @@
-import { PlayerAvatar } from "@/components/PlayerAvatar";
 import type { Player } from "@/lib/types";
 import {
   offChipClass,
@@ -90,9 +89,8 @@ export function ZvanjaStep({
                     }`}
                   >
                     <SelectedMark show={selected} />
-                    <span className="flex items-center gap-1">
-                      <PlayerAvatar id={player.id} name={player.username} size="xs" />
-                      <span className="text-[12px] font-bold text-heading">{player.username}</span>
+                    <span className="block w-full truncate px-2 text-[12px] font-bold text-heading">
+                      {player.username}
                     </span>
                     <span
                       className={`mt-px font-mono text-[12px] font-bold ${

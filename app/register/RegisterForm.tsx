@@ -45,8 +45,9 @@ export function RegisterForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <div>
-        <label className={labelClass}>Korisničko ime grupe</label>
+        <label htmlFor="register-username" className={labelClass}>Korisničko ime grupe</label>
         <input
+          id="register-username"
           type="text"
           autoComplete="username"
           autoCapitalize="none"
@@ -59,8 +60,9 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label className={labelClass}>Lozinka</label>
+        <label htmlFor="register-password" className={labelClass}>Lozinka</label>
         <input
+          id="register-password"
           type="password"
           autoComplete="new-password"
           value={password}
@@ -71,8 +73,9 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label className={labelClass}>Ponovi lozinku</label>
+        <label htmlFor="register-confirm" className={labelClass}>Ponovi lozinku</label>
         <input
+          id="register-confirm"
           type="password"
           autoComplete="new-password"
           value={confirmPassword}
@@ -83,7 +86,7 @@ export function RegisterForm() {
         />
       </div>
 
-      {error ? <p className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
+      {error ? <p role="alert" className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
 
       <button
         type="submit"

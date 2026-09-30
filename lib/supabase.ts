@@ -342,8 +342,17 @@ interface LocalDb {
 
 const allowedSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
 
+/**
+ * Direktorij lokalnih JSON "baza" kad Supabase nije konfiguriran. BELA_DATA_DIR
+ * ga premješta (E2E testovi dobiju svoj, prazan direktorij) i jedini je način
+ * da se lokalna pohrana koristi i u produkcijskom buildu.
+ */
+export function localDataDir() {
+  return process.env.BELA_DATA_DIR || path.join(process.cwd(), ".data");
+}
+
 class FileRepo implements BelaRepository {
-  private readonly dbPath = path.join(process.cwd(), ".data", "bela-db.json");
+  private readonly dbPath = path.join(localDataDir(), "bela-db.json");
 
   constructor(private readonly accountId: string) {}
 
@@ -810,7 +819,7 @@ export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRole) {
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production" && !process.env.BELA_DATA_DIR) {
       throw new Error(
         "Supabase env varijable nedostaju u produkciji. Postavi NEXT_PUBLIC_SUPABASE_URL i SUPABASE_SERVICE_ROLE_KEY.",
       );

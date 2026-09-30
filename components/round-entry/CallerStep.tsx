@@ -58,7 +58,7 @@ export function CallerStep({
                   >
                     <SelectedMark show={selected} />
                     <PlayerAvatar id={player.id} name={player.username} size="xs" />
-                    <span className="block text-[12px] font-bold text-heading">
+                    <span className="block w-full truncate px-1 text-[12px] font-bold text-heading">
                       {player.username}
                     </span>
                   </button>

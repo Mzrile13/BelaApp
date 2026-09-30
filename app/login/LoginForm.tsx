@@ -44,10 +44,11 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <div>
-        <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
+        <label htmlFor="login-username" className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
           Korisničko ime
         </label>
         <input
+          id="login-username"
           type="text"
           autoComplete="username"
           autoCapitalize="none"
@@ -58,10 +59,11 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
+        <label htmlFor="login-password" className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
           Lozinka
         </label>
         <input
+          id="login-password"
           type="password"
           autoComplete="current-password"
           value={password}
@@ -71,7 +73,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         />
       </div>
 
-      {error ? <p className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
+      {error ? <p role="alert" className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
 
       <button
         type="submit"
