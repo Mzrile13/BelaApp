@@ -47,6 +47,8 @@ export interface NewGameInitialData {
   players: Player[];
   groups: PlayerGroup[];
   members: Record<string, Player[]>;
+  /** Timovi iz prošle partije — otvara odmah korak "Postava". */
+  rematch?: { groupId: string; teamA: [string, string]; teamB: [string, string] };
 }
 
 /**
@@ -58,12 +60,15 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
   const router = useRouter();
   const [players, setPlayers] = useState<Player[]>(initialData.players);
   const [groups, setGroups] = useState<PlayerGroup[]>(initialData.groups);
-  const [groupPlayers, setGroupPlayers] = useState<Player[]>([]);
+  const rematch = initialData.rematch;
+  const [groupPlayers, setGroupPlayers] = useState<Player[]>(
+    rematch ? (initialData.members[rematch.groupId] ?? []) : [],
+  );
   const [groupMembers, setGroupMembers] = useState<Record<string, Player[]>>(
     initialData.members,
   );
-  const [step, setStep] = useState<Step>("groups");
-  const [selectedGroupId, setSelectedGroupId] = useState("");
+  const [step, setStep] = useState<Step>(rematch ? "setup" : "groups");
+  const [selectedGroupId, setSelectedGroupId] = useState(rematch?.groupId ?? "");
   const [activeSlot, setActiveSlot] = useState<SlotKey | null>("A0");
 
   const [groupQuery, setGroupQuery] = useState("");
@@ -83,10 +88,10 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
-    groupId: "",
+    groupId: rematch?.groupId ?? "",
     dealerPlayerId: "",
-    teamA: ["", ""] as [string, string],
-    teamB: ["", ""] as [string, string],
+    teamA: (rematch?.teamA ?? ["", ""]) as [string, string],
+    teamB: (rematch?.teamB ?? ["", ""]) as [string, string],
   });
 
   const selectedGroup = useMemo(

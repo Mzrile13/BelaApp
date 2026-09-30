@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, RotateCcw } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { GameHeader } from "@/components/GameHeader";
 import { ScoreTimeline } from "@/components/ScoreTimeline";
@@ -32,7 +32,14 @@ export default async function GamePage(props: PageProps<"/game/[id]">) {
       />
       {winnerTeam ? (
         <div className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] px-4 py-3 text-center font-semibold text-[#eef6ea]">
-          Partija je završena. Pobjednik je Tim {winnerTeam}.
+          <p>Partija je završena. Pobjednik je Tim {winnerTeam}.</p>
+          <Link
+            href={`/new-game?rematch=${game.id}`}
+            className="btn-accent mt-3 flex items-center justify-center gap-2 rounded-2xl py-3 font-semibold"
+          >
+            <RotateCcw size={18} />
+            Revanš
+          </Link>
         </div>
       ) : (
         <Link
