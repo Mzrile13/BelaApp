@@ -17,10 +17,18 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
   use: {
-    ...devices["Pixel 7"],
     baseURL: `http://localhost:${PORT}`,
     trace: "retain-on-failure",
   },
+  projects: [
+    { name: "android", use: { ...devices["Pixel 7"] } },
+    {
+      // Safari engine: polja za datum i safe-area ponašaju se drukčije nego u Chromeu.
+      name: "iphone",
+      use: { ...devices["iPhone 15"] },
+      testMatch: /home-and-filters\.spec\.ts$/,
+    },
+  ],
   webServer: {
     // Produkcijski build, jer SW i manifest rade samo tamo.
     command: `npm run build && npx next start -p ${PORT}`,

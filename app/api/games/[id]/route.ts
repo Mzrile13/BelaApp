@@ -51,7 +51,7 @@ export async function DELETE(
     );
   }
   await repo.deleteGame(id);
-  invalidateStats(accountId);
+  invalidateStats(accountId, { immediate: true });
   return NextResponse.json({ ok: true });
 }
 

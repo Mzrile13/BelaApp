@@ -113,7 +113,8 @@ export async function PATCH(
   } else {
     await repo.reopenGame(game.id);
   }
-  invalidateStats(accountId);
+  // Izmjena ruke u završenoj (ili sada završenoj) partiji mijenja statistiku.
+  invalidateStats(accountId, { immediate: Boolean(winnerTeam || game.finishedAt) });
 
   return NextResponse.json(
     { round, gameFinished: Boolean(winnerTeam), winnerTeam, score: scoreAfterUpdate },

@@ -20,11 +20,12 @@ export function NewRoundPageClient({
   const router = useRouter();
 
   function backToGame(result?: { gameFinished: boolean }) {
-    // `refresh` je nužan jer je stranica partije sada server-renderirana:
-    // bez njega bi se vratila iz klijentskog cachea, bez upravo upisane ruke.
+    // Bez router.refresh(): dinamičke stranice se od Next 15 ne drže u
+    // klijentskom cacheu (staleTimes.dynamic = 0), pa push već dohvaća svježu
+    // stranicu. refresh() odmah iza njega bio je drugi, suvišan render na
+    // serveru nakon svake ruke.
     // `?pobjeda=1` pušta konfete samo kad je ova ruka završila partiju.
     router.push(`/game/${game.id}${result?.gameFinished ? "?pobjeda=1" : ""}`);
-    router.refresh();
   }
 
   return (

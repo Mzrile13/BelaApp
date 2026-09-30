@@ -16,14 +16,19 @@ export function statsTag(accountId: string) {
 const STATS_TTL_SECONDS = 30;
 
 /**
- * Poziva se nakon svake izmjene partije/ruke. `expire: 0` umjesto "max": uz
- * "max" (stale-while-revalidate) prvi prikaz nakon izmjene dobije STARE
- * podatke — npr. ekran pobjede bez promjene rejtinga upravo završene partije,
- * ili ljestvica bez te partije. Ovako prvi sljedeći zahtjev pričeka svježi
- * izračun.
+ * Poziva se nakon svake izmjene partije/ruke.
+ *
+ * `immediate` (expire: 0): sljedeći zahtjev ČEKA svježi izračun. Za izmjene
+ * koje mijenjaju statistiku ili popis aktivnih partija: nova/obrisana partija,
+ * ruka koja završava partiju, izmjena završene partije. Bez toga bi ekran
+ * pobjede ostao bez promjene rejtinga upravo završene partije.
+ *
+ * Inače "max" (stale-while-revalidate): obična ruka u partiji koja traje ne
+ * ulazi u statistiku (broje se samo završene partije), pa nema smisla da
+ * sljedeća stranica čeka ponovni dohvat svih ruku računa.
  */
-export function invalidateStats(accountId: string) {
-  revalidateTag(statsTag(accountId), { expire: 0 });
+export function invalidateStats(accountId: string, { immediate }: { immediate: boolean }) {
+  revalidateTag(statsTag(accountId), immediate ? { expire: 0 } : "max");
 }
 
 export interface AccountDataset {
@@ -39,10 +44,13 @@ function datasetFor(accountId: string) {
   return unstable_cache(
     async (): Promise<AccountDataset> => {
       const repo = getRepo(accountId);
-      const [players, games] = await Promise.all([repo.listPlayers(), repo.listGames()]);
-      const rounds = games.length
-        ? await repo.listRoundsForGames(games.map((game) => game.id))
-        : [];
+      // Sve tri tablice u jednom paralelnom krugu (ruke po računu, ne po popisu
+      // id-eva partija, pa ne čekaju da partije stignu).
+      const [players, games, rounds] = await Promise.all([
+        repo.listPlayers(),
+        repo.listGames(),
+        repo.listAllRounds(),
+      ]);
       return { players, games, rounds };
     },
     ["dataset", accountId],

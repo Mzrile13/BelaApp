@@ -53,6 +53,6 @@ export async function POST(request: Request) {
   const game = await repo.createGame(parsed.data);
   // Popis partija računa je keširan zajedno sa statistikom, pa i nova partija
   // (koja još nema nijednu ruku) mora srušiti tu stavku da se odmah vidi.
-  invalidateStats(accountId);
+  invalidateStats(accountId, { immediate: true });
   return NextResponse.json({ game }, { status: 201 });
 }

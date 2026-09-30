@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === "development";
+// Lokalni produkcijski build za E2E (BELA_DATA_DIR, vidi playwright.config.ts)
+// radi preko http://localhost. Safari/WebKit poštuje upgrade-insecure-requests
+// i za localhost pa bi svaki skript tražio na https:// i stranica ne bi radila.
+const isPlainHttp = isDev || Boolean(process.env.BELA_DATA_DIR);
 
 // CSP bez noncea (dokumentirani pristup za app koja zadržava statičko/cache
 // renderiranje). 'unsafe-inline' je nužan za Next-ov inline bootstrap i
@@ -19,7 +23,7 @@ const csp = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   // U dev-u localhost ide preko http-a; upgrade-insecure-requests bi lomio HMR.
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ...(isPlainHttp ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [
@@ -34,7 +38,7 @@ const securityHeaders = [
   },
   // HSTS samo u produkciji (preglednik ga ignorira preko http-a, ali izbjegavamo
   // pinanje localhost-a na https tijekom razvoja).
-  ...(isDev
+  ...(isPlainHttp
     ? []
     : [
         {

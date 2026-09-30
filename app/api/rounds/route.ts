@@ -132,7 +132,7 @@ export async function POST(request: Request) {
   if (winnerTeam) {
     await repo.finishGame(game.id);
   }
-  invalidateStats(accountId);
+  invalidateStats(accountId, { immediate: Boolean(winnerTeam) });
 
   return NextResponse.json(
     { round, gameFinished: Boolean(winnerTeam), winnerTeam, score: scoreAfterInsert },
