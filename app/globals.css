@@ -103,6 +103,28 @@ body {
     linear-gradient(165deg, #0d2a20 0%, #071a14 55%, #061410 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /*
+   * Instalirana aplikacija (viewport-fit=cover + black-translucent) crta se i
+   * ispod statusne trake / Dynamic Islanda. Bez ovoga vrh svakog ekrana
+   * (naslov, logo, profil, "Nazad") završi pod satom i zamućenjem.
+   * U običnom pregledniku env() je 0, pa se ništa ne mijenja.
+   */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Traka ispod statusne trake: sadržaj koji se skrola ne prolazi ispod sata. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background: rgba(7, 26, 20, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 45;
+  pointer-events: none;
 }
 
 a {

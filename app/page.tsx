@@ -79,54 +79,14 @@ async function HomeContent() {
           </div>
           <ProfileButton username={account?.username ?? "Profil"} />
         </div>
-        <p className="mt-1.5 mb-[18px] text-[13.5px] leading-[1.5] text-subtle">
+        <p className="mt-1.5 text-[13.5px] leading-[1.5] text-subtle">
           Live praćenje partija, ruku i naprednih statistika.
         </p>
-
-        <Link
-          href="/new-game"
-          className="btn-accent block rounded-[16px] p-4 text-center text-[15px] font-bold"
-        >
-          Nova partija
-        </Link>
-
-        <div className="mt-2.5 grid grid-cols-3 gap-2">
-          <Link
-            href="/leaderboard"
-            className="rounded-[14px] border border-subtle/22 bg-well/40 px-1.5 py-3 text-center"
-          >
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
-              <circle cx="8" cy="8" r="4.2" stroke="#c9d9a0" strokeWidth="1.4" />
-              <circle cx="14.5" cy="9.5" r="3.4" stroke="#8fa89b" strokeWidth="1.3" />
-            </svg>
-            <span className="text-[11.5px] font-semibold text-soft">Igrači</span>
-          </Link>
-          <Link
-            href="/leaderboard/pairs"
-            className="rounded-[14px] border border-subtle/22 bg-well/40 px-1.5 py-3 text-center"
-          >
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
-              <circle cx="8.5" cy="11" r="4.6" stroke="#c9d9a0" strokeWidth="1.4" />
-              <circle cx="13.5" cy="11" r="4.6" stroke="#8fa89b" strokeWidth="1.3" />
-            </svg>
-            <span className="text-[11.5px] font-semibold text-soft">Parovi</span>
-          </Link>
-          <Link
-            href="/history"
-            className="rounded-[14px] border border-subtle/22 bg-well/40 px-1.5 py-3 text-center"
-          >
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
-              <circle cx="11" cy="11" r="7.5" stroke="#c9d9a0" strokeWidth="1.4" />
-              <path d="M11 6.5V11L14 13" stroke="#c9d9a0" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-            <span className="text-[11.5px] font-semibold text-soft">Povijest</span>
-          </Link>
-        </div>
 
         {activeGames.length > 0 ? (
           <Link
             href="/active-games"
-            className="mt-2.5 block rounded-[14px] border border-accent/40 bg-accent/10 p-[13px] text-center text-[13.5px] font-semibold text-ink"
+            className="mt-4 block rounded-[14px] border border-accent/40 bg-accent/10 p-[13px] text-center text-[13.5px] font-semibold text-ink"
           >
             Nastavi partiju &rarr;
           </Link>
