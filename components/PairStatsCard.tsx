@@ -30,10 +30,10 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
   const losses = Math.max(0, stats.gamesTogether - stats.winsTogether);
   const chemistryClass =
     stats.chemistry > 0.01
-      ? "bg-[#c9d9a0] text-[#10261c]"
+      ? "bg-accent text-on-accent"
       : stats.chemistry < -0.01
-        ? "bg-[rgba(196,90,74,0.85)] text-[#f7fbf6]"
-        : "bg-[rgba(169,194,179,0.25)] text-[#eef3ee]";
+        ? "bg-pad/85 text-heading"
+        : "bg-subtle/25 text-ink";
 
   const statPairs: Array<[string, string]> = [
     ["Odigrane partije", String(stats.gamesTogether)],
@@ -56,13 +56,13 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
   ];
 
   return (
-    <article className="rounded-[18px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-4">
+    <article className="rounded-[18px] border border-white/5 bg-panel/50 p-4">
       <div className="mb-2.5 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate text-[15px] font-bold text-[#f7fbf6]">
+          <h3 className="truncate text-[15px] font-bold text-heading">
             {stats.playerAUsername} + {stats.playerBUsername}
           </h3>
-          <p className="mt-0.5 text-[11px] text-[#8fa89b]">
+          <p className="mt-0.5 text-[11px] text-muted">
             Kemija = stvarni minus očekivani postotak pobjeda
           </p>
         </div>
@@ -75,17 +75,17 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
 
       <div className="mb-2.5 grid grid-cols-2 gap-x-2.5 gap-y-1.5">
         {statPairs.map(([label, value]) => (
-          <p key={label} className="flex justify-between text-[12px] text-[#a9c2b3]">
+          <p key={label} className="flex justify-between text-[12px] text-subtle">
             <span>{label}</span>
-            <b className="font-semibold text-[#eef3ee]">{value}</b>
+            <b className="font-semibold text-ink">{value}</b>
           </p>
         ))}
       </div>
 
-      <div className="flex items-center justify-between rounded-[12px] bg-[rgba(6,20,16,0.45)] py-[9px]">
-        <p className="flex items-center gap-1.5 pl-2.5 text-[12px] font-semibold text-[#dcece3]">
+      <div className="flex items-center justify-between rounded-[12px] bg-well/45 py-[9px]">
+        <p className="flex items-center gap-1.5 pl-2.5 text-[12px] font-semibold text-soft">
           {winsInLast10 > lossesInLast10 ? (
-            <TrendingUp size={14} className="text-[#c9d9a0]" />
+            <TrendingUp size={14} className="text-accent" />
           ) : lossesInLast10 > winsInLast10 ? (
             <TrendingDown size={14} className="text-rose-300" />
           ) : null}
@@ -96,7 +96,7 @@ export function PairStatsCard({ stats }: { stats: PairStats }) {
             <span
               key={index}
               className={`h-[7px] w-[7px] rounded-full ${
-                result === "W" ? "bg-[#c9d9a0]" : "bg-[rgba(196,90,74,0.85)]"
+                result === "W" ? "bg-accent" : "bg-pad/85"
               }`}
             />
           ))}

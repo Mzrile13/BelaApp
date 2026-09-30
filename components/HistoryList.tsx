@@ -8,46 +8,46 @@ function HistoryCard({ row }: { row: HistoryRow }) {
   return (
     <section className="card p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-sm font-semibold text-[#f2f5f0]">
+        <p className="text-sm font-semibold text-heading">
           Partija {new Date(row.createdAt).toLocaleString("hr-HR")}
         </p>
         <Link
           href={`/game/${row.id}?from=history`}
-          className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
+          className="rounded-lg border border-subtle/30 px-2 py-1 text-xs font-semibold text-soft"
         >
           Otvori
         </Link>
       </div>
-      <div className="rounded-[14px] bg-[rgba(6,20,16,0.45)] p-3 text-sm text-[#dcece3]">
+      <div className="rounded-[14px] bg-well/45 p-3 text-sm text-soft">
         <p
           className={`font-semibold ${
-            row.winnerTeam === "B" ? "text-[#8fa89b]" : "text-[#f7fbf6]"
+            row.winnerTeam === "B" ? "text-muted" : "text-heading"
           }`}
         >
           Tim A: {row.teamA.join(" + ")}
           {row.winnerTeam === "A" ? (
-            <span className="ml-2 rounded-full bg-[rgba(201,217,160,0.2)] px-2 py-0.5 text-xs text-[#c9d9a0]">
+            <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
               pobjednik
             </span>
           ) : null}
         </p>
         <p
           className={`mt-1 font-semibold ${
-            row.winnerTeam === "A" ? "text-[#8fa89b]" : "text-[#f7fbf6]"
+            row.winnerTeam === "A" ? "text-muted" : "text-heading"
           }`}
         >
           Tim B: {row.teamB.join(" + ")}
           {row.winnerTeam === "B" ? (
-            <span className="ml-2 rounded-full bg-[rgba(201,217,160,0.2)] px-2 py-0.5 text-xs text-[#c9d9a0]">
+            <span className="ml-2 rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
               pobjednik
             </span>
           ) : null}
         </p>
-        <p className="mt-1 text-[#8fa89b]">
+        <p className="mt-1 text-muted">
           Rezultat: A {row.scoreA} : {row.scoreB} B
         </p>
         {row.comment ? (
-          <p className="mt-2 whitespace-pre-wrap break-words border-t border-[rgba(255,255,255,0.08)] pt-2 text-[13px] italic text-[#c9d9a0]">
+          <p className="mt-2 whitespace-pre-wrap break-words border-t border-white/8 pt-2 text-[13px] italic text-accent">
             “{row.comment}”
           </p>
         ) : null}
@@ -67,8 +67,8 @@ interface HistoryListProps {
 }
 
 const CONTROL_CLASS =
-  "w-full rounded-[10px] border border-[rgba(255,255,255,0.12)] bg-[rgba(6,20,16,0.6)] px-3 py-2 text-[13px] text-[#eef6ea] disabled:opacity-50";
-const LABEL_CLASS = "mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa89b]";
+  "w-full rounded-[10px] border border-white/12 bg-well/60 px-3 py-2 text-[13px] text-ink disabled:opacity-50";
+const LABEL_CLASS = "mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted";
 
 function toQuery(filters: HistoryFilters, lockedPlayerId: string | undefined, offset: number, limit: number) {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
@@ -181,7 +181,7 @@ export function HistoryList({
           type="button"
           onClick={() => setShowFilters((prev) => !prev)}
           aria-expanded={showFilters}
-          className="rounded-full border-none bg-transparent p-0 text-sm font-bold text-[#c9d9a0]"
+          className="rounded-full border-none bg-transparent p-0 text-sm font-bold text-accent"
         >
           {showFilters ? "▾" : "▸"} Filteri{activeCount > 0 ? ` (${activeCount})` : ""}
         </button>
@@ -189,7 +189,7 @@ export function HistoryList({
           <button
             type="button"
             onClick={() => setFilters({})}
-            className="rounded-full border-none bg-transparent p-0 text-xs font-bold text-[#8fa89b]"
+            className="rounded-full border-none bg-transparent p-0 text-xs font-bold text-muted"
           >
             Očisti
           </button>
@@ -267,7 +267,7 @@ export function HistoryList({
               <option value="loss">Porazi</option>
             </select>
             {hasSubject ? null : (
-              <p className="mt-1 text-[11px] text-[#7d9587]">Odaberi igrača ili par.</p>
+              <p className="mt-1 text-[11px] text-dim">Odaberi igrača ili par.</p>
             )}
           </div>
           <div className="col-span-2">
@@ -290,7 +290,7 @@ export function HistoryList({
   let body;
   if (rows.length === 0 && !hasMore) {
     body = (
-      <section className="card p-4 text-sm text-[#a9c2b3]">
+      <section className="card p-4 text-sm text-subtle">
         {loading
           ? "Učitavam..."
           : activeCount > 0
@@ -312,7 +312,7 @@ export function HistoryList({
             type="button"
             onClick={loadMore}
             disabled={loading}
-            className="mt-4 w-full rounded-[12px] border border-[rgba(169,194,179,0.3)] bg-[rgba(6,20,16,0.4)] py-2.5 text-center text-[13px] font-bold text-[#dcece3] disabled:opacity-60"
+            className="mt-4 w-full rounded-[12px] border border-subtle/30 bg-well/40 py-2.5 text-center text-[13px] font-bold text-soft disabled:opacity-60"
           >
             {loading ? "Učitavam..." : "Prikaži još"}
           </button>

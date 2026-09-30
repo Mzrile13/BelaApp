@@ -66,10 +66,10 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
       <PairStatsCard stats={stats} />
 
       <section className="card mt-4 p-4">
-        <h2 className="text-lg font-semibold text-[#f7fbf6]">Partije para</h2>
+        <h2 className="text-lg font-semibold text-heading">Partije para</h2>
         <div className="mt-3">
           {pairGames.length === 0 ? (
-            <p className="text-sm text-[#a9c2b3]">Par još nema odigranih partija.</p>
+            <p className="text-sm text-subtle">Par još nema odigranih partija.</p>
           ) : (
             <RevealList
               listClassName="space-y-2"
@@ -79,28 +79,28 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
                 return (
                   <div
                     key={game.id}
-                    className="flex items-center justify-between rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3 py-2"
+                    className="flex items-center justify-between rounded-[14px] bg-well/45 px-3 py-2"
                   >
                   <div>
-                    <p className="text-sm font-medium text-[#f2f5f0]">
+                    <p className="text-sm font-medium text-heading">
                       {new Date(game.createdAt).toLocaleString("hr-HR")}
                     </p>
-                    <p className="text-xs text-[#dcece3]">
+                    <p className="text-xs text-soft">
                       A {score.teamA} : {score.teamB} B · {finished ? "završena" : "u tijeku"}
                     </p>
-                    <p className="text-xs text-[#8fa89b]">
+                    <p className="text-xs text-muted">
                       {game.teams.teamA.map((id) => playersById.get(id) ?? "Unknown").join(" + ")} vs{" "}
                       {game.teams.teamB.map((id) => playersById.get(id) ?? "Unknown").join(" + ")}
                     </p>
                     {comments[game.id] ? (
-                      <p className="mt-1 whitespace-pre-wrap break-words text-xs italic text-[#c9d9a0]">
+                      <p className="mt-1 whitespace-pre-wrap break-words text-xs italic text-accent">
                         “{comments[game.id]}”
                       </p>
                     ) : null}
                   </div>
                   <Link
                     href={`/game/${game.id}?from=history`}
-                    className="rounded-lg border border-[rgba(169,194,179,0.3)] px-2 py-1 text-xs font-semibold text-[#dcece3]"
+                    className="rounded-lg border border-subtle/30 px-2 py-1 text-xs font-semibold text-soft"
                   >
                     Otvori
                   </Link>

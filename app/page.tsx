@@ -63,7 +63,7 @@ async function HomeContent() {
       <section className="glass-card rounded-[22px] px-5 py-[22px] shadow-[0_18px_36px_-18px_rgba(0,0,0,0.55)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-[rgba(201,217,160,0.35)] shadow-[0_6px_16px_-8px_rgba(0,0,0,0.6)]">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white ring-1 ring-accent/35 shadow-[0_6px_16px_-8px_rgba(0,0,0,0.6)]">
               <Image
                 src="/logo.png"
                 alt="Bela Tracker logo"
@@ -73,13 +73,13 @@ async function HomeContent() {
                 className="h-full w-full object-contain"
               />
             </span>
-            <h1 className="text-[26px] font-extrabold tracking-[-0.01em] text-[#f7fbf6]">
+            <h1 className="text-[26px] font-extrabold tracking-[-0.01em] text-heading">
               Bela Tracker
             </h1>
           </div>
           <ProfileButton username={account?.username ?? "Profil"} />
         </div>
-        <p className="mt-1.5 mb-[18px] text-[13.5px] leading-[1.5] text-[#a9c2b3]">
+        <p className="mt-1.5 mb-[18px] text-[13.5px] leading-[1.5] text-subtle">
           Live praćenje partija, ruku i naprednih statistika.
         </p>
 
@@ -93,40 +93,40 @@ async function HomeContent() {
         <div className="mt-2.5 grid grid-cols-3 gap-2">
           <Link
             href="/leaderboard"
-            className="rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-1.5 py-3 text-center"
+            className="rounded-[14px] border border-subtle/22 bg-well/40 px-1.5 py-3 text-center"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
               <circle cx="8" cy="8" r="4.2" stroke="#c9d9a0" strokeWidth="1.4" />
               <circle cx="14.5" cy="9.5" r="3.4" stroke="#8fa89b" strokeWidth="1.3" />
             </svg>
-            <span className="text-[11.5px] font-semibold text-[#dcece3]">Igrači</span>
+            <span className="text-[11.5px] font-semibold text-soft">Igrači</span>
           </Link>
           <Link
             href="/leaderboard/pairs"
-            className="rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-1.5 py-3 text-center"
+            className="rounded-[14px] border border-subtle/22 bg-well/40 px-1.5 py-3 text-center"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
               <circle cx="8.5" cy="11" r="4.6" stroke="#c9d9a0" strokeWidth="1.4" />
               <circle cx="13.5" cy="11" r="4.6" stroke="#8fa89b" strokeWidth="1.3" />
             </svg>
-            <span className="text-[11.5px] font-semibold text-[#dcece3]">Parovi</span>
+            <span className="text-[11.5px] font-semibold text-soft">Parovi</span>
           </Link>
           <Link
             href="/history"
-            className="rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-1.5 py-3 text-center"
+            className="rounded-[14px] border border-subtle/22 bg-well/40 px-1.5 py-3 text-center"
           >
             <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="mx-auto mb-1.5 block">
               <circle cx="11" cy="11" r="7.5" stroke="#c9d9a0" strokeWidth="1.4" />
               <path d="M11 6.5V11L14 13" stroke="#c9d9a0" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
-            <span className="text-[11.5px] font-semibold text-[#dcece3]">Povijest</span>
+            <span className="text-[11.5px] font-semibold text-soft">Povijest</span>
           </Link>
         </div>
 
         {activeGames.length > 0 ? (
           <Link
             href="/active-games"
-            className="mt-2.5 block rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] p-[13px] text-center text-[13.5px] font-semibold text-[#eef6ea]"
+            className="mt-2.5 block rounded-[14px] border border-accent/40 bg-accent/10 p-[13px] text-center text-[13.5px] font-semibold text-ink"
           >
             Nastavi partiju &rarr;
           </Link>
@@ -134,12 +134,12 @@ async function HomeContent() {
       </section>
 
       <section className="card px-[18px] pt-[18px] pb-2">
-        <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-[#f2f5f0]">
-          <Trophy size={16} className="text-[#c9d9a0]" /> Top igrači
+        <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-heading">
+          <Trophy size={16} className="text-accent" /> Top igrači
         </h2>
         <div className="space-y-3">
           {topPlayers.length === 0 ? (
-            <p className="text-sm text-[#a9c2b3]">
+            <p className="text-sm text-subtle">
               Još nema podataka. Dodaj igrače i pokreni prvu partiju.
             </p>
           ) : (
@@ -151,34 +151,34 @@ async function HomeContent() {
       </section>
 
       <section className="card px-[18px] pt-[18px] pb-2">
-        <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-[#f2f5f0]">
-          <Users size={16} className="text-[#c9d9a0]" /> Najbolji parovi
+        <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-heading">
+          <Users size={16} className="text-accent" /> Najbolji parovi
         </h2>
         <div className="space-y-2.5">
           {pairStats.length === 0 ? (
-            <p className="text-sm text-[#a9c2b3]">Nema dovoljno podataka za parove.</p>
+            <p className="text-sm text-subtle">Nema dovoljno podataka za parove.</p>
           ) : (
             pairStats.map((pair) => (
               <div
                 key={`${pair.playerAId}-${pair.playerBId}`}
-                className="rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3 py-[11px]"
+                className="rounded-[14px] bg-well/45 px-3 py-[11px]"
               >
-                <p className="text-[13px] font-bold text-[#f2f5f0]">
+                <p className="text-[13px] font-bold text-heading">
                   {pair.playerAUsername} + {pair.playerBUsername}
                 </p>
-                <p className="mt-[3px] text-[11.5px] text-[#8fa89b]">
+                <p className="mt-[3px] text-[11.5px] text-muted">
                   Pobjede {pair.winsTogether}/{pair.gamesTogether} ·{" "}
                   {(pair.winRate * 100).toFixed(1)}%
                 </p>
-                <p className="mt-[3px] text-[11.5px] text-[#8fa89b]">
+                <p className="mt-[3px] text-[11.5px] text-muted">
                   Kemija{" "}
                   <b
                     className={`font-semibold ${
                       pair.chemistry > 0.01
-                        ? "text-[#c9d9a0]"
+                        ? "text-accent"
                         : pair.chemistry < -0.01
                           ? "text-rose-300"
-                          : "text-[#dcece3]"
+                          : "text-soft"
                     }`}
                   >
                     {pair.chemistry > 0 ? "+" : ""}
@@ -194,9 +194,9 @@ async function HomeContent() {
 
       <Link
         href="/informacije"
-        className="flex items-center justify-center gap-2 rounded-[16px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] p-[15px] text-[13.5px] font-semibold text-[#dcece3]"
+        className="flex items-center justify-center gap-2 rounded-[16px] border border-subtle/22 bg-well/40 p-[15px] text-[13.5px] font-semibold text-soft"
       >
-        <Info size={16} className="text-[#c9d9a0]" />
+        <Info size={16} className="text-accent" />
         Informacije
       </Link>
     </main>

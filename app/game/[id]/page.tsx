@@ -36,9 +36,10 @@ export default async function GamePage(props: PageProps<"/game/[id]">) {
         playersById={playersById}
         score={score}
         dealerPlayerId={nextDealerId}
+        finished={Boolean(winnerTeam)}
       />
       {winnerTeam ? (
-        <div className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] px-4 py-3 text-center font-semibold text-[#eef6ea]">
+        <div className="rounded-[14px] border border-accent/40 bg-accent/10 px-4 py-3 text-center font-semibold text-ink">
           <p>Partija je završena. Pobjednik je Tim {winnerTeam}.</p>
           <Link
             href={`/new-game?rematch=${game.id}`}

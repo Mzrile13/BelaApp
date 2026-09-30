@@ -34,7 +34,7 @@ export function ProfileButton({ username }: { username: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex max-w-[46vw] items-center gap-1.5 rounded-[10px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-2.5 py-1.5 text-[11.5px] font-semibold text-[#a9c2b3]"
+        className="flex max-w-[46vw] items-center gap-1.5 rounded-[10px] border border-subtle/22 bg-well/40 px-2.5 py-1.5 text-[11.5px] font-semibold text-subtle"
       >
         <User size={13} className="shrink-0" />
         <span className="truncate">{username}</span>
@@ -45,7 +45,7 @@ export function ProfileButton({ username }: { username: string }) {
           role="dialog"
           aria-modal="true"
           aria-label="Profil"
-          className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(3,12,9,0.72)] p-4 backdrop-blur-[2px] sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-scrim/72 p-4 backdrop-blur-[2px] sm:items-center"
           onClick={close}
         >
           <div
@@ -54,16 +54,16 @@ export function ProfileButton({ username }: { username: string }) {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
                   Prijavljeni profil
                 </p>
-                <p className="truncate text-[19px] font-extrabold text-[#f7fbf6]">{username}</p>
+                <p className="truncate text-[19px] font-extrabold text-heading">{username}</p>
               </div>
               <button
                 type="button"
                 onClick={close}
                 aria-label="Zatvori"
-                className="rounded-[10px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] p-1.5 text-[#a9c2b3]"
+                className="rounded-[10px] border border-subtle/22 bg-well/40 p-1.5 text-subtle"
               >
                 <X size={15} />
               </button>
@@ -98,27 +98,27 @@ function MenuView({ onChangePassword }: { onChangePassword: () => void }) {
       <button
         type="button"
         onClick={onChangePassword}
-        className="flex items-center gap-2.5 rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-3.5 py-3 text-left text-[14px] font-semibold text-[#eef6ea]"
+        className="flex items-center gap-2.5 rounded-[14px] border border-subtle/22 bg-well/40 px-3.5 py-3 text-left text-[14px] font-semibold text-ink"
       >
-        <KeyRound size={16} className="text-[#c9d9a0]" /> Promjena lozinke
+        <KeyRound size={16} className="text-accent" /> Promjena lozinke
       </button>
       <button
         type="button"
         onClick={logout}
         disabled={loggingOut}
-        className="flex items-center gap-2.5 rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] px-3.5 py-3 text-left text-[14px] font-semibold text-[#eef6ea] disabled:opacity-60"
+        className="flex items-center gap-2.5 rounded-[14px] border border-subtle/22 bg-well/40 px-3.5 py-3 text-left text-[14px] font-semibold text-ink disabled:opacity-60"
       >
-        <LogOut size={16} className="text-[#c9d9a0]" /> {loggingOut ? "Odjava..." : "Odjava"}
+        <LogOut size={16} className="text-accent" /> {loggingOut ? "Odjava..." : "Odjava"}
       </button>
     </div>
   );
 }
 
 const inputClass =
-  "w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(6,20,16,0.4)] px-3 py-2.5 text-[#eef3ee] placeholder:text-[#8fa89b] focus:border-[rgba(201,217,160,0.5)] focus:outline-none";
+  "w-full rounded-xl border border-white/5 bg-well/40 px-3 py-2.5 text-ink placeholder:text-muted focus:border-accent/50 focus:outline-none";
 
 const labelClass =
-  "mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]";
+  "mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted";
 
 function PasswordForm({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -159,7 +159,7 @@ function PasswordForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =
   if (done) {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-[13.5px] font-semibold text-[#c9d9a0]">Lozinka je promijenjena.</p>
+        <p className="text-[13.5px] font-semibold text-accent">Lozinka je promijenjena.</p>
         <button
           type="button"
           onClick={onDone}
@@ -215,7 +215,7 @@ function PasswordForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-[14px] border border-[rgba(169,194,179,0.22)] bg-[rgba(6,20,16,0.4)] py-3 text-center text-[14px] font-semibold text-[#a9c2b3]"
+          className="flex-1 rounded-[14px] border border-subtle/22 bg-well/40 py-3 text-center text-[14px] font-semibold text-subtle"
         >
           Natrag
         </button>

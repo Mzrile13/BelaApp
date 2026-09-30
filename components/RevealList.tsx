@@ -26,7 +26,7 @@ export function RevealList({ items, pageSize = 20, listClassName }: RevealListPr
         <button
           type="button"
           onClick={() => setVisibleCount((count) => count + pageSize)}
-          className="mt-4 w-full rounded-[12px] border border-[rgba(169,194,179,0.3)] bg-[rgba(6,20,16,0.4)] py-2.5 text-center text-[13px] font-bold text-[#dcece3]"
+          className="mt-4 w-full rounded-[12px] border border-subtle/30 bg-well/40 py-2.5 text-center text-[13px] font-bold text-soft"
         >
           Prikaži još ({items.length - visibleCount})
         </button>

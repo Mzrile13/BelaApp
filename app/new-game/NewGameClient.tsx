@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import type { Player, PlayerGroup } from "@/lib/types";
+import { avatarFor, initialOf } from "@/lib/avatar";
 
 interface PlayersPayload {
   players: Player[];
@@ -18,26 +19,6 @@ type Step = "groups" | "setup";
 type SlotKey = "A0" | "A1" | "B0" | "B1";
 
 const SLOT_ORDER: SlotKey[] = ["A0", "A1", "B0", "B1"];
-
-const AVATAR_PALETTE: Array<[string, string]> = [
-  ["#e7cd8e", "#10261c"],
-  ["#8fbfa4", "#0a1f17"],
-  ["#a9b6e0", "#0f1428"],
-  ["#e0a9b6", "#28101a"],
-  ["#c9d9a0", "#152210"],
-  ["#9fd0d0", "#0a2222"],
-];
-
-function avatarFor(id: string): { bg: string; fg: string } {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
-  const [bg, fg] = AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
-  return { bg, fg };
-}
-
-function initialOf(username: string): string {
-  return username.slice(0, 1).toUpperCase();
-}
 
 function memberCountLabel(count: number): string {
   return `${count} ${count === 1 ? "igrač" : "igrača"}`;
@@ -504,7 +485,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
             return (
               <div
                 key={member.id}
-                className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10.5px] font-extrabold"
+                className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[11.5px] font-extrabold"
                 style={{
                   marginLeft: index === 0 ? 0 : "-8px",
                   background: bg,
@@ -518,7 +499,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
           })}
           {overflow > 0 ? (
             <div
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[10.5px] font-extrabold"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-full text-[11.5px] font-extrabold"
               style={{
                 marginLeft: shown.length === 0 ? 0 : "-8px",
                 background: "rgba(6,20,16,.85)",
@@ -543,7 +524,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
           ) : null}
         </div>
         <div className="w-full min-w-0">
-          <p className="m-0 truncate text-sm font-bold text-[#f2f5f0]">{group.name}</p>
+          <p className="m-0 truncate text-sm font-bold text-heading">{group.name}</p>
           <p
             className="mt-[2px] text-[11.5px] font-semibold"
             style={{ color: isSelected ? "#c9d9a0" : "#8fa89b" }}
@@ -581,15 +562,15 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
           }}
         >
           <div
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10.5px] font-extrabold"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11.5px] font-extrabold"
             style={{ background: bg, color: fg }}
           >
             {initialOf(player.username)}
           </div>
-          <span className="min-w-0 flex-1 truncate text-[12.5px] font-bold text-[#f2f5f0]">
+          <span className="min-w-0 flex-1 truncate text-[12.5px] font-bold text-heading">
             {player.username}
           </span>
-          <span className="shrink-0 text-[10px] text-[#7d9587]">✕</span>
+          <span className="shrink-0 text-[11px] text-dim">✕</span>
         </div>
       );
     }
@@ -644,12 +625,12 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
         }}
       >
         <div
-          className="mx-auto mb-[5px] flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-extrabold"
+          className="mx-auto mb-[5px] flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-extrabold"
           style={{ background: bg, color: fg }}
         >
           {initialOf(player.username)}
         </div>
-        <p className="m-0 truncate text-[11px] font-bold text-[#f2f5f0]">{player.username}</p>
+        <p className="m-0 truncate text-[11px] font-bold text-heading">{player.username}</p>
         {selected ? (
           <div
             className="absolute right-1 top-1 flex h-[13px] w-[13px] items-center justify-center rounded-full"
@@ -679,15 +660,15 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
             {/* header */}
             <div>
               <div className="flex items-center gap-2">
-                <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[rgba(201,217,160,.16)] text-xs font-extrabold text-[#c9d9a0]">
+                <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-accent/16 text-xs font-extrabold text-accent">
                   1
                 </span>
-                <p className="m-0 text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa89b]">
+                <p className="m-0 text-[11px] font-bold uppercase tracking-[0.06em] text-muted">
                   Korak 1 od 2 · Grupa
                 </p>
               </div>
-              <h1 className="mt-2 text-xl font-extrabold text-[#f7fbf6]">Odabir grupe igrača</h1>
-              <p className="mt-1 text-sm text-[#97a49c]">
+              <h1 className="mt-2 text-xl font-extrabold text-heading">Odabir grupe igrača</h1>
+              <p className="mt-1 text-sm text-muted">
                 Odaberi grupu tapom ili napravi novu. Dodaj igrače u jednom polju.
               </p>
             </div>
@@ -709,14 +690,14 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                   value={groupQuery}
                   onChange={(event) => setGroupQuery(event.target.value)}
                   placeholder="Traži grupu…"
-                  className="min-w-0 flex-1 border-none bg-transparent py-[9px] text-[13px] font-medium text-[#eef3ee] outline-none"
+                  className="min-w-0 flex-1 border-none bg-transparent py-[9px] text-[13px] font-medium text-ink outline-none"
                 />
                 {groupQuery.trim().length > 0 ? (
                   <button
                     type="button"
                     onClick={() => setGroupQuery("")}
                     title="Očisti"
-                    className="mr-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-none bg-[rgba(255,255,255,.05)] p-0 text-[15px] leading-none text-[#8fa89b]"
+                    className="mr-1 flex h-[26px] w-[26px] items-center justify-center rounded-full border-none bg-white/5 p-0 text-[15px] leading-none text-muted"
                   >
                     ×
                   </button>
@@ -734,7 +715,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
               {visibleGroups.map((group) => renderGroupCard(group))}
 
               {noGroupResults ? (
-                <div className="col-span-2 px-2 py-[14px] text-center text-[12.5px] text-[#7d9587]">
+                <div className="col-span-2 px-2 py-[14px] text-center text-[12.5px] text-dim">
                   Nema grupe za „{groupQuery.trim()}”.
                 </div>
               ) : null}
@@ -760,7 +741,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                       }
                     }}
                     placeholder="Naziv grupe"
-                    className="w-full rounded-[10px] px-[10px] py-2 text-[13px] font-semibold text-[#eef3ee] outline-none"
+                    className="w-full rounded-[10px] px-[10px] py-2 text-[13px] font-semibold text-ink outline-none"
                     style={{
                       background: "rgba(6,20,16,.55)",
                       border: "1px solid rgba(169,194,179,.24)",
@@ -773,7 +754,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                         setAddingGroup(false);
                         setNewGroupName("");
                       }}
-                      className="shrink-0 rounded-[9px] bg-transparent px-[10px] py-[7px] text-xs font-bold text-[#b7ccbf]"
+                      className="shrink-0 rounded-[9px] bg-transparent px-[10px] py-[7px] text-xs font-bold text-subtle"
                       style={{ border: "1px solid rgba(169,194,179,.28)" }}
                     >
                       Odustani
@@ -782,7 +763,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                       type="button"
                       onClick={() => void confirmAddGroup()}
                       disabled={creatingGroup}
-                      className="flex-1 rounded-[9px] border-none px-[10px] py-[7px] text-xs font-extrabold text-[#10261c] disabled:opacity-60"
+                      className="flex-1 rounded-[9px] border-none px-[10px] py-[7px] text-xs font-extrabold text-on-accent disabled:opacity-60"
                       style={{ background: "linear-gradient(180deg, #d7f1c7, #c9d9a0)" }}
                     >
                       {creatingGroup ? "Spremam…" : "Kreiraj"}
@@ -810,10 +791,10 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                     border: "1.5px dashed rgba(201,217,160,.32)",
                   }}
                 >
-                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[rgba(201,217,160,.14)] text-[20px] font-medium leading-none text-[#c9d9a0]">
+                  <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent/14 text-[20px] font-medium leading-none text-accent">
                     +
                   </div>
-                  <p className="m-0 text-[12.5px] font-bold text-[#c9d9a0]">Nova grupa</p>
+                  <p className="m-0 text-[12.5px] font-bold text-accent">Nova grupa</p>
                 </div>
               )}
             </div>
@@ -839,14 +820,14 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                         if (event.key === "Escape") setRenaming(false);
                       }}
                       onBlur={() => void confirmRename()}
-                      className="flex-1 rounded-[9px] px-[9px] py-[6px] text-sm font-bold text-[#eef3ee] outline-none"
+                      className="flex-1 rounded-[9px] px-[9px] py-[6px] text-sm font-bold text-ink outline-none"
                       style={{
                         background: "rgba(6,20,16,.55)",
                         border: "1px solid rgba(201,217,160,.5)",
                       }}
                     />
                   ) : (
-                    <p className="m-0 text-[14.5px] font-extrabold text-[#f7fbf6]">
+                    <p className="m-0 text-[14.5px] font-extrabold text-heading">
                       {selectedGroup.name}
                     </p>
                   )}
@@ -910,13 +891,13 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                       border: "1px solid rgba(220,110,110,.34)",
                     }}
                   >
-                    <p className="m-0 flex-1 text-xs font-semibold leading-[1.35] text-[#f0c9c9]">
+                    <p className="m-0 flex-1 text-xs font-semibold leading-[1.35] text-danger-soft">
                       Obrisati grupu i sve članove iz nje?
                     </p>
                     <button
                       type="button"
                       onClick={() => setConfirmingDelete(false)}
-                      className="rounded-lg bg-transparent px-[9px] py-[6px] text-[11.5px] font-bold text-[#b7ccbf]"
+                      className="rounded-lg bg-transparent px-[9px] py-[6px] text-[11.5px] font-bold text-subtle"
                       style={{ border: "1px solid rgba(169,194,179,.28)" }}
                     >
                       Ne
@@ -947,19 +928,19 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                         }}
                       >
                         <div
-                          className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-extrabold"
+                          className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-extrabold"
                           style={{ background: bg, color: fg }}
                         >
                           {initialOf(member.username)}
                         </div>
-                        <span className="text-[12.5px] font-semibold text-[#e6efe8]">
+                        <span className="text-[12.5px] font-semibold text-ink">
                           {member.username}
                         </span>
                         <button
                           type="button"
                           onClick={() => void removePlayerFromSelectedGroup(member.id)}
                           title="Ukloni"
-                          className="flex h-[18px] w-[18px] items-center justify-center rounded-full border-none bg-[rgba(255,255,255,.05)] p-0 text-[13px] leading-none text-[#8fa89b]"
+                          className="flex h-[18px] w-[18px] items-center justify-center rounded-full border-none bg-white/5 p-0 text-[13px] leading-none text-muted"
                         >
                           ×
                         </button>
@@ -967,7 +948,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                     );
                   })}
                   {groupPlayers.length === 0 ? (
-                    <span className="py-1 text-xs text-[#7d9587]">
+                    <span className="py-1 text-xs text-dim">
                       Još nema igrača u ovoj grupi.
                     </span>
                   ) : null}
@@ -1003,10 +984,10 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                       placeholder="Dodaj igrača — traži ili upiši novog"
                       autoCapitalize="none"
                       autoCorrect="off"
-                      className="min-w-0 flex-1 border-none bg-transparent py-[9px] text-[13px] font-medium text-[#eef3ee] outline-none"
+                      className="min-w-0 flex-1 border-none bg-transparent py-[9px] text-[13px] font-medium text-ink outline-none"
                     />
                     {creatingPlayer || addingToGroup ? (
-                      <span className="mr-2 text-[11px] font-semibold text-[#8fa89b]">…</span>
+                      <span className="mr-2 text-[11px] font-semibold text-muted">…</span>
                     ) : null}
                   </div>
                   {showSuggest ? (
@@ -1029,13 +1010,13 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                               className="flex cursor-pointer items-center gap-[9px] rounded-[9px] px-[9px] py-2"
                               style={{ background: "rgba(201,217,160,.06)" }}
                             >
-                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[rgba(201,217,160,.16)] text-[11px] font-extrabold text-[#c9d9a0]">
+                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/16 text-[11px] font-extrabold text-accent">
                                 +
                               </div>
-                              <span className="flex-1 text-[13px] font-semibold text-[#e6efe8]">
+                              <span className="flex-1 text-[13px] font-semibold text-ink">
                                 &quot;{suggestion.name}&quot;
                               </span>
-                              <span className="text-[10px] font-bold uppercase tracking-[0.04em] text-[#c9d9a0]">
+                              <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-accent">
                                 Kreiraj novog
                               </span>
                             </div>
@@ -1054,7 +1035,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                             >
                               {initialOf(suggestion.player.username)}
                             </div>
-                            <span className="flex-1 text-[13px] font-semibold text-[#e6efe8]">
+                            <span className="flex-1 text-[13px] font-semibold text-ink">
                               {suggestion.player.username}
                             </span>
                           </div>
@@ -1091,24 +1072,24 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
             <div>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[rgba(201,217,160,.16)] text-xs font-extrabold text-[#c9d9a0]">
+                  <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-accent/16 text-xs font-extrabold text-accent">
                     2
                   </span>
-                  <p className="m-0 text-[11px] font-bold uppercase tracking-[0.06em] text-[#8fa89b]">
+                  <p className="m-0 text-[11px] font-bold uppercase tracking-[0.06em] text-muted">
                     Korak 2 od 2 · Postava
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setStep("groups")}
-                  className="rounded-full border-none bg-transparent px-[2px] py-1 text-xs font-bold text-[#8fa89b]"
+                  className="rounded-full border-none bg-transparent px-[2px] py-1 text-xs font-bold text-muted"
                 >
                   ‹ Grupe
                 </button>
               </div>
-              <h1 className="mt-2 text-xl font-extrabold text-[#f7fbf6]">Timovi i prvi djelitelj</h1>
-              <p className="mt-1 text-xs text-[#8fa89b]">
-                Grupa: <span className="font-bold text-[#c9d9a0]">{selectedGroup?.name ?? "-"}</span>
+              <h1 className="mt-2 text-xl font-extrabold text-heading">Timovi i prvi djelitelj</h1>
+              <p className="mt-1 text-xs text-muted">
+                Grupa: <span className="font-bold text-accent">{selectedGroup?.name ?? "-"}</span>
               </p>
             </div>
 
@@ -1119,14 +1100,14 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
             >
               <div className="grid grid-cols-2 gap-[10px]">
                 <div className="flex flex-col gap-[7px]">
-                  <p className="m-0 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                  <p className="m-0 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-dim">
                     Tim A
                   </p>
                   {renderTeamSlot("A0")}
                   {renderTeamSlot("A1")}
                 </div>
                 <div className="flex flex-col gap-[7px]">
-                  <p className="m-0 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                  <p className="m-0 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-dim">
                     Tim B
                   </p>
                   {renderTeamSlot("B0")}
@@ -1135,7 +1116,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
               </div>
 
               <div className="mt-[2px] pt-[10px]" style={{ borderTop: "1px solid rgba(255,255,255,.06)" }}>
-                <p className="m-0 mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+                <p className="m-0 mb-2 text-[11.5px] font-bold uppercase tracking-[0.06em] text-dim">
                   Igrači u grupi
                 </p>
                 <div className="flex flex-wrap gap-[7px]">
@@ -1157,19 +1138,19 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                         style={{ background: "rgba(6,20,16,.5)", border: "1px solid rgba(169,194,179,.16)" }}
                       >
                         <div
-                          className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[10px] font-extrabold"
+                          className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] font-extrabold"
                           style={{ background: bg, color: fg }}
                         >
                           {initialOf(player.username)}
                         </div>
-                        <span className="text-[12.5px] font-semibold text-[#e6efe8]">
+                        <span className="text-[12.5px] font-semibold text-ink">
                           {player.username}
                         </span>
                       </div>
                     );
                   })}
                   {poolPlayers.length === 0 ? (
-                    <span className="py-1 text-xs text-[#7d9587]">Svi igrači su raspoređeni.</span>
+                    <span className="py-1 text-xs text-dim">Svi igrači su raspoređeni.</span>
                   ) : null}
                 </div>
               </div>
@@ -1180,7 +1161,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
               className="mt-3 flex flex-col gap-[9px] rounded-[18px] p-[14px]"
               style={{ background: "rgba(15,50,36,.5)", border: "1px solid rgba(255,255,255,.06)" }}
             >
-              <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#7d9587]">
+              <p className="m-0 text-[11.5px] font-bold uppercase tracking-[0.06em] text-dim">
                 Prvi djelitelj
               </p>
               {allSlotsFilled ? (
@@ -1188,7 +1169,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                   {dealerChipsPlayers.map((player) => renderDealerChip(player))}
                 </div>
               ) : (
-                <p className="m-0 text-xs leading-[1.5] text-[#6f857a]">
+                <p className="m-0 text-xs leading-[1.5] text-dim">
                   Dovrši postavu oba tima da odabereš prvog djelitelja.
                 </p>
               )}
@@ -1206,7 +1187,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                 <button
                   type="button"
                   onClick={() => setStep("groups")}
-                  className="rounded-2xl p-[15px] text-[13px] font-bold text-[#dcece3]"
+                  className="rounded-2xl p-[15px] text-[13px] font-bold text-soft"
                   style={{ border: "1px solid rgba(169,194,179,.3)", background: "transparent" }}
                 >
                   Nazad

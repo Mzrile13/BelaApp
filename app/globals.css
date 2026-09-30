@@ -8,6 +8,70 @@
   --accent: #c9d9a0;
 }
 
+/*
+ * Dizajnerski tokeni. Tailwind v4 iz njih generira `text-muted`, `bg-accent/15`
+ * itd. Nove boje ne pisati kao hex u klasama, nego dodati token ovdje.
+ */
+@theme {
+  /* tekst, od najsvjetlijeg prema najtamnijem */
+  --color-heading: #f7fbf6;
+  --color-ink: #eef3ee;
+  --color-soft: #dcece3;
+  --color-subtle: #a9c2b3;
+  --color-muted: #8fa89b;
+  /* najtamniji tekst; >= 4.5:1 i na svjetlijoj kartici (#123728) */
+  --color-dim: #94ad9f;
+
+  --color-accent: #c9d9a0;
+  --color-accent-soft: #d7f1c7;
+  --color-on-accent: #10261c;
+
+  /* površine */
+  --color-well: #061410;
+  --color-panel: #0f3224;
+  --color-sheet: #0a2019;
+  --color-scrim: #030c09;
+
+  --color-pad: #c45a4a;
+  --color-danger: #e0a9b6;
+  --color-danger-soft: #f0c9c9;
+  --color-ok: #a9c98f;
+  --color-warn: #d0a97a;
+
+  --animate-fade-up: fade-up 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pop: pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-score-bump: score-bump 480ms ease-out;
+  --animate-confetti: confetti 1600ms ease-in forwards;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes score-bump {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.12); color: var(--color-accent-soft); }
+    100% { transform: scale(1); }
+  }
+  @keyframes confetti {
+    0% { opacity: 1; transform: translate3d(0, -10px, 0) rotate(0deg); }
+    100% { opacity: 0; transform: translate3d(var(--dx, 0), 220px, 0) rotate(540deg); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

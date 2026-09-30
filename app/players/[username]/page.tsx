@@ -35,7 +35,7 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/leaderboard" className="mb-3" />
       <PlayerStatsCard stats={row} />
-      <h2 className="mb-3 mt-4 text-lg font-semibold text-[#f7fbf6]">Partije igrača</h2>
+      <h2 className="mb-3 mt-4 text-lg font-semibold text-heading">Partije igrača</h2>
       <HistoryList
         initialRows={page.rows}
         initialHasMore={page.hasMore}

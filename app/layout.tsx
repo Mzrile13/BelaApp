@@ -46,7 +46,7 @@ export default function RootLayout({
     <html lang="hr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
-        <footer className="mt-auto px-4 py-5 text-center text-[12px] text-[#7d9587]">
+        <footer className="mt-auto px-4 py-5 text-center text-[12px] text-dim">
           © {COPYRIGHT_YEAR} Marko Zrilić. Sva prava pridržana.
         </footer>
         {/* Moraju biti unutar <body>. Kao braća <body>-ja to je nevaljan HTML

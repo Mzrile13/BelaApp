@@ -20,8 +20,8 @@ export default async function HistoryPage() {
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/" className="mb-3" />
       <section className="card p-4">
-        <h1 className="text-xl font-bold text-[#f7fbf6]">Povijest partija</h1>
-        <p className="text-sm text-[#a9c2b3]">Pregled svih odigranih partija.</p>
+        <h1 className="text-xl font-bold text-heading">Povijest partija</h1>
+        <p className="text-sm text-subtle">Pregled svih odigranih partija.</p>
       </section>
 
       <div className="mt-4">

@@ -19,7 +19,7 @@ export default async function NewRoundPage(props: PageProps<"/game/[id]/new-roun
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
         <BackButton fallbackHref={`/game/${params.id}`} />
-        <section className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] p-4 text-[#eef6ea]">
+        <section className="rounded-[14px] border border-accent/40 bg-accent/10 p-4 text-ink">
           <p className="text-lg font-bold">Partija je završena.</p>
           {winnerTeam ? <p className="mt-1 text-sm">Pobjednik je Tim {winnerTeam}.</p> : null}
           <Link

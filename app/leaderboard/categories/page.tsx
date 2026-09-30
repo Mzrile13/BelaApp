@@ -65,32 +65,32 @@ export default async function CategoriesPage() {
   return (
     <main className="mx-auto w-full max-w-3xl p-4 pb-20">
       <BackButton fallbackHref="/" className="mb-3" />
-      <h1 className="mb-3.5 text-[20px] font-extrabold text-[#f7fbf6]">Leaderboard</h1>
+      <h1 className="mb-3.5 text-[20px] font-extrabold text-heading">Leaderboard</h1>
 
       <LeaderboardTabs active="/leaderboard/categories" />
 
-      <section className="mb-3 rounded-[18px] border border-[rgba(201,217,160,0.25)] bg-[rgba(201,217,160,0.08)] p-4">
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.06em] text-[#c9d9a0]">
+      <section className="mb-3 rounded-[18px] border border-accent/25 bg-accent/8 p-4">
+        <p className="text-[11.5px] font-bold uppercase tracking-[0.06em] text-accent">
           MVP sezone {season ?? ""}
         </p>
         {mvp ? (
           <>
             <Link
               href={mvp.href ?? "/leaderboard"}
-              className="mt-1 block text-[22px] font-extrabold text-[#f7fbf6]"
+              className="mt-1 block text-[22px] font-extrabold text-heading"
             >
               {mvp.label}
             </Link>
-            <p className="mt-0.5 text-[12px] text-[#a9c2b3]">
+            <p className="mt-0.5 text-[12px] text-subtle">
               {mvp.value} rejtinga u sezoni · {mvp.hint}
             </p>
           </>
         ) : (
-          <p className="mt-1 text-[13px] text-[#a9c2b3]">
+          <p className="mt-1 text-[13px] text-subtle">
             Još nitko nije odigrao {MVP_MIN_GAMES} partija ove sezone.
           </p>
         )}
-        <p className="mt-2 text-[10.5px] leading-snug text-[#8fa89b]">
+        <p className="mt-2 text-[11.5px] leading-snug text-muted">
           Nagrada za najveći napredak, ne mjera snage — za snagu služi rejting na kartici
           Igrači.
         </p>

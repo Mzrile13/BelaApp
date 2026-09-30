@@ -38,9 +38,9 @@ export function RegisterForm() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(6,20,16,0.4)] px-3 py-2.5 text-[#eef3ee] placeholder:text-[#8fa89b] focus:border-[rgba(201,217,160,0.5)] focus:outline-none";
+    "w-full rounded-xl border border-white/5 bg-well/40 px-3 py-2.5 text-ink placeholder:text-muted focus:border-accent/50 focus:outline-none";
   const labelClass =
-    "mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]";
+    "mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted";
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
