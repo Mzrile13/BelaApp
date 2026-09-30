@@ -35,6 +35,8 @@ interface BelaRepository {
   deleteGame(gameId: string): Promise<void>;
   finishGame(gameId: string): Promise<void>;
   reopenGame(gameId: string): Promise<void>;
+  getGameComment(gameId: string): Promise<string | null>;
+  setGameComment(gameId: string, comment: string | null): Promise<void>;
   listRounds(gameId: string): Promise<Round[]>;
   listRoundsForGames(gameIds: string[]): Promise<Round[]>;
   createRound(input: RoundInput, context?: RoundWriteContext): Promise<Round>;
@@ -249,6 +251,16 @@ class InMemoryRepo implements BelaRepository {
     const game = this.games.find((row) => row.id === gameId);
     if (!game) return;
     game.finishedAt = null;
+  }
+
+  async getGameComment(gameId: string) {
+    const game = this.games.find((row) => row.id === gameId) as (Owned<Game> & { comment?: string | null }) | undefined;
+    return game?.comment ?? null;
+  }
+
+  async setGameComment(gameId: string, comment: string | null) {
+    const game = this.games.find((row) => row.id === gameId) as (Owned<Game> & { comment?: string | null }) | undefined;
+    if (game) game.comment = comment;
   }
 
   async listRounds(gameId: string) {
@@ -581,6 +593,20 @@ class FileRepo implements BelaRepository {
     const game = this.mine(db.games).find((row) => row.id === gameId);
     if (!game || game.finishedAt === null) return;
     game.finishedAt = null;
+    await this.writeDb(db);
+  }
+
+  async getGameComment(gameId: string) {
+    const db = await this.readDb();
+    const game = this.mine(db.games).find((row) => row.id === gameId) as (Owned<Game> & { comment?: string | null }) | undefined;
+    return game?.comment ?? null;
+  }
+
+  async setGameComment(gameId: string, comment: string | null) {
+    const db = await this.readDb();
+    const game = this.mine(db.games).find((row) => row.id === gameId) as (Owned<Game> & { comment?: string | null }) | undefined;
+    if (!game) return;
+    game.comment = comment;
     await this.writeDb(db);
   }
 
@@ -1030,6 +1056,24 @@ export function getRepo(accountId: string): BelaRepository {
       const { error } = await supabase
         .from("games")
         .update({ finished_at: null })
+        .eq("id", gameId)
+        .eq("account_id", accountId);
+      if (error) throw error;
+    },
+    async getGameComment(gameId: string) {
+      const { data, error } = await supabase
+        .from("games")
+        .select("comment")
+        .eq("id", gameId)
+        .eq("account_id", accountId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.comment as string | null | undefined) ?? null;
+    },
+    async setGameComment(gameId: string, comment: string | null) {
+      const { error } = await supabase
+        .from("games")
+        .update({ comment })
         .eq("id", gameId)
         .eq("account_id", accountId);
       if (error) throw error;

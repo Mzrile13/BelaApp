@@ -128,3 +128,7 @@ export const createRoundSchema = z.object({
     .optional(),
   stigliaTeam: z.enum(["A", "B"]).nullable(),
 });
+
+export const gameCommentSchema = z.object({
+  comment: z.string().trim().max(500, "Komentar može imati najviše 500 znakova"),
+});

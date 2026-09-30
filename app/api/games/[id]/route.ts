@@ -3,6 +3,7 @@ import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
 import { statsTag } from "@/lib/cachedStats";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
+import { gameCommentSchema } from "@/lib/validation";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 
 export async function GET(
@@ -53,4 +54,38 @@ export async function DELETE(
   await repo.deleteGame(id);
   revalidateTag(statsTag(accountId), "max");
   return NextResponse.json({ ok: true });
+}
+
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  const { id } = await context.params;
+  const parsed = gameCommentSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: parsed.error.issues[0]?.message ?? "Neispravan payload" },
+      { status: 400 },
+    );
+  }
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
+  const repo = getRepo(accountId);
+  const [game, rounds] = await Promise.all([repo.getGame(id), repo.listRounds(id)]);
+  if (!game) {
+    return NextResponse.json({ error: "Partija nije pronađena" }, { status: 404 });
+  }
+  if (!game.finishedAt && !getWinningTeam(getGameScore(rounds))) {
+    return NextResponse.json(
+      { error: "Komentar se može dodati tek kad je partija završena." },
+      { status: 400 },
+    );
+  }
+  const comment = parsed.data.comment || null;
+  try {
+    await repo.setGameComment(id, comment);
+  } catch {
+    return NextResponse.json({ error: "Komentar trenutno nije moguće spremiti." }, { status: 500 });
+  }
+  return NextResponse.json({ comment });
 }
