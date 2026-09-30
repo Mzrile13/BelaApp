@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
-import { statsTag } from "@/lib/cachedStats";
+import { invalidateStats } from "@/lib/cachedStats";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { gameCommentSchema } from "@/lib/validation";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
@@ -52,7 +51,7 @@ export async function DELETE(
     );
   }
   await repo.deleteGame(id);
-  revalidateTag(statsTag(accountId), "max");
+  invalidateStats(accountId);
   return NextResponse.json({ ok: true });
 }
 

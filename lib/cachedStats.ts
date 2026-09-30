@@ -1,5 +1,7 @@
-import { unstable_cache } from "next/cache";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { getRepo } from "@/lib/supabase";
+import { computeRatings } from "@/lib/rating";
+import { toRatingData, type RatingData } from "@/lib/ratingHistory";
 import { computeAllStats } from "@/lib/stats";
 import type { Game, PairStats, Player, PlayerStats, Round } from "@/lib/types";
 
@@ -12,6 +14,17 @@ export function statsTag(accountId: string) {
 }
 
 const STATS_TTL_SECONDS = 30;
+
+/**
+ * Poziva se nakon svake izmjene partije/ruke. `expire: 0` umjesto "max": uz
+ * "max" (stale-while-revalidate) prvi prikaz nakon izmjene dobije STARE
+ * podatke — npr. ekran pobjede bez promjene rejtinga upravo završene partije,
+ * ili ljestvica bez te partije. Ovako prvi sljedeći zahtjev pričeka svježi
+ * izračun.
+ */
+export function invalidateStats(accountId: string) {
+  revalidateTag(statsTag(accountId), { expire: 0 });
+}
 
 export interface AccountDataset {
   players: Player[];
@@ -78,4 +91,22 @@ export async function getCachedPlayerStats(accountId: string) {
 
 export async function getCachedPairStats(accountId: string) {
   return (await getCachedAllStats(accountId)).pairs;
+}
+
+// Povijest rejtinga po partiji (graf, sezone, usporedba, delta na kraju
+// partije). Zasebna stavka jer je velika, a treba je manje stranica nego
+// leaderboard. Isti tag, pa je invalidira svaka izmjena partije/ruke.
+function ratingDataFor(accountId: string) {
+  return unstable_cache(
+    async (): Promise<RatingData> => {
+      const { games, rounds } = await getCachedDataset(accountId);
+      return toRatingData(computeRatings(games, rounds));
+    },
+    ["rating-data", accountId],
+    { revalidate: STATS_TTL_SECONDS, tags: [statsTag(accountId)] },
+  );
+}
+
+export function getCachedRatingData(accountId: string) {
+  return ratingDataFor(accountId)();
 }

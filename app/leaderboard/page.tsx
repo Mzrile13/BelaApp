@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
+import { Swords } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { LeaderboardTabs } from "@/components/LeaderboardTabs";
 import { RatingSparkline } from "@/components/RatingSparkline";
@@ -94,6 +95,12 @@ export default async function LeaderboardPage(props: PageProps<"/leaderboard">) 
       <h1 className="mb-3.5 text-[20px] font-extrabold text-heading">Leaderboard</h1>
 
       <LeaderboardTabs active="/leaderboard" />
+      <Link
+        href="/usporedba"
+        className="mb-3 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-accent"
+      >
+        <Swords size={15} aria-hidden /> Usporedi dva igrača
+      </Link>
 
       <form method="GET" className="mb-3.5">
         <input

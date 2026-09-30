@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import { statsTag } from "@/lib/cachedStats";
+import { invalidateStats } from "@/lib/cachedStats";
 import { createRoundSchema, isAllowedZvanjaTotal } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -133,7 +132,7 @@ export async function POST(request: Request) {
   if (winnerTeam) {
     await repo.finishGame(game.id);
   }
-  revalidateTag(statsTag(accountId), "max");
+  invalidateStats(accountId);
 
   return NextResponse.json(
     { round, gameFinished: Boolean(winnerTeam), winnerTeam, score: scoreAfterInsert },

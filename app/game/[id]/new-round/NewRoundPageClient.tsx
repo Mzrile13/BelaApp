@@ -19,10 +19,11 @@ export function NewRoundPageClient({
 }) {
   const router = useRouter();
 
-  function backToGame() {
+  function backToGame(result?: { gameFinished: boolean }) {
     // `refresh` je nužan jer je stranica partije sada server-renderirana:
     // bez njega bi se vratila iz klijentskog cachea, bez upravo upisane ruke.
-    router.push(`/game/${game.id}`);
+    // `?pobjeda=1` pušta konfete samo kad je ova ruka završila partiju.
+    router.push(`/game/${game.id}${result?.gameFinished ? "?pobjeda=1" : ""}`);
     router.refresh();
   }
 
@@ -32,7 +33,7 @@ export function NewRoundPageClient({
       players={players}
       dealerName={dealerName}
       onSaved={backToGame}
-      onCancel={backToGame}
+      onCancel={() => backToGame()}
     />
   );
 }
