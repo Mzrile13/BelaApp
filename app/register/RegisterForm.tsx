@@ -38,15 +38,16 @@ export function RegisterForm() {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(6,20,16,0.4)] px-3 py-2.5 text-[#eef3ee] placeholder:text-[#8fa89b] focus:border-[rgba(201,217,160,0.5)] focus:outline-none";
+    "w-full rounded-xl border border-white/5 bg-well/40 px-3 py-2.5 text-ink placeholder:text-muted focus:border-accent/50 focus:outline-none";
   const labelClass =
-    "mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]";
+    "mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted";
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <div>
-        <label className={labelClass}>Korisničko ime grupe</label>
+        <label htmlFor="register-username" className={labelClass}>Korisničko ime grupe</label>
         <input
+          id="register-username"
           type="text"
           autoComplete="username"
           autoCapitalize="none"
@@ -59,8 +60,9 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label className={labelClass}>Lozinka</label>
+        <label htmlFor="register-password" className={labelClass}>Lozinka</label>
         <input
+          id="register-password"
           type="password"
           autoComplete="new-password"
           value={password}
@@ -71,8 +73,9 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label className={labelClass}>Ponovi lozinku</label>
+        <label htmlFor="register-confirm" className={labelClass}>Ponovi lozinku</label>
         <input
+          id="register-confirm"
           type="password"
           autoComplete="new-password"
           value={confirmPassword}
@@ -83,7 +86,7 @@ export function RegisterForm() {
         />
       </div>
 
-      {error ? <p className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
+      {error ? <p role="alert" className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
 
       <button
         type="submit"

@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SuitBadge } from "@/components/SuitBadge";
+import { CallerStep } from "@/components/round-entry/CallerStep";
+import { PointsStep } from "@/components/round-entry/PointsStep";
+import { type PointsField, type ZvanjaValue } from "@/components/round-entry/shared";
+import { ZvanjaStep } from "@/components/round-entry/ZvanjaStep";
 import { deriveInputPoints } from "@/lib/scoring";
 import type { CalledSuit, Game, Player, Round } from "@/lib/types";
 
@@ -20,11 +23,6 @@ interface RoundEntryFormProps {
   submitMethod?: "POST" | "PATCH";
   submitLabel?: string;
 }
-
-type PointsField = "pointsTeamA" | "pointsTeamB";
-type ZvanjaValue = 20 | 50 | 100 | 150 | 200;
-
-const calledSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
 
 export function RoundEntryForm({
   game,
@@ -293,311 +291,64 @@ export function RoundEntryForm({
     syncZvanja(zvanjaTokensByPlayerA, nextMap);
   }
 
-  const stepPanelClass =
-    "flex flex-col gap-2.5 rounded-[16px] border border-[rgba(255,255,255,0.05)] bg-[rgba(15,50,36,0.5)] p-3";
-  const stepBadgeClass =
-    "flex h-[18px] w-[18px] flex-shrink-0 items-center justify-center rounded-full bg-[rgba(201,217,160,0.16)] text-[11px] font-extrabold text-[#c9d9a0]";
-  const stepTitleClass =
-    "text-[12px] font-bold uppercase tracking-[0.05em] text-[#8fa89b]";
-  const teamMiniLabelClass =
-    "mb-1 text-center text-[10px] font-bold uppercase tracking-[0.06em] text-[#7d9587]";
-  const selectedChipClass =
-    "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.14)]";
-  const offChipClass = "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)]";
-
-  const activeZvanjaTokens =
-    (game.teams.teamA.includes(activeZvanjaPlayerId)
-      ? zvanjaTokensByPlayerA[activeZvanjaPlayerId]
-      : zvanjaTokensByPlayerB[activeZvanjaPlayerId]) ?? [];
-
   return (
-    <section className="flex flex-col gap-3 rounded-[24px] border border-[rgba(255,255,255,0.05)] bg-[radial-gradient(120%_60%_at_85%_-10%,rgba(201,217,160,0.08)_0%,transparent_55%),linear-gradient(165deg,#0d2a20_0%,#071a14_55%,#061410_100%)] p-4">
+    <section className="flex flex-col gap-2 rounded-[22px] border border-white/5 bg-[radial-gradient(120%_60%_at_85%_-10%,rgba(201,217,160,0.08)_0%,transparent_55%),linear-gradient(165deg,#0d2a20_0%,#071a14_55%,#061410_100%)] p-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-[16px] font-extrabold text-[#f7fbf6]">Unos nove ruke</h2>
+        <h2 className="text-[16px] font-extrabold text-heading">Unos nove ruke</h2>
         {dealerName ? (
-          <p className="text-[13px] font-semibold text-[#a9c2b3]">Dijeli: {dealerName}</p>
+          <p className="text-[13px] font-semibold text-subtle">Dijeli: {dealerName}</p>
         ) : null}
       </div>
 
-      {/* KORAK 1 — tko je zvao i koji znak */}
-      <div className={stepPanelClass}>
-        <div className="flex items-center gap-[7px]">
-          <span className={stepBadgeClass}>1</span>
-          <p className={stepTitleClass}>Tko je zvao i koji znak</p>
-        </div>
+      <CallerStep
+        teamAPlayers={teamAPlayers}
+        teamBPlayers={teamBPlayers}
+        callerPlayerId={form.callerPlayerId}
+        calledSuit={form.calledSuit}
+        onCallerChange={(playerId) => setForm((prev) => ({ ...prev, callerPlayerId: playerId }))}
+        onSuitChange={(suit) => setForm((prev) => ({ ...prev, calledSuit: suit }))}
+      />
 
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className={teamMiniLabelClass}>Tim A</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {teamAPlayers.map((player) => (
-                <button
-                  key={player.id}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
-                  className={`rounded-[9px] border px-[3px] py-2 text-center ${
-                    form.callerPlayerId === player.id ? selectedChipClass : offChipClass
-                  }`}
-                >
-                  <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className={teamMiniLabelClass}>Tim B</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {teamBPlayers.map((player) => (
-                <button
-                  key={player.id}
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, callerPlayerId: player.id }))}
-                  className={`rounded-[9px] border px-[3px] py-2 text-center ${
-                    form.callerPlayerId === player.id ? selectedChipClass : offChipClass
-                  }`}
-                >
-                  <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+      <ZvanjaStep
+        teamAPlayers={teamAPlayers}
+        teamBPlayers={teamBPlayers}
+        tokensByPlayerA={zvanjaTokensByPlayerA}
+        tokensByPlayerB={zvanjaTokensByPlayerB}
+        zvanjaTeamA={form.zvanjaTeamA}
+        zvanjaTeamB={form.zvanjaTeamB}
+        activePlayerId={activeZvanjaPlayerId}
+        onActivePlayerChange={setActiveZvanjaPlayerId}
+        onAddZvanje={applyZvanja}
+        onResetPlayer={clearZvanjaForActivePlayer}
+      />
 
-        <div className="grid grid-cols-4 gap-1.5">
-          {calledSuits.map((suit) => (
-            <button
-              key={suit}
-              type="button"
-              onClick={() => setForm((prev) => ({ ...prev, calledSuit: suit }))}
-              className="block"
-            >
-              <SuitBadge suit={suit} selected={form.calledSuit === suit} chip />
-            </button>
-          ))}
-        </div>
-      </div>
+      <PointsStep
+        teamAName={teamAName}
+        teamBName={teamBName}
+        pointsTeamA={form.pointsTeamA}
+        pointsTeamB={form.pointsTeamB}
+        activeField={activePointsField}
+        onActiveFieldChange={setActivePointsField}
+        onDigit={appendDigitToPoints}
+        onBackspace={backspacePoints}
+        onClear={clearPoints}
+        stigliaTeam={form.stigliaTeam}
+        onStiglia={applyStigliaForActivePointsTeam}
+      />
 
-      {/* KORAK 2 — bodovi iz čiste igre */}
-      <div className={stepPanelClass}>
-        <div className="flex items-center gap-[7px]">
-          <span className={stepBadgeClass}>2</span>
-          <p className={stepTitleClass}>Bodovi iz čiste igre</p>
-          <span className="ml-auto text-[11px] font-semibold text-[#7d9587]">zbroj = 162</span>
-        </div>
+      {error ? (
+        <p role="alert" className="text-[14px] font-semibold text-rose-300">
+          {error}
+        </p>
+      ) : null}
 
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setActivePointsField("pointsTeamA")}
-            className={`rounded-[11px] border px-[10px] py-2 text-left ${
-              activePointsField === "pointsTeamA"
-                ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-                : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-[#8fa89b]">{teamAName}</p>
-              {activePointsField === "pointsTeamA" ? (
-                <span className="text-[9px] font-extrabold tracking-[0.05em] text-[#c9d9a0]">
-                  ● UNOS
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-px font-mono text-[24px] font-extrabold text-[#f7fbf6]">
-              {form.pointsTeamA}
-            </p>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActivePointsField("pointsTeamB")}
-            className={`rounded-[11px] border px-[10px] py-2 text-left ${
-              activePointsField === "pointsTeamB"
-                ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-                : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold text-[#8fa89b]">{teamBName}</p>
-              {activePointsField === "pointsTeamB" ? (
-                <span className="text-[9px] font-extrabold tracking-[0.05em] text-[#c9d9a0]">
-                  ● UNOS
-                </span>
-              ) : null}
-            </div>
-            <p className="mt-px font-mono text-[24px] font-extrabold text-[#f7fbf6]">
-              {form.pointsTeamB}
-            </p>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-3 gap-1.5">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].map((digit) => (
-            <button
-              type="button"
-              key={digit}
-              onClick={() => appendDigitToPoints(digit)}
-              className="rounded-[9px] bg-[rgba(255,255,255,0.05)] py-[9px] text-center font-mono text-[15px] font-bold text-[#eef3ee]"
-            >
-              {digit}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={backspacePoints}
-            className="rounded-[9px] bg-[rgba(201,217,160,0.12)] py-[9px] text-center text-[12px] font-bold text-[#c9d9a0]"
-          >
-            ⌫ Del
-          </button>
-          <button
-            type="button"
-            onClick={clearPoints}
-            className="rounded-[9px] bg-[rgba(201,217,160,0.12)] py-[9px] text-center text-[12px] font-bold text-[#c9d9a0]"
-          >
-            Clear
-          </button>
-        </div>
-      </div>
-
-      {/* KORAK 3 — zvanja */}
-      <div className={stepPanelClass}>
-        <div className="flex items-center gap-[7px]">
-          <span className={stepBadgeClass}>3</span>
-          <p className={stepTitleClass}>Zvanja</p>
-          <span className="ml-auto text-[11px] text-[#a9c2b3]">
-            A <b className="font-mono text-[#eef3ee]">{form.zvanjaTeamA}</b> · B{" "}
-            <b className="font-mono text-[#eef3ee]">{form.zvanjaTeamB}</b>
-          </span>
-        </div>
-
-        <p className="text-[10.5px] text-[#7d9587]">Odaberi igrača, pa dodaj vrijednost:</p>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className={teamMiniLabelClass}>Tim A</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {teamAPlayers.map((player) => {
-                const playerTotal = (zvanjaTokensByPlayerA[player.id] ?? []).reduce(
-                  (sum, value) => sum + value,
-                  0,
-                );
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    onClick={() => setActiveZvanjaPlayerId(player.id)}
-                    className={`rounded-[9px] border px-[3px] py-1.5 text-center ${
-                      activeZvanjaPlayerId === player.id ? selectedChipClass : offChipClass
-                    }`}
-                  >
-                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                    <p
-                      className={`mt-px font-mono text-[12px] font-bold ${
-                        playerTotal > 0 ? "text-[#c9d9a0]" : "text-[#5f7168]"
-                      }`}
-                    >
-                      {playerTotal}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          <div>
-            <p className={teamMiniLabelClass}>Tim B</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {teamBPlayers.map((player) => {
-                const playerTotal = (zvanjaTokensByPlayerB[player.id] ?? []).reduce(
-                  (sum, value) => sum + value,
-                  0,
-                );
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    onClick={() => setActiveZvanjaPlayerId(player.id)}
-                    className={`rounded-[9px] border px-[3px] py-1.5 text-center ${
-                      activeZvanjaPlayerId === player.id ? selectedChipClass : offChipClass
-                    }`}
-                  >
-                    <p className="text-[12px] font-bold text-[#f7fbf6]">{player.username}</p>
-                    <p
-                      className={`mt-px font-mono text-[12px] font-bold ${
-                        playerTotal > 0 ? "text-[#c9d9a0]" : "text-[#5f7168]"
-                      }`}
-                    >
-                      {playerTotal}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-5 gap-1.5">
-          {[20, 50, 100, 150, 200].map((value) => {
-            const toggle = value === 150 || value === 200;
-            const active = toggle && activeZvanjaTokens.includes(value as ZvanjaValue);
-            return (
-              <button
-                type="button"
-                key={value}
-                onClick={() => applyZvanja(value as ZvanjaValue)}
-                className={`rounded-[8px] border py-2 text-center text-[12px] font-extrabold text-[#10261c] ${
-                  active
-                    ? "border-[rgba(255,255,255,0.55)] bg-[#d7f1c7]"
-                    : "border-transparent bg-[rgba(201,217,160,0.85)]"
-                }`}
-              >
-                +{value}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-stretch gap-1.5">
-          <button
-            type="button"
-            onClick={applyStigliaForActivePointsTeam}
-            className={`flex flex-1 items-center justify-between gap-2 rounded-[10px] border px-3 py-2 ${
-              form.stigliaTeam
-                ? "border-transparent bg-[rgba(201,217,160,0.85)]"
-                : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
-            }`}
-          >
-            <span
-              className={`text-[12px] font-extrabold ${
-                form.stigliaTeam ? "text-[#10261c]" : "text-[#dcece3]"
-              }`}
-            >
-              Štiglja +90
-            </span>
-            <span
-              className={`text-[10.5px] font-semibold ${
-                form.stigliaTeam ? "text-[rgba(16,38,28,0.75)]" : "text-[#7d9587]"
-              }`}
-            >
-              {form.stigliaTeam ? `Tim ${form.stigliaTeam}` : "Nije upisana"}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={clearZvanjaForActivePlayer}
-            className="flex flex-shrink-0 items-center rounded-[10px] bg-[rgba(6,20,16,0.5)] px-3 py-2 text-[11.5px] font-bold text-[#a9c2b3]"
-          >
-            Reset igrača
-          </button>
-        </div>
-      </div>
-
-      {error ? <p className="text-[14px] font-semibold text-rose-300">{error}</p> : null}
-
-      <div className="grid grid-cols-[1fr_1.6fr] gap-2">
+      {/* Ljepljivo na dnu ekrana: spremanje je uvijek na dohvat, bez skrolanja. */}
+      <div className="sticky bottom-0 z-20 -mx-3 -mb-3 grid grid-cols-[1fr_1.6fr] gap-2 rounded-b-[22px] border-t border-white/5 bg-sheet px-3 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">
         {onCancel ? (
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[12px] border border-[rgba(169,194,179,0.3)] py-3 text-center text-[13px] font-bold text-[#dcece3]"
+            className="rounded-[12px] border border-subtle/30 bg-well/60 py-2.5 text-center text-[13px] font-bold text-soft"
           >
             Nazad
           </button>
@@ -606,7 +357,8 @@ export function RoundEntryForm({
           type="button"
           onClick={submit}
           disabled={loading}
-          className={`btn-accent rounded-[12px] py-3 text-center text-[13px] font-extrabold disabled:opacity-60 ${
+          aria-busy={loading}
+          className={`btn-accent rounded-[12px] py-2.5 text-center text-[13px] font-extrabold disabled:opacity-60 ${
             onCancel ? "" : "col-span-2"
           }`}
         >

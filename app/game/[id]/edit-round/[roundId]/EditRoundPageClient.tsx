@@ -22,8 +22,8 @@ export function EditRoundPageClient({
   const router = useRouter();
 
   function backToGame() {
+    // Bez refresh(): push već dohvaća svježu dinamičku stranicu (vidi new-round).
     router.push(`/game/${game.id}`);
-    router.refresh();
   }
 
   return (

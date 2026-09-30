@@ -49,10 +49,10 @@ export function SuitBadge({
   if (chip) {
     return (
       <span
-        className={`flex flex-col items-center gap-[3px] rounded-[9px] px-0.5 pt-1.5 pb-[7px] border ${
+        className={`flex items-center justify-center gap-1.5 rounded-[9px] border px-0.5 py-2 ${
           selected
-            ? "border-[rgba(201,217,160,0.7)] bg-[rgba(201,217,160,0.12)]"
-            : "border-[rgba(169,194,179,0.16)] bg-[rgba(6,20,16,0.4)]"
+            ? "border-accent/70 bg-accent/12"
+            : "border-subtle/16 bg-well/40"
         }`}
       >
         <Image
@@ -62,7 +62,7 @@ export function SuitBadge({
           height={18}
           className="h-[18px] w-[18px] object-contain"
         />
-        <span className="text-[9.5px] font-semibold text-[#eef3ee]">{suitLabels[suit]}</span>
+        <span className="text-[11px] font-semibold text-ink">{suitLabels[suit]}</span>
       </span>
     );
   }
@@ -73,8 +73,8 @@ export function SuitBadge({
         compact ? "gap-2 px-2 py-1.5" : "min-h-14 w-full justify-start gap-3 px-4 py-3"
       } ${
         selected
-          ? "border-[#c9d9a0] bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
-          : "border-[rgba(169,194,179,0.18)] bg-[rgba(6,20,16,0.4)] text-[#dcece3]"
+          ? "border-accent bg-linear-to-r from-emerald-700/90 to-emerald-600/80 text-white shadow-md shadow-emerald-900/40"
+          : "border-subtle/18 bg-well/40 text-soft"
       }`}
     >
       <Image

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
 import { getRepo } from "@/lib/supabase";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
-import { statsTag } from "@/lib/cachedStats";
+import { invalidateStats } from "@/lib/cachedStats";
 import { createRoundSchema, isAllowedZvanjaTotal } from "@/lib/validation";
 
 export async function PATCH(
@@ -114,7 +113,8 @@ export async function PATCH(
   } else {
     await repo.reopenGame(game.id);
   }
-  revalidateTag(statsTag(accountId), "max");
+  // Izmjena ruke u završenoj (ili sada završenoj) partiji mijenja statistiku.
+  invalidateStats(accountId, { immediate: Boolean(winnerTeam || game.finishedAt) });
 
   return NextResponse.json(
     { round, gameFinished: Boolean(winnerTeam), winnerTeam, score: scoreAfterUpdate },

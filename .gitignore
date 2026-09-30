@@ -43,3 +43,8 @@ next-env.d.ts
 
 # lokalne datoteke s kredencijalima (npr. hash za legacy racun)
 *.local.sql
+
+# playwright
+/test-results
+/playwright-report
+/playwright/.cache

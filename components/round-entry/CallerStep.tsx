@@ -1,0 +1,87 @@
+import { SuitBadge } from "@/components/SuitBadge";
+import type { CalledSuit, Player } from "@/lib/types";
+import {
+  offChipClass,
+  SelectedMark,
+  selectedChipClass,
+  StepPanel,
+  tap,
+  TeamGroup,
+} from "./shared";
+
+const calledSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
+
+interface CallerStepProps {
+  teamAPlayers: Player[];
+  teamBPlayers: Player[];
+  callerPlayerId: string;
+  calledSuit: CalledSuit;
+  onCallerChange: (playerId: string) => void;
+  onSuitChange: (suit: CalledSuit) => void;
+}
+
+export function CallerStep({
+  teamAPlayers,
+  teamBPlayers,
+  callerPlayerId,
+  calledSuit,
+  onCallerChange,
+  onSuitChange,
+}: CallerStepProps) {
+  const teams = [
+    { label: "Tim A", players: teamAPlayers },
+    { label: "Tim B", players: teamBPlayers },
+  ];
+
+  return (
+    <StepPanel step={1} title="Tko je zvao i koji znak">
+      <div className="grid grid-cols-2 gap-2">
+        {teams.map((team) => (
+          <TeamGroup key={team.label} label={team.label}>
+            {team.players.map((player) => {
+              const selected = callerPlayerId === player.id;
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    tap();
+                    onCallerChange(player.id);
+                  }}
+                  className={`relative rounded-[9px] border px-0.5 py-2 text-center ${
+                    selected ? selectedChipClass : offChipClass
+                  }`}
+                >
+                  <SelectedMark show={selected} />
+                  <span className="block w-full truncate px-1 text-[12px] font-bold text-heading">
+                    {player.username}
+                  </span>
+                </button>
+              );
+            })}
+          </TeamGroup>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-4 gap-1" role="group" aria-label="Zvani znak">
+        {calledSuits.map((suit) => (
+          <button
+            key={suit}
+            type="button"
+            aria-pressed={calledSuit === suit}
+            aria-label={suit}
+            onClick={() => {
+              tap();
+              onSuitChange(suit);
+            }}
+            className="relative block"
+          >
+            <SelectedMark show={calledSuit === suit} />
+            <SuitBadge suit={suit} selected={calledSuit === suit} chip />
+          </button>
+        ))}
+      </div>
+    </StepPanel>
+  );
+}

@@ -39,15 +39,16 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[rgba(255,255,255,0.05)] bg-[rgba(6,20,16,0.4)] px-3 py-2.5 text-[#eef3ee] placeholder:text-[#8fa89b] focus:border-[rgba(201,217,160,0.5)] focus:outline-none";
+    "w-full rounded-xl border border-white/5 bg-well/40 px-3 py-2.5 text-ink placeholder:text-muted focus:border-accent/50 focus:outline-none";
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <div>
-        <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
+        <label htmlFor="login-username" className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
           Korisničko ime
         </label>
         <input
+          id="login-username"
           type="text"
           autoComplete="username"
           autoCapitalize="none"
@@ -58,10 +59,11 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         />
       </div>
       <div>
-        <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-[#8fa89b]">
+        <label htmlFor="login-password" className="mb-1 block text-[11px] font-bold uppercase tracking-[0.04em] text-muted">
           Lozinka
         </label>
         <input
+          id="login-password"
           type="password"
           autoComplete="current-password"
           value={password}
@@ -71,7 +73,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
         />
       </div>
 
-      {error ? <p className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
+      {error ? <p role="alert" className="text-[13px] font-semibold text-rose-300">{error}</p> : null}
 
       <button
         type="submit"

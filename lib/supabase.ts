@@ -41,6 +41,8 @@ interface BelaRepository {
   listGameComments(gameIds?: string[]): Promise<Record<string, string>>;
   listRounds(gameId: string): Promise<Round[]>;
   listRoundsForGames(gameIds: string[]): Promise<Round[]>;
+  /** Sve ruke računa; za dataset statistike (bez popisa id-eva u URL-u). */
+  listAllRounds(): Promise<Round[]>;
   createRound(input: RoundInput, context?: RoundWriteContext): Promise<Round>;
   updateRound(roundId: string, input: RoundInput, context?: RoundWriteContext): Promise<Round>;
 }
@@ -287,6 +289,10 @@ class InMemoryRepo implements BelaRepository {
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }
 
+  async listAllRounds() {
+    return [...this.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
+  }
+
   async createRound(input: RoundInput) {
     const game = await this.getGame(input.gameId);
     if (!game) {
@@ -342,8 +348,17 @@ interface LocalDb {
 
 const allowedSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
 
+/**
+ * Direktorij lokalnih JSON "baza" kad Supabase nije konfiguriran. BELA_DATA_DIR
+ * ga premješta (E2E testovi dobiju svoj, prazan direktorij) i jedini je način
+ * da se lokalna pohrana koristi i u produkcijskom buildu.
+ */
+export function localDataDir() {
+  return process.env.BELA_DATA_DIR || path.join(process.cwd(), ".data");
+}
+
 class FileRepo implements BelaRepository {
-  private readonly dbPath = path.join(process.cwd(), ".data", "bela-db.json");
+  private readonly dbPath = path.join(localDataDir(), "bela-db.json");
 
   constructor(private readonly accountId: string) {}
 
@@ -646,6 +661,11 @@ class FileRepo implements BelaRepository {
       .sort((a, b) => a.roundNumber - b.roundNumber);
   }
 
+  async listAllRounds() {
+    const db = await this.readDb();
+    return this.mine(db.rounds).sort((a, b) => a.roundNumber - b.roundNumber);
+  }
+
   async createRound(input: RoundInput) {
     const db = await this.readDb();
     const game = this.mine(db.games).find((candidate) => candidate.id === input.gameId);
@@ -810,7 +830,7 @@ export function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceRole) {
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.NODE_ENV === "production" && !process.env.BELA_DATA_DIR) {
       throw new Error(
         "Supabase env varijable nedostaju u produkciji. Postavi NEXT_PUBLIC_SUPABASE_URL i SUPABASE_SERVICE_ROLE_KEY.",
       );
@@ -829,6 +849,56 @@ export function getSupabaseAdmin() {
  * (007_enable_rls.sql) i sve ide preko service-role ključa, pa baza sama ne
  * postavlja tu granicu.
  */
+/**
+ * PostgREST (Supabase) vraća najviše 1000 redaka po upitu i to TIHO — bez
+ * greške. Najveći račun je već imao ~860 ruku, pa bi statistika uskoro počela
+ * ignorirati najnovije partije. Svaki "dohvati sve" upit ide kroz ovo.
+ */
+const PAGE_SIZE = 1000;
+const ROUNDS_ID_CHUNK = 150;
+
+export async function selectAllPages<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE_SIZE) return rows;
+  }
+}
+
+const ROUND_COLUMNS =
+  "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapRoundRows(rows: any[]): Round[] {
+  return rows.map((row) => ({
+        id: row.id,
+        gameId: row.game_id,
+        roundNumber: row.round_number,
+        callerPlayerId: row.caller_player_id,
+        calledSuit: row.called_suit,
+        callingTeam: row.calling_team,
+        pointsTeamA: row.points_team_a,
+        pointsTeamB: row.points_team_b,
+        zvanjaTeamA: row.zvanja_team_a,
+        zvanjaTeamB: row.zvanja_team_b,
+        zvanjaPlayerIdA: row.zvanja_player_id_a,
+        zvanjaPlayerIdB: row.zvanja_player_id_b,
+        zvanjaByPlayerA: Array.isArray(row.zvanja_by_player_a)
+          ? (row.zvanja_by_player_a as PlayerZvanja[])
+          : [],
+        zvanjaByPlayerB: Array.isArray(row.zvanja_by_player_b)
+          ? (row.zvanja_by_player_b as PlayerZvanja[])
+          : [],
+        stigliaTeam: row.stiglia_team,
+        callerSucceeded: row.caller_succeeded,
+        createdAt: row.created_at,
+      }));
+}
+
 export function getRepo(accountId: string): BelaRepository {
   if (!accountId) throw new Error("getRepo zahtijeva accountId");
   const supabase = getSupabaseAdmin();
@@ -985,13 +1055,16 @@ export function getRepo(accountId: string): BelaRepository {
       if (error) throw error;
     },
     async listGames() {
-      const { data, error } = await supabase
-        .from("games")
-        .select("id, dealer_player_id, created_at, finished_at, teams")
-        .eq("account_id", accountId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []).map((row) => ({
+      const data = await selectAllPages((from, to) =>
+        supabase!
+          .from("games")
+          .select("id, dealer_player_id, created_at, finished_at, teams")
+          .eq("account_id", accountId)
+          .order("created_at", { ascending: false })
+          .order("id")
+          .range(from, to),
+      );
+      return data.map((row) => ({
         id: row.id,
         dealerPlayerId: row.dealer_player_id,
         createdAt: row.created_at,
@@ -1151,38 +1224,38 @@ export function getRepo(accountId: string): BelaRepository {
     },
     async listRoundsForGames(gameIds: string[]) {
       if (gameIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("rounds")
-        .select(
-          "id, game_id, round_number, caller_player_id, called_suit, calling_team, points_team_a, points_team_b, zvanja_team_a, zvanja_team_b, zvanja_player_id_a, zvanja_player_id_b, zvanja_by_player_a, zvanja_by_player_b, stiglia_team, caller_succeeded, created_at",
-        )
-        .in("game_id", gameIds)
-        .eq("account_id", accountId)
-        .order("round_number", { ascending: true });
-      if (error) throw error;
-      return (data ?? []).map((row) => ({
-        id: row.id,
-        gameId: row.game_id,
-        roundNumber: row.round_number,
-        callerPlayerId: row.caller_player_id,
-        calledSuit: row.called_suit,
-        callingTeam: row.calling_team,
-        pointsTeamA: row.points_team_a,
-        pointsTeamB: row.points_team_b,
-        zvanjaTeamA: row.zvanja_team_a,
-        zvanjaTeamB: row.zvanja_team_b,
-        zvanjaPlayerIdA: row.zvanja_player_id_a,
-        zvanjaPlayerIdB: row.zvanja_player_id_b,
-        zvanjaByPlayerA: Array.isArray(row.zvanja_by_player_a)
-          ? (row.zvanja_by_player_a as PlayerZvanja[])
-          : [],
-        zvanjaByPlayerB: Array.isArray(row.zvanja_by_player_b)
-          ? (row.zvanja_by_player_b as PlayerZvanja[])
-          : [],
-        stigliaTeam: row.stiglia_team,
-        callerSucceeded: row.caller_succeeded,
-        createdAt: row.created_at,
-      }));
+      // Id-evi idu u URL (`in.(...)`), pa ih dijelimo u komade da URL ne
+      // naraste preko limita, a svaki komad se još i straniči.
+      const chunks: string[][] = [];
+      for (let i = 0; i < gameIds.length; i += ROUNDS_ID_CHUNK) {
+        chunks.push(gameIds.slice(i, i + ROUNDS_ID_CHUNK));
+      }
+      const pages = await Promise.all(
+        chunks.map((ids) =>
+          selectAllPages((from, to) =>
+            supabase!
+              .from("rounds")
+              .select(ROUND_COLUMNS)
+              .in("game_id", ids)
+              .eq("account_id", accountId)
+              .order("round_number", { ascending: true })
+              .order("id")
+              .range(from, to),
+          ),
+        ),
+      );
+      return mapRoundRows(pages.flat());
+    },
+    async listAllRounds() {
+      const rows = await selectAllPages((from, to) =>
+        supabase!
+          .from("rounds")
+          .select(ROUND_COLUMNS)
+          .eq("account_id", accountId)
+          .order("id")
+          .range(from, to),
+      );
+      return mapRoundRows(rows);
     },
     async createRound(input: RoundInput, context?: RoundWriteContext) {
       const game = context?.game ?? (await this.getGame(input.gameId));

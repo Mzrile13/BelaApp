@@ -1,13 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PlusCircle, RotateCcw } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { BackButton } from "@/components/BackButton";
 import { GameHeader } from "@/components/GameHeader";
 import { GameComment } from "@/components/GameComment";
 import { ScoreTimeline } from "@/components/ScoreTimeline";
+import { VictoryCard } from "@/components/VictoryCard";
+import { getCachedRatingData } from "@/lib/cachedStats";
+import { ratingDeltasForGame } from "@/lib/ratingHistory";
 import { getNextDealer } from "@/lib/dealer";
 import { loadGameBundle } from "@/lib/gameData";
-import { getGameScore, getWinningTeam } from "@/lib/scoring";
+import { getGameScore, getWinningTeam, resolveRoundPoints } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import { requireAccountId } from "@/lib/session";
 
@@ -24,9 +27,22 @@ export default async function GamePage(props: PageProps<"/game/[id]">) {
   const winnerTeam = getWinningTeam(score);
   const fromHistory = searchParams?.from === "history";
   // Zaseban upit (ne dio getGame) da stranice ne ovise o stupcu `comment`.
-  const comment = winnerTeam
-    ? await getRepo(accountId).getGameComment(game.id).catch(() => null)
-    : null;
+  const [comment, ratingData] = winnerTeam
+    ? await Promise.all([
+        getRepo(accountId).getGameComment(game.id).catch(() => null),
+        getCachedRatingData(accountId),
+      ])
+    : [null, null];
+  const ratingDeltas = ratingData ? ratingDeltasForGame(ratingData, game.id) : {};
+  let bestRound: { roundNumber: number; team: "A" | "B"; points: number } | null = null;
+  for (const round of rounds) {
+    const resolved = resolveRoundPoints(round);
+    for (const [team, points] of [["A", resolved.teamA], ["B", resolved.teamB]] as const) {
+      if (!bestRound || points > bestRound.points) {
+        bestRound = { roundNumber: round.roundNumber, team, points };
+      }
+    }
+  }
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
@@ -36,18 +52,19 @@ export default async function GamePage(props: PageProps<"/game/[id]">) {
         playersById={playersById}
         score={score}
         dealerPlayerId={nextDealerId}
+        finished={Boolean(winnerTeam)}
       />
       {winnerTeam ? (
-        <div className="rounded-[14px] border border-[rgba(201,217,160,0.4)] bg-[rgba(201,217,160,0.10)] px-4 py-3 text-center font-semibold text-[#eef6ea]">
-          <p>Partija je završena. Pobjednik je Tim {winnerTeam}.</p>
-          <Link
-            href={`/new-game?rematch=${game.id}`}
-            className="btn-accent mt-3 flex items-center justify-center gap-2 rounded-2xl py-3 font-semibold"
-          >
-            <RotateCcw size={18} />
-            Revanš
-          </Link>
-        </div>
+        <VictoryCard
+          game={game}
+          playersById={playersById}
+          winnerTeam={winnerTeam}
+          score={score}
+          ratingDeltas={ratingDeltas}
+          bestRound={bestRound}
+          roundsCount={rounds.length}
+          celebrate={searchParams?.pobjeda === "1"}
+        />
       ) : (
         <Link
           href={`/game/${params.id}/new-round`}

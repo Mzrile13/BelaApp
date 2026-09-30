@@ -3,7 +3,8 @@ import { AUTH_COOKIE, verifySessionToken } from "@/utils/auth";
 
 // Paths that must stay reachable without a session (the login screen itself
 // and the endpoint that creates the session).
-const PUBLIC_PATHS = new Set(["/login", "/api/login", "/register", "/api/register"]);
+// /offline mora raditi i kad je sesija istekla — SW ga poslužuje bez mreže.
+const PUBLIC_PATHS = new Set(["/login", "/api/login", "/register", "/api/register", "/offline"]);
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -33,6 +34,6 @@ export const config = {
   matcher: [
     // Statika i ikone nikad ne trebaju proxy — svaki izuzetak ovdje je jedan
     // manje poziv funkcije po učitavanju stranice.
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.webmanifest|sw\\.js$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 };

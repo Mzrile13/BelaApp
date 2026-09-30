@@ -32,10 +32,10 @@ export default function InformacijePage() {
       <BackButton fallbackHref="/" className="self-start" />
 
       <header className="card px-[18px] py-[18px]">
-        <h1 className="text-[24px] font-extrabold text-balance text-[#f7fbf6]">
+        <h1 className="text-[24px] font-extrabold text-balance text-heading">
           Kako sve ovo radi
         </h1>
-        <p className="mt-2 text-[13.5px] leading-[1.65] text-[#a9c2b3]">
+        <p className="mt-2 text-[13.5px] leading-[1.65] text-subtle">
           Svaka brojka u aplikaciji računa se iz završenih partija — nema ručnog
           namještanja i nema ocjena. Ovdje piše što svaka statistika mjeri, kako se
           točno računa i kako se čita.
@@ -45,9 +45,9 @@ export default function InformacijePage() {
             <a
               key={id}
               href={`#${id}`}
-              className="flex items-center gap-2 rounded-[10px] bg-[rgba(6,20,16,0.45)] px-2.5 py-2 text-[12px] font-semibold text-[#dcece3]"
+              className="flex items-center gap-2 rounded-[10px] bg-well/45 px-2.5 py-2 text-[12px] font-semibold text-soft"
             >
-              <span className="text-[10px] font-bold tabular-nums text-[#8fa89b]">
+              <span className="text-[11px] font-bold tabular-nums text-muted">
                 {index + 1}
               </span>
               {label}
@@ -60,15 +60,15 @@ export default function InformacijePage() {
         <Prose>
           <p>
             Postoje točno dvije ljestvice, i svaka odgovara na svoje pitanje.
-            Igrači se rangiraju po <b className="font-semibold text-[#eef3ee]">rejtingu</b>,
+            Igrači se rangiraju po <b className="font-semibold text-ink">rejtingu</b>,
             koji mjeri jačinu. Parovi se rangiraju po{" "}
-            <b className="font-semibold text-[#eef3ee]">kemiji</b>, koja mjeri igraju li
+            <b className="font-semibold text-ink">kemiji</b>, koja mjeri igraju li
             zajedno bolje nego što bi se od njih dvojice očekivalo.
           </p>
           <p>
             Sve ostale statistike stoje samostalno, svaka sa svojom malom ljestvicom na
             kartici Kategorije. Namjerno se{" "}
-            <b className="font-semibold text-[#eef3ee]">ne zbrajaju</b> u jednu ocjenu:
+            <b className="font-semibold text-ink">ne zbrajaju</b> u jednu ocjenu:
             većina ih mjeri istu stvar iz različitih kutova, pa bi zbroj samo skrivao što
             se zapravo dogodilo.
           </p>
@@ -90,7 +90,7 @@ export default function InformacijePage() {
             Postotak pobjeda ne mjeri igrača — mjeri i to s kim je igrao i protiv koga.
             U ekipi u kojoj se parovi stalno mijenjaju to je presudno. Zato rejting ne
             broji pobjede, nego{" "}
-            <b className="font-semibold text-[#eef3ee]">
+            <b className="font-semibold text-ink">
               prije svake partije predvidi tko bi trebao pobijediti
             </b>
             , pa nagradi ili kazni prema tome koliko je predviđanje promašeno.
@@ -223,7 +223,7 @@ poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
       <Section id="nesigurnost" eyebrow="Koliko vjerovati broju" title="Nesigurnost (±)">
         <Prose>
           <p>
-            Broj iza znaka ± <b className="font-semibold text-[#eef3ee]">nije raspon
+            Broj iza znaka ± <b className="font-semibold text-ink">nije raspon
             rejtinga</b> — to je koliko sustav još nije siguran u njega. Pada s brojem
             odigranih partija.
           </p>
@@ -255,7 +255,7 @@ poredak    = rejting − ±`}</Formula>
             razinu.
           </p>
           <p>
-            Prikaz <span className="font-mono text-[#eef3ee]">1687 ±22</span> čitaj kao:
+            Prikaz <span className="font-mono text-ink">1687 ±22</span> čitaj kao:
             pravi rejting je vrlo vjerojatno oko 1687, i sustav je u to prilično siguran.
             Manji ±, zasluženiji broj.
           </p>
@@ -267,7 +267,7 @@ poredak    = rejting − ±`}</Formula>
           <p>
             Da se parovi rangiraju po pobjedama, par dvojice najboljih igrača uvijek bi
             vodio — a to već piše u listi igrača. Kemija zato mjeri nešto drugo:{" "}
-            <b className="font-semibold text-[#eef3ee]">
+            <b className="font-semibold text-ink">
               igra li ovaj par bolje ili gore nego što bi se očekivalo od te dvojice
               ljudi
             </b>
@@ -304,9 +304,9 @@ kemija     = sirova × pouzdanost`}</Formula>
             50%, a dobio je 65%. Sirova kemija je +15%, prikazana +11.5%.
           </p>
           <p>
-            <b className="font-semibold text-[#eef3ee]">Plus</b> znači da zajedno igraju
+            <b className="font-semibold text-ink">Plus</b> znači da zajedno igraju
             bolje od zbroja svojih dijelova — razumiju se, znaju kad tko zove, ne gaze
-            jedan drugome zvanja. <b className="font-semibold text-[#eef3ee]">Minus</b>{" "}
+            jedan drugome zvanja. <b className="font-semibold text-ink">Minus</b>{" "}
             znači suprotno. Nula je posve normalna: točno su onoliko dobri koliko im
             rejtinzi kažu. Vrijednosti su obično skromne, između −15% i +15%, jer dio
             kemije neizbježno upije i sam pojedinačni rejting.
@@ -406,7 +406,7 @@ završnica = dobivene takve ruke / sve takve ruke`}</Formula>
           chips={["min. 30 ruku za ljestvicu"]}
           reading={
             <>
-              <b className="font-semibold text-[#c9d9a0]">Manji broj je bolji.</b> Igrač s
+              <b className="font-semibold text-accent">Manji broj je bolji.</b> Igrač s
               40 i prosjekom 85 je pouzdan; igrač sa 70 i istim prosjekom je vlak smrti.
             </>
           }
@@ -446,7 +446,7 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
           kad padneš.
         </StatEntry>
 
-        <h3 className="border-t border-[rgba(255,255,255,0.07)] pt-3 text-[14px] font-bold text-[#f2f5f0]">
+        <h3 className="border-t border-white/7 pt-3 text-[14px] font-bold text-heading">
           Ostale brojke na kartici
         </h3>
 
@@ -565,7 +565,7 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
         />
       </Section>
 
-      <p className="px-1 text-[11px] leading-relaxed text-[#8fa89b]">
+      <p className="px-1 text-[11px] leading-relaxed text-muted">
         Sve brojke se preračunavaju iz cijele povijesti svaki put — nema spremljenih
         međurezultata koji bi mogli zastarjeti. Ispravak unosa neke stare ruke uredno se
         provuče kroz sve statistike.

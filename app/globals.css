@@ -8,6 +8,70 @@
   --accent: #c9d9a0;
 }
 
+/*
+ * Dizajnerski tokeni. Tailwind v4 iz njih generira `text-muted`, `bg-accent/15`
+ * itd. Nove boje ne pisati kao hex u klasama, nego dodati token ovdje.
+ */
+@theme {
+  /* tekst, od najsvjetlijeg prema najtamnijem */
+  --color-heading: #f7fbf6;
+  --color-ink: #eef3ee;
+  --color-soft: #dcece3;
+  --color-subtle: #a9c2b3;
+  --color-muted: #8fa89b;
+  /* najtamniji tekst; >= 4.5:1 i na svjetlijoj kartici (#123728) */
+  --color-dim: #94ad9f;
+
+  --color-accent: #c9d9a0;
+  --color-accent-soft: #d7f1c7;
+  --color-on-accent: #10261c;
+
+  /* površine */
+  --color-well: #061410;
+  --color-panel: #0f3224;
+  --color-sheet: #0a2019;
+  --color-scrim: #030c09;
+
+  --color-pad: #c45a4a;
+  --color-danger: #e0a9b6;
+  --color-danger-soft: #f0c9c9;
+  --color-ok: #a9c98f;
+  --color-warn: #d0a97a;
+
+  --animate-fade-up: fade-up 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-pop: pop 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-score-bump: score-bump 480ms ease-out;
+  --animate-confetti: confetti 1600ms ease-in forwards;
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes score-bump {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.12); color: var(--color-accent-soft); }
+    100% { transform: scale(1); }
+  }
+  @keyframes confetti {
+    0% { opacity: 1; transform: translate3d(0, -10px, 0) rotate(0deg); }
+    100% { opacity: 0; transform: translate3d(var(--dx, 0), 220px, 0) rotate(540deg); }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -39,6 +103,36 @@ body {
     linear-gradient(165deg, #0d2a20 0%, #071a14 55%, #061410 100%);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /*
+   * Instalirana aplikacija (viewport-fit=cover + black-translucent) crta se i
+   * ispod statusne trake / Dynamic Islanda. Bez ovoga vrh svakog ekrana
+   * (naslov, logo, profil, "Nazad") završi pod satom i zamućenjem.
+   * U običnom pregledniku env() je 0, pa se ništa ne mijenja.
+   */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/*
+ * Razmak za donju navigaciju (visina + safe area), samo kad je prikazana. Na
+ * unosu ruke je skrivena, pa ondje ne ostaje prazan prostor ispod forme.
+ */
+body:has(> [data-bottom-nav]) {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
+/* Traka ispod statusne trake: sadržaj koji se skrola ne prolazi ispod sata. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: env(safe-area-inset-top);
+  background: rgba(7, 26, 20, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 45;
+  pointer-events: none;
 }
 
 a {
@@ -66,6 +160,18 @@ a {
 .no-scrollbar::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Polje za datum iste veličine kao ostali izbornici (vidi HistoryList). */
+.date-input {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  color-scheme: dark;
+}
+.date-input::-webkit-date-and-time-value {
+  text-align: left;
 }
 
 .btn-accent {

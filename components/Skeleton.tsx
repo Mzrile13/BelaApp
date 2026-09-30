@@ -7,7 +7,7 @@ export function SkeletonLine({ className = "" }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
-      className={`block animate-pulse rounded-md bg-[rgba(169,194,179,0.16)] ${className}`}
+      className={`block animate-pulse rounded-md bg-subtle/16 ${className}`}
     />
   );
 }
@@ -18,7 +18,7 @@ export function SkeletonRows({ count = 5 }: { count?: number }) {
       {Array.from({ length: count }, (_, index) => (
         <div
           key={index}
-          className="flex items-center gap-3 rounded-[14px] bg-[rgba(6,20,16,0.45)] px-3.5 py-3"
+          className="flex items-center gap-3 rounded-[14px] bg-well/45 px-3.5 py-3"
         >
           <SkeletonLine className="h-[26px] w-[26px] shrink-0 rounded-full" />
           <div className="min-w-0 flex-1 space-y-1.5">
