@@ -49,7 +49,7 @@ export function SuitBadge({
   if (chip) {
     return (
       <span
-        className={`flex flex-col items-center gap-[3px] rounded-[9px] px-0.5 pt-1.5 pb-[7px] border ${
+        className={`flex items-center justify-center gap-1.5 rounded-[9px] border px-0.5 py-2 ${
           selected
             ? "border-accent/70 bg-accent/12"
             : "border-subtle/16 bg-well/40"

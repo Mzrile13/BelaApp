@@ -77,6 +77,9 @@ test("partija od unosa ruke do ekrana pobjede", async ({ page }) => {
 });
 
 test("dijeljenje bez Web Share API-ja preuzima sliku", async ({ page }) => {
+  // Zamjena za preglednike bez Web Share (desktop/Android); iOS Safari ga ima,
+  // a WebKit u Playwrightu ne podržava ovaj način preuzimanja.
+  test.skip(test.info().project.name === "iphone", "iOS ima Web Share API");
   await registerAccount(page);
   const seeded = await seedGroup(page);
   const gameId = await createGame(page, seeded);
@@ -91,4 +94,30 @@ test("dijeljenje bez Web Share API-ja preuzima sliku", async ({ page }) => {
   await page.getByRole("button", { name: "Podijeli" }).click();
   expect((await download).suggestedFilename()).toBe("bela-rezultat.png");
   await expect(page.getByRole("button", { name: "Slika preuzeta" })).toBeVisible();
+});
+
+test("koraci idu zvač → zvanja → bodovi, a štiglja je uz bodove", async ({ page }) => {
+  await registerAccount(page);
+  const seeded = await seedGroup(page);
+  const gameId = await createGame(page, seeded);
+  await page.goto(`/game/${gameId}/new-round`);
+
+  const titles = await page.locator('[role="group"][aria-labelledby^="round-step-"]').evaluateAll((groups) =>
+    groups.map((group) => document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent),
+  );
+  expect(titles).toEqual(["Tko je zvao i koji znak", "Zvanja", "Bodovi iz čiste igre"]);
+
+  const points = page.getByRole("group", { name: "Bodovi iz čiste igre" });
+  const stiglia = points.getByRole("button", { name: /Štiglja \+90/ });
+  await expect(stiglia).toHaveAttribute("aria-pressed", "false");
+  // Aktivno polje je Tim B → štiglja za Tim B.
+  await points.getByRole("button", { name: /Cvita.*bodova/ }).click();
+  await stiglia.click();
+  await expect(stiglia).toHaveAttribute("aria-pressed", "true");
+  await expect(stiglia).toContainText("Tim B");
+  await expect(points.getByRole("button", { name: /Cvita.*: 162 bodova/ })).toBeVisible();
+  await expect(page.getByRole("group", { name: "Zvanja" }).getByRole("button", { name: /Štiglja/ })).toHaveCount(0);
+
+  // Spremi je vidljiv bez skrolanja (ljepljiva traka).
+  await expect(page.getByRole("button", { name: "Spremi ruku" })).toBeInViewport();
 });

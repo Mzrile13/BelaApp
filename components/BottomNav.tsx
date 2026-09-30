@@ -49,6 +49,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Glavna navigacija"
+      data-bottom-nav
       className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-sheet/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
     >
       <ul className="mx-auto grid max-w-3xl grid-cols-5">

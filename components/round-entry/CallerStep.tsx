@@ -1,4 +1,3 @@
-import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { SuitBadge } from "@/components/SuitBadge";
 import type { CalledSuit, Player } from "@/lib/types";
 import {
@@ -7,7 +6,7 @@ import {
   selectedChipClass,
   StepPanel,
   tap,
-  teamMiniLabelClass,
+  TeamGroup,
 } from "./shared";
 
 const calledSuits: CalledSuit[] = ["karo", "herc", "pik", "tref"];
@@ -38,38 +37,34 @@ export function CallerStep({
     <StepPanel step={1} title="Tko je zvao i koji znak">
       <div className="grid grid-cols-2 gap-2">
         {teams.map((team) => (
-          <div key={team.label}>
-            <p className={teamMiniLabelClass}>{team.label}</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {team.players.map((player) => {
-                const selected = callerPlayerId === player.id;
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      tap();
-                      onCallerChange(player.id);
-                    }}
-                    className={`relative flex flex-col items-center gap-1 rounded-[9px] border px-[3px] py-2 text-center ${
-                      selected ? selectedChipClass : offChipClass
-                    }`}
-                  >
-                    <SelectedMark show={selected} />
-                    <PlayerAvatar id={player.id} name={player.username} size="xs" />
-                    <span className="block w-full truncate px-1 text-[12px] font-bold text-heading">
-                      {player.username}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <TeamGroup key={team.label} label={team.label}>
+            {team.players.map((player) => {
+              const selected = callerPlayerId === player.id;
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => {
+                    tap();
+                    onCallerChange(player.id);
+                  }}
+                  className={`relative rounded-[9px] border px-0.5 py-2 text-center ${
+                    selected ? selectedChipClass : offChipClass
+                  }`}
+                >
+                  <SelectedMark show={selected} />
+                  <span className="block w-full truncate px-1 text-[12px] font-bold text-heading">
+                    {player.username}
+                  </span>
+                </button>
+              );
+            })}
+          </TeamGroup>
         ))}
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Zvani znak">
+      <div className="grid grid-cols-4 gap-1" role="group" aria-label="Zvani znak">
         {calledSuits.map((suit) => (
           <button
             key={suit}

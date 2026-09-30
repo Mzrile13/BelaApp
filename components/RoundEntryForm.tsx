@@ -292,7 +292,7 @@ export function RoundEntryForm({
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-[24px] border border-white/5 bg-[radial-gradient(120%_60%_at_85%_-10%,rgba(201,217,160,0.08)_0%,transparent_55%),linear-gradient(165deg,#0d2a20_0%,#071a14_55%,#061410_100%)] p-4">
+    <section className="flex flex-col gap-2 rounded-[22px] border border-white/5 bg-[radial-gradient(120%_60%_at_85%_-10%,rgba(201,217,160,0.08)_0%,transparent_55%),linear-gradient(165deg,#0d2a20_0%,#071a14_55%,#061410_100%)] p-3">
       <div className="flex items-baseline justify-between">
         <h2 className="text-[16px] font-extrabold text-heading">Unos nove ruke</h2>
         {dealerName ? (
@@ -309,6 +309,19 @@ export function RoundEntryForm({
         onSuitChange={(suit) => setForm((prev) => ({ ...prev, calledSuit: suit }))}
       />
 
+      <ZvanjaStep
+        teamAPlayers={teamAPlayers}
+        teamBPlayers={teamBPlayers}
+        tokensByPlayerA={zvanjaTokensByPlayerA}
+        tokensByPlayerB={zvanjaTokensByPlayerB}
+        zvanjaTeamA={form.zvanjaTeamA}
+        zvanjaTeamB={form.zvanjaTeamB}
+        activePlayerId={activeZvanjaPlayerId}
+        onActivePlayerChange={setActiveZvanjaPlayerId}
+        onAddZvanje={applyZvanja}
+        onResetPlayer={clearZvanjaForActivePlayer}
+      />
+
       <PointsStep
         teamAName={teamAName}
         teamBName={teamBName}
@@ -319,21 +332,8 @@ export function RoundEntryForm({
         onDigit={appendDigitToPoints}
         onBackspace={backspacePoints}
         onClear={clearPoints}
-      />
-
-      <ZvanjaStep
-        teamAPlayers={teamAPlayers}
-        teamBPlayers={teamBPlayers}
-        tokensByPlayerA={zvanjaTokensByPlayerA}
-        tokensByPlayerB={zvanjaTokensByPlayerB}
-        zvanjaTeamA={form.zvanjaTeamA}
-        zvanjaTeamB={form.zvanjaTeamB}
-        activePlayerId={activeZvanjaPlayerId}
         stigliaTeam={form.stigliaTeam}
-        onActivePlayerChange={setActiveZvanjaPlayerId}
-        onAddZvanje={applyZvanja}
         onStiglia={applyStigliaForActivePointsTeam}
-        onResetPlayer={clearZvanjaForActivePlayer}
       />
 
       {error ? (
@@ -342,12 +342,13 @@ export function RoundEntryForm({
         </p>
       ) : null}
 
-      <div className="grid grid-cols-[1fr_1.6fr] gap-2">
+      {/* Ljepljivo na dnu ekrana: spremanje je uvijek na dohvat, bez skrolanja. */}
+      <div className="sticky bottom-0 z-20 -mx-3 -mb-3 grid grid-cols-[1fr_1.6fr] gap-2 rounded-b-[22px] border-t border-white/5 bg-sheet px-3 pt-2 pb-[max(12px,env(safe-area-inset-bottom))]">
         {onCancel ? (
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[12px] border border-subtle/30 py-3 text-center text-[13px] font-bold text-soft"
+            className="rounded-[12px] border border-subtle/30 bg-well/60 py-2.5 text-center text-[13px] font-bold text-soft"
           >
             Nazad
           </button>
@@ -357,7 +358,7 @@ export function RoundEntryForm({
           onClick={submit}
           disabled={loading}
           aria-busy={loading}
-          className={`btn-accent rounded-[12px] py-3 text-center text-[13px] font-extrabold disabled:opacity-60 ${
+          className={`btn-accent rounded-[12px] py-2.5 text-center text-[13px] font-extrabold disabled:opacity-60 ${
             onCancel ? "" : "col-span-2"
           }`}
         >

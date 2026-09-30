@@ -26,7 +26,7 @@ export default defineConfig({
       // Safari engine: polja za datum i safe-area ponašaju se drukčije nego u Chromeu.
       name: "iphone",
       use: { ...devices["iPhone 15"] },
-      testMatch: /home-and-filters\.spec\.ts$/,
+      testMatch: /(home-and-filters|game-flow)\.spec\.ts$/,
     },
   ],
   webServer: {

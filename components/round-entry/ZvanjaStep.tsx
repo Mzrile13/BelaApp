@@ -6,7 +6,7 @@ import {
   StepPanel,
   sumTokens,
   tap,
-  teamMiniLabelClass,
+  TeamGroup,
   type ZvanjaValue,
 } from "./shared";
 
@@ -20,10 +20,8 @@ interface ZvanjaStepProps {
   zvanjaTeamA: number;
   zvanjaTeamB: number;
   activePlayerId: string;
-  stigliaTeam: "A" | "B" | null;
   onActivePlayerChange: (playerId: string) => void;
   onAddZvanje: (value: ZvanjaValue) => void;
-  onStiglia: () => void;
   onResetPlayer: () => void;
 }
 
@@ -35,10 +33,8 @@ export function ZvanjaStep({
   zvanjaTeamA,
   zvanjaTeamB,
   activePlayerId,
-  stigliaTeam,
   onActivePlayerChange,
   onAddZvanje,
-  onStiglia,
   onResetPlayer,
 }: ZvanjaStepProps) {
   const teams = [
@@ -55,7 +51,7 @@ export function ZvanjaStep({
 
   return (
     <StepPanel
-      step={3}
+      step={2}
       title="Zvanja"
       aside={
         <span className="ml-auto text-[11px] text-subtle">
@@ -64,51 +60,46 @@ export function ZvanjaStep({
         </span>
       }
     >
-      <p className="text-[11.5px] text-dim">Odaberi igrača, pa dodaj vrijednost:</p>
-
       <div className="grid grid-cols-2 gap-2">
         {teams.map((team) => (
-          <div key={team.label}>
-            <p className={teamMiniLabelClass}>{team.label}</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {team.players.map((player) => {
-                const playerTotal = sumTokens(team.tokens[player.id]);
-                const selected = activePlayerId === player.id;
-                return (
-                  <button
-                    key={player.id}
-                    type="button"
-                    aria-pressed={selected}
-                    aria-label={`${player.username}, zvanja ${playerTotal}`}
-                    onClick={() => {
-                      tap();
-                      onActivePlayerChange(player.id);
-                    }}
-                    className={`relative flex flex-col items-center rounded-[9px] border px-[3px] py-1.5 text-center ${
-                      selected ? selectedChipClass : offChipClass
+          <TeamGroup key={team.label} label={team.label}>
+            {team.players.map((player) => {
+              const playerTotal = sumTokens(team.tokens[player.id]);
+              const selected = activePlayerId === player.id;
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  aria-pressed={selected}
+                  aria-label={`${player.username}, zvanja ${playerTotal}`}
+                  onClick={() => {
+                    tap();
+                    onActivePlayerChange(player.id);
+                  }}
+                  className={`relative flex items-center justify-between gap-1 rounded-[9px] border px-1.5 py-2 ${
+                    selected ? selectedChipClass : offChipClass
+                  }`}
+                >
+                  <SelectedMark show={selected} />
+                  <span className="min-w-0 truncate text-[12px] font-bold text-heading">
+                    {player.username}
+                  </span>
+                  <span
+                    className={`shrink-0 font-mono text-[12px] font-bold ${
+                      playerTotal > 0 ? "text-accent" : "text-dim"
                     }`}
                   >
-                    <SelectedMark show={selected} />
-                    <span className="block w-full truncate px-2 text-[12px] font-bold text-heading">
-                      {player.username}
-                    </span>
-                    <span
-                      className={`mt-px font-mono text-[12px] font-bold ${
-                        playerTotal > 0 ? "text-accent" : "text-dim"
-                      }`}
-                    >
-                      {playerTotal}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                    {playerTotal}
+                  </span>
+                </button>
+              );
+            })}
+          </TeamGroup>
         ))}
       </div>
 
       <div
-        className="grid grid-cols-5 gap-1.5"
+        className="grid grid-cols-[repeat(5,1fr)_auto] gap-1"
         role="group"
         aria-label={`Dodaj zvanje igraču ${activePlayerName}`}
       >
@@ -132,42 +123,16 @@ export function ZvanjaStep({
             </button>
           );
         })}
-      </div>
-
-      <div className="flex items-stretch gap-1.5">
         <button
           type="button"
-          aria-pressed={stigliaTeam !== null}
-          onClick={() => {
-            tap();
-            onStiglia();
-          }}
-          className={`flex flex-1 items-center justify-between gap-2 rounded-[10px] border px-3 py-2 ${
-            stigliaTeam ? "border-transparent bg-accent/85" : "border-subtle/16 bg-well/40"
-          }`}
-        >
-          <span
-            className={`text-[12px] font-extrabold ${stigliaTeam ? "text-on-accent" : "text-soft"}`}
-          >
-            Štiglja +90
-          </span>
-          <span
-            className={`text-[11.5px] font-semibold ${
-              stigliaTeam ? "text-on-accent/75" : "text-dim"
-            }`}
-          >
-            {stigliaTeam ? `Tim ${stigliaTeam}` : "Nije upisana"}
-          </span>
-        </button>
-        <button
-          type="button"
+          aria-label={`Obriši zvanja igrača ${activePlayerName}`}
           onClick={() => {
             tap();
             onResetPlayer();
           }}
-          className="flex flex-shrink-0 items-center rounded-[10px] bg-well/50 px-3 py-2 text-[11.5px] font-bold text-subtle"
+          className="rounded-[8px] bg-well/50 px-2.5 text-[12px] font-bold text-subtle"
         >
-          Reset igrača
+          Reset
         </button>
       </div>
     </StepPanel>

@@ -114,6 +114,14 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+/*
+ * Razmak za donju navigaciju (visina + safe area), samo kad je prikazana. Na
+ * unosu ruke je skrivena, pa ondje ne ostaje prazan prostor ispod forme.
+ */
+body:has(> [data-bottom-nav]) {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+
 /* Traka ispod statusne trake: sadržaj koji se skrola ne prolazi ispod sata. */
 body::before {
   content: "";

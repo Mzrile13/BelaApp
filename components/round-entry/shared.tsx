@@ -6,8 +6,6 @@ export type ZvanjaValue = 20 | 50 | 100 | 150 | 200;
 
 export const selectedChipClass = "border-accent/70 bg-accent/14";
 export const offChipClass = "border-subtle/18 bg-well/40";
-export const teamMiniLabelClass =
-  "mb-1 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-dim";
 
 /** Kratka vibracija kao potvrda dodira; tiho ne radi ništa gdje nije podržano. */
 export function tap() {
@@ -36,7 +34,7 @@ export function StepPanel({ step, title, aside, children }: StepPanelProps) {
     <div
       role="group"
       aria-labelledby={titleId}
-      className="flex animate-fade-up flex-col gap-2.5 rounded-[16px] border border-white/5 bg-panel/50 p-3"
+      className="flex animate-fade-up flex-col gap-2 rounded-[14px] border border-white/5 bg-panel/50 p-2.5"
       style={{ animationDelay: `${(step - 1) * 60}ms` }}
     >
       <div className="flex items-center gap-[7px]">
@@ -56,15 +54,37 @@ export function StepPanel({ step, title, aside, children }: StepPanelProps) {
   );
 }
 
-/** Kvačica u kutu odabranog čipa, da odabir nije označen samo bojom. */
+/** Kvačica na kutu odabranog čipa (izvan teksta), da odabir nije označen samo bojom. */
 export function SelectedMark({ show }: { show: boolean }) {
   if (!show) return null;
   return (
     <span
       aria-hidden
-      className="absolute top-1 right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-on-accent"
+      className="absolute -top-1.5 -right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-on-accent ring-2 ring-sheet"
     >
       <Check size={10} strokeWidth={3.5} />
     </span>
+  );
+}
+
+interface TeamGroupProps {
+  label: string;
+  children: ReactNode;
+}
+
+/**
+ * Čipovi jednog tima u tankom okviru s oznakom na gornjem rubu. Prije je
+ * "Tim A / Tim B" bio zaseban redak iznad čipova u svakom koraku. Nativni
+ * fieldset/legend sam prekida obrub iza oznake (bez maske u boji pozadine) i
+ * daje grupi pristupačno ime.
+ */
+export function TeamGroup({ label, children }: TeamGroupProps) {
+  return (
+    <fieldset className="min-w-0 rounded-[11px] border border-white/10 px-0.5 pb-0.5">
+      <legend className="ml-1.5 px-1 text-[11px] leading-none font-bold uppercase tracking-[0.06em] text-dim">
+        {label}
+      </legend>
+      <div className="grid grid-cols-2 gap-1">{children}</div>
+    </fieldset>
   );
 }

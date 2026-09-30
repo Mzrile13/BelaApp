@@ -37,7 +37,7 @@ export default async function NewRoundPage(props: PageProps<"/game/[id]/new-roun
   const dealerName = players.find((player) => player.id === dealerId)?.username ?? "Unknown";
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4 pb-20">
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-2.5 px-3 pt-3 pb-4">
       <BackButton fallbackHref={`/game/${params.id}`} />
       <NewRoundPageClient game={game} players={players} dealerName={dealerName} />
     </main>

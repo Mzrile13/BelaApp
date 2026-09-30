@@ -10,6 +10,9 @@ interface PointsStepProps {
   onDigit: (digit: string) => void;
   onBackspace: () => void;
   onClear: () => void;
+  stigliaTeam: "A" | "B" | null;
+  /** Postavlja 162 : 0 i štiglju za tim čije je polje bodova aktivno. */
+  onStiglia: () => void;
 }
 
 const DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
@@ -25,6 +28,8 @@ export function PointsStep({
   onDigit,
   onBackspace,
   onClear,
+  stigliaTeam,
+  onStiglia,
 }: PointsStepProps) {
   const fields: Array<{ field: PointsField; name: string; value: number }> = [
     { field: "pointsTeamA", name: teamAName, value: pointsTeamA },
@@ -33,7 +38,7 @@ export function PointsStep({
 
   return (
     <StepPanel
-      step={2}
+      step={3}
       title="Bodovi iz čiste igre"
       aside={<span className="ml-auto text-[11px] font-semibold text-dim">zbroj = 162</span>}
     >
@@ -47,7 +52,7 @@ export function PointsStep({
               aria-pressed={active}
               aria-label={`${name}: ${value} bodova${active ? ", unos aktivan" : ""}`}
               onClick={() => onActiveFieldChange(field)}
-              className={`rounded-[11px] border px-[10px] py-2 text-left ${
+              className={`rounded-[11px] border px-[10px] py-1.5 text-left ${
                 active ? "border-accent/70 bg-accent/12" : "border-subtle/16 bg-well/40"
               }`}
             >
@@ -59,13 +64,39 @@ export function PointsStep({
                   </span>
                 ) : null}
               </div>
-              <p className="mt-px font-mono text-[24px] font-extrabold text-heading">{value}</p>
+              <p className="font-mono text-[24px] leading-[1.15] font-extrabold text-heading">{value}</p>
             </button>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Tipkovnica za bodove">
+      {/* Štiglja je ovdje, uz bodove: odnosi se na tim čije je polje aktivno. */}
+      <button
+        type="button"
+        aria-pressed={stigliaTeam !== null}
+        onClick={() => {
+          tap();
+          onStiglia();
+        }}
+        className={`flex items-center justify-between gap-2 rounded-[10px] border px-3 py-2 ${
+          stigliaTeam ? "border-transparent bg-accent/85" : "border-subtle/16 bg-well/40"
+        }`}
+      >
+        <span className={`text-[12px] font-extrabold ${stigliaTeam ? "text-on-accent" : "text-soft"}`}>
+          Štiglja +90
+        </span>
+        <span
+          className={`truncate text-[11.5px] font-semibold ${
+            stigliaTeam ? "text-on-accent/75" : "text-dim"
+          }`}
+        >
+          {stigliaTeam
+            ? `Tim ${stigliaTeam}`
+            : `za ${activeField === "pointsTeamA" ? teamAName : teamBName}`}
+        </span>
+      </button>
+
+      <div className="grid grid-cols-3 gap-1" role="group" aria-label="Tipkovnica za bodove">
         {DIGITS.map((digit) => (
           <button
             type="button"

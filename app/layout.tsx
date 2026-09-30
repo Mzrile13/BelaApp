@@ -49,8 +49,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="hr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      {/* Donji padding = visina BottomNav + safe area, da zadnji sadržaj nije pod njom. */}
-      <body className="min-h-full flex flex-col pb-[calc(64px+env(safe-area-inset-bottom))]">
+      {/* Donji razmak za BottomNav dodaje globals.css, samo kad je navigacija prikazana. */}
+      <body className="min-h-full flex flex-col">
         {children}
         <BottomNav />
         <ServiceWorkerRegister />
