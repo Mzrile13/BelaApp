@@ -67,7 +67,11 @@ interface HistoryListProps {
 }
 
 const CONTROL_CLASS =
-  "w-full rounded-[10px] border border-white/12 bg-well/60 px-3 py-2 text-[13px] text-ink disabled:opacity-50";
+  "h-[38px] w-full rounded-[10px] border border-white/12 bg-well/60 px-3 py-2 text-[13px] text-ink disabled:opacity-50";
+// Safari (iOS) daje <input type="date"> ugrađenu minimalnu širinu koja ignorira
+// w-full, pa polje izlazi iz stupca i prekrije susjedno. `date-input` (globals.css)
+// skida nativni izgled; min-w-0 i fiksna visina ga izjednače s izbornicima.
+const DATE_CONTROL_CLASS = `${CONTROL_CLASS} date-input block min-w-0`;
 const LABEL_CLASS = "mb-1 block text-[11px] font-bold uppercase tracking-[0.06em] text-muted";
 
 function toQuery(filters: HistoryFilters, lockedPlayerId: string | undefined, offset: number, limit: number) {
@@ -196,7 +200,7 @@ export function HistoryList({
         ) : null}
       </div>
       {showFilters ? (
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-2 gap-3 [&>div]:min-w-0">
           <div>
             <label className={LABEL_CLASS} htmlFor="hf-from">Od datuma</label>
             <input
@@ -205,7 +209,7 @@ export function HistoryList({
               value={filters.from ?? ""}
               max={filters.to || undefined}
               onChange={(event) => setFilter("from", event.target.value)}
-              className={CONTROL_CLASS}
+              className={DATE_CONTROL_CLASS}
             />
           </div>
           <div>
@@ -216,7 +220,7 @@ export function HistoryList({
               value={filters.to ?? ""}
               min={filters.from || undefined}
               onChange={(event) => setFilter("to", event.target.value)}
-              className={CONTROL_CLASS}
+              className={DATE_CONTROL_CLASS}
             />
           </div>
           {lockedPlayerId ? null : (

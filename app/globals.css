@@ -154,6 +154,18 @@ a {
   height: 0;
 }
 
+/* Polje za datum iste veličine kao ostali izbornici (vidi HistoryList). */
+.date-input {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  color-scheme: dark;
+}
+.date-input::-webkit-date-and-time-value {
+  text-align: left;
+}
+
 .btn-accent {
   background: linear-gradient(180deg, #d7f1c7, var(--accent));
   color: #10261c;
