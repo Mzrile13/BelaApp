@@ -113,6 +113,12 @@ promjena     = K × margina × (S − E)`}</Formula>
 
         <StatEntry
           name="Primjer"
+          formula={
+            <Formula>{`E = 1 / (1 + 10 ^ (225 / 400)) = 0.215
+
+pobjeda 1001:500  →  24 × 1.30 × (1 − 0.215) = +24
+poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
+          }
           reading={
             <>
               Poraz koji je bio očekivan gotovo te ne košta, a neočekivana pobjeda te
@@ -123,16 +129,16 @@ promjena     = K × margina × (S − E)`}</Formula>
         >
           Ti (1400) i slabiji partner (1300) činite tim od 1350. Protivnici su 1600 i
           1550, dakle tim od 1575. Razlika od 225 bodova daje vam oko 22% šanse.
-          <Formula>{`E = 1 / (1 + 10 ^ (225 / 400)) = 0.215
-
-pobjeda 1001:500  →  24 × 1.30 × (1 − 0.215) = +24
-poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
         </StatEntry>
 
-        <StatEntry name="Margina">
+        <StatEntry
+          name="Margina"
+          formula={
+            <Formula>{`margina = 0.75 + 0.5 × ln(1 + 4 × (pobjednik − gubitnik) / 1001)`}</Formula>
+          }
+        >
           Rezultat 1001:950 i 1001:200 nisu isti dokaz, pa razlika u bodovima skalira
           veličinu promjene. Nikad je ne poništava i nikad ne udvostručuje.
-          <Formula>{`margina = 0.75 + 0.5 × ln(1 + 4 × (pobjednik − gubitnik) / 1001)`}</Formula>
         </StatEntry>
 
         <DataTable

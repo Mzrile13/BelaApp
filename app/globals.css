@@ -90,17 +90,13 @@
 }
 
 body {
-  background:
-    radial-gradient(120% 60% at 85% -10%, rgba(201, 217, 160, 0.1) 0%, transparent 55%),
-    radial-gradient(90% 50% at 0% 100%, rgba(20, 90, 64, 0.35) 0%, transparent 60%),
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.012) 0px,
-      rgba(255, 255, 255, 0.012) 2px,
-      transparent 2px,
-      transparent 5px
-    ),
-    linear-gradient(165deg, #0d2a20 0%, #071a14 55%, #061410 100%);
+  /*
+   * Puna boja ispod sloja s gradijentom (body::after). Bez nje stranica nema
+   * boju pozadine, pa Safari područje izvan dokumenta (ispod donje navigacije /
+   * home indikatora dok je stranica kratka, npr. loading kostur) boji zadanom
+   * tamnom bojom sheme — crnom trakom.
+   */
+  background-color: #061410;
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   /*
@@ -133,6 +129,35 @@ body::before {
   -webkit-backdrop-filter: blur(10px);
   z-index: 45;
   pointer-events: none;
+}
+
+/*
+ * Gradijent pozadine na fiksnom sloju iza sadržaja. Na <body> bi se slika
+ * ponavljala nakon svake visine ekrana pa bi se pri skrolanju vidio šav;
+ * `background-attachment: fixed` iOS Safari ignorira. Ovako sloj stoji, a
+ * sadržaj klizi preko njega. Visina je 100lvh da pokrije ekran i kad se
+ * trake preglednika sakriju.
+ */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 85% -10%, rgba(201, 217, 160, 0.1) 0%, transparent 55%),
+    radial-gradient(90% 50% at 0% 100%, rgba(20, 90, 64, 0.35) 0%, transparent 60%),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 2px,
+      transparent 2px,
+      transparent 5px
+    ),
+    linear-gradient(165deg, #0d2a20 0%, #071a14 55%, #061410 100%);
 }
 
 a {
