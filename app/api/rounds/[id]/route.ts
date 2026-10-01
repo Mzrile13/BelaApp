@@ -3,16 +3,18 @@ import { getRepo } from "@/lib/supabase";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { invalidateStats } from "@/lib/cachedStats";
-import { createRoundSchema, isAllowedZvanjaTotal } from "@/lib/validation";
+import { createRoundSchema } from "@/lib/validation";
+import { validateRoundInput } from "@/lib/roundValidation";
 
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const body = await request.json();
-  const parsed = createRoundSchema.safeParse(body);
+  const accountId = await getSessionAccountId();
+  if (!accountId) return unauthorized();
 
+  const parsed = createRoundSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Neispravan payload", details: parsed.error.flatten() },
@@ -20,35 +22,6 @@ export async function PATCH(
     );
   }
 
-  if (parsed.data.pointsTeamA + parsed.data.pointsTeamB > 162) {
-    return NextResponse.json(
-      { error: "Zbroj bodova iz čiste igre ne može biti veći od 162" },
-      { status: 400 },
-    );
-  }
-
-  if (!isAllowedZvanjaTotal(parsed.data.zvanjaTeamA) || !isAllowedZvanjaTotal(parsed.data.zvanjaTeamB)) {
-    return NextResponse.json(
-      { error: "Zvanja moraju biti kombinacija 20, 50, 100, 150 i 200" },
-      { status: 400 },
-    );
-  }
-
-  if (parsed.data.stigliaTeam === "A" && parsed.data.pointsTeamA !== 162) {
-    return NextResponse.json(
-      { error: "Štiglja Tim A je moguća samo kad Tim A uzme svih 162 čista boda" },
-      { status: 400 },
-    );
-  }
-  if (parsed.data.stigliaTeam === "B" && parsed.data.pointsTeamB !== 162) {
-    return NextResponse.json(
-      { error: "Štiglja Tim B je moguća samo kad Tim B uzme svih 162 čista boda" },
-      { status: 400 },
-    );
-  }
-
-  const accountId = await getSessionAccountId();
-  if (!accountId) return unauthorized();
   const repo = getRepo(accountId);
   const [game, existingRounds] = await Promise.all([
     repo.getGame(parsed.data.gameId),
@@ -57,50 +30,12 @@ export async function PATCH(
   if (!game) {
     return NextResponse.json({ error: "Partija nije pronađena" }, { status: 404 });
   }
-
-  const teamAPlayers = new Set(game.teams.teamA);
-  const teamBPlayers = new Set(game.teams.teamB);
-  const zvanjaByPlayerA = parsed.data.zvanjaByPlayerA ?? [];
-  const zvanjaByPlayerB = parsed.data.zvanjaByPlayerB ?? [];
-  const totalByPlayerA = zvanjaByPlayerA.reduce((sum, entry) => sum + entry.points, 0);
-  const totalByPlayerB = zvanjaByPlayerB.reduce((sum, entry) => sum + entry.points, 0);
-
-  if (totalByPlayerA !== parsed.data.zvanjaTeamA || totalByPlayerB !== parsed.data.zvanjaTeamB) {
-    return NextResponse.json(
-      { error: "Zbroj zvanja po igračima mora odgovarati ukupnom zvanju tima" },
-      { status: 400 },
-    );
+  if (!existingRounds.some((round) => round.id === id)) {
+    return NextResponse.json({ error: "Ruka nije pronađena" }, { status: 404 });
   }
 
-  for (const entry of zvanjaByPlayerA) {
-    if (!teamAPlayers.has(entry.playerId)) {
-      return NextResponse.json(
-        { error: "Svi igrači zvanja za Tim A moraju biti iz Tima A" },
-        { status: 400 },
-      );
-    }
-    if (!isAllowedZvanjaTotal(entry.points)) {
-      return NextResponse.json(
-        { error: "Zvanja pojedinog igrača (Tim A) moraju biti kombinacija 20, 50, 100, 150 i 200" },
-        { status: 400 },
-      );
-    }
-  }
-
-  for (const entry of zvanjaByPlayerB) {
-    if (!teamBPlayers.has(entry.playerId)) {
-      return NextResponse.json(
-        { error: "Svi igrači zvanja za Tim B moraju biti iz Tima B" },
-        { status: 400 },
-      );
-    }
-    if (!isAllowedZvanjaTotal(entry.points)) {
-      return NextResponse.json(
-        { error: "Zvanja pojedinog igrača (Tim B) moraju biti kombinacija 20, 50, 100, 150 i 200" },
-        { status: 400 },
-      );
-    }
-  }
+  const invalid = validateRoundInput(parsed.data, game);
+  if (invalid) return NextResponse.json({ error: invalid }, { status: 400 });
 
   // Ruke su gore već dohvaćene: repozitorij ih dobiva umjesto da ih čita opet,
   // a novi rezultat se sklopi lokalno zamjenom izmijenjene ruke.

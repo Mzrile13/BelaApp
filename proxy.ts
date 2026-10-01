@@ -6,8 +6,33 @@ import { AUTH_COOKIE, verifySessionToken } from "@/utils/auth";
 // /offline mora raditi i kad je sesija istekla — SW ga poslužuje bez mreže.
 const PUBLIC_PATHS = new Set(["/login", "/api/login", "/register", "/api/register", "/offline"]);
 
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * CSRF brana za API izmjene. SameSite=Lax štiti rute s cookiejem, ali ne i
+ * /api/login (napadač bi žrtvu mogao prijaviti u svoj račun). Preglednik uvijek
+ * šalje Sec-Fetch-Site ili Origin; ne-preglednički klijenti (curl, testovi) ne
+ * šalju ništa, a oni ionako nemaju tuđi cookie pa ih puštamo.
+ */
+function isCrossSiteWrite(request: NextRequest) {
+  if (SAFE_METHODS.has(request.method)) return false;
+  const site = request.headers.get("sec-fetch-site");
+  if (site) return site !== "same-origin" && site !== "none";
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return new URL(origin).host !== request.headers.get("host");
+  } catch {
+    return true;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/api/") && isCrossSiteWrite(request)) {
+    return NextResponse.json({ error: "Zabranjeno" }, { status: 403 });
+  }
 
   // Optimistična provjera: samo potpis cookieja, bez ijednog mrežnog poziva.
   // Dokumentacija izričito kaže da proxy nije mjesto za dohvat podataka

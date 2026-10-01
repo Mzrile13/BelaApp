@@ -34,6 +34,7 @@ export function RegisterForm() {
     }
 
     // Full navigation so the proxy re-reads the new auth cookie.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- namjerno puno učitavanje
     window.location.assign("/");
   }
 

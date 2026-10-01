@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { APP_TIME_ZONE } from "@/lib/time";
 
 export interface RatingPoint {
   gameId: string;
@@ -21,7 +22,12 @@ const H = 220;
 const PAD = { top: 16, right: 14, bottom: 26, left: 40 };
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("hr-HR", { day: "numeric", month: "numeric", year: "2-digit" });
+  return new Date(iso).toLocaleDateString("hr-HR", {
+    day: "numeric",
+    month: "numeric",
+    year: "2-digit",
+    timeZone: APP_TIME_ZONE,
+  });
 }
 
 function signed(value: number) {

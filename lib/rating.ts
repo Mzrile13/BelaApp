@@ -1,5 +1,6 @@
 import { GAME_TARGET_SCORE, getFinishedGameIds, getGameScore, groupRoundsByGame } from "@/lib/scoring";
 import type { Game, Round, TeamId } from "@/lib/types";
+import { zagrebDay } from "@/lib/time";
 
 /**
  * Ekipni Elo za belu.
@@ -133,8 +134,10 @@ export const SEASON_START_MONTH = 10;
  * kronološki poredane, pa se sezone nikad ne sortiraju po tekstu.
  */
 export function seasonOf(createdAt: string) {
-  const year = Number(createdAt.slice(0, 4));
-  const month = Number(createdAt.slice(5, 7));
+  // Granica je ponoć 1. listopada po zagrebačkom vremenu, ne UTC.
+  const day = zagrebDay(createdAt) ?? createdAt;
+  const year = Number(day.slice(0, 4));
+  const month = Number(day.slice(5, 7));
   if (!Number.isFinite(year) || !Number.isFinite(month)) return createdAt.slice(0, 4);
   const startYear = month >= SEASON_START_MONTH ? year : year - 1;
   const short = (value: number) => String(((value % 100) + 100) % 100).padStart(2, "0");
@@ -179,9 +182,13 @@ export function computeRatings(
   games: Game[],
   rounds: Round[],
   config: RatingConfig = DEFAULT_RATING_CONFIG,
+  now: Date = new Date(),
 ): RatingResult {
   const scoredGames = getScoredGames(games, rounds);
-  const currentSeason = scoredGames.length ? scoredGames[scoredGames.length - 1].season : null;
+  // Trenutna sezona po današnjem datumu, kao na /sezona. Prije je to bila sezona
+  // zadnje završene partije, pa je početkom listopada "sezona" na kategorijama
+  // još pokazivala prošlogodišnje promjene i MVP-a.
+  const currentSeason = seasonOf(now.toISOString());
 
   // Prior sljedećeg prolaza = završni rejtinzi prethodnog. Elo je zbroj-nula po
   // partiji, pa prijenos ne napuhava ukupnu sumu.

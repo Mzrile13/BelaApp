@@ -2,7 +2,11 @@ export type CsvCell = string | number | boolean | null | undefined;
 
 function escapeCell(cell: CsvCell) {
   if (cell === null || cell === undefined) return "";
-  const text = String(cell);
+  let text = String(cell);
+  // Tekst koji počinje s = + - @ Excel izvršava kao formulu (npr. komentar
+  // partije "=HYPERLINK(...)"). Apostrof ga drži tekstom. Brojevi su sigurni,
+  // pa negativan rezultat ostaje broj.
+  if (typeof cell === "string" && /^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return /[",\r\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

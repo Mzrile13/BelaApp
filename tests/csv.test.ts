@@ -56,3 +56,17 @@ describe("izvoz", () => {
     expect(lines[1]).toMatch(/^g2,.*,1,ana,A,herc,300,1001,0,0,,true$/);
   });
 });
+
+describe("csv: formule", () => {
+  it("tekst koji počinje s = + - @ ostaje tekst, a negativni brojevi ostaju brojevi", () => {
+    const csv = toCsv(["x"], [["=HYPERLINK(\"http://x\")"], ["+1"], ["-2"], ["@SUM(A1)"], [-5], ["obično"]]);
+    expect(csv.split("\r\n").slice(1, -1)).toEqual([
+      '"\'=HYPERLINK(""http://x"")"',
+      "'+1",
+      "'-2",
+      "'@SUM(A1)",
+      "-5",
+      "obično",
+    ]);
+  });
+});

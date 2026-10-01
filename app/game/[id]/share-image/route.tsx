@@ -4,6 +4,7 @@ import { ImageResponse } from "next/og";
 import { loadGameBundle } from "@/lib/gameData";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
+import { formatDate } from "@/lib/time";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/game/[id]/share
     { key: "A" as const, names: game.teams.teamA.map(nameOf), points: score.teamA },
     { key: "B" as const, names: game.teams.teamB.map(nameOf), points: score.teamB },
   ];
-  const date = new Date(game.createdAt).toLocaleDateString("hr-HR");
+  const date = formatDate(game.createdAt);
 
   return new ImageResponse(
     (

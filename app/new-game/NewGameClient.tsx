@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/BackButton";
 import type { Player, PlayerGroup } from "@/lib/types";
+import { GROUP_NAME_MAX } from "@/lib/limits";
 import { avatarFor, initialOf } from "@/lib/avatar";
 
 interface PlayersPayload {
@@ -419,22 +420,31 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
       setError("Odaberi grupu prije kreiranja partije.");
       return;
     }
-    if (!teamsReady) return;
+    if (!teamsReady || loading) return;
     setLoading(true);
     setError("");
-    const response = await fetch("/api/games", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, groupId: selectedGroupId }),
-    });
-    setLoading(false);
-
-    if (!response.ok) {
-      const body = (await response.json()) as { error?: string };
-      setError(body.error ?? "Greška pri kreiranju partije");
+    let response: Response;
+    try {
+      response = await fetch("/api/games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, groupId: selectedGroupId }),
+      });
+    } catch {
+      setError("Nema veze s poslužiteljem. Provjeri internet i pokušaj ponovno.");
+      setLoading(false);
       return;
     }
 
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      setError(body.error ?? "Greška pri kreiranju partije");
+      setLoading(false);
+      return;
+    }
+
+    // `loading` ostaje true do nove stranice: router.push ne čeka, a drugi
+    // dodir bi u međuvremenu napravio još jednu partiju.
     const body = (await response.json()) as { game: { id: string } };
     router.push(`/game/${body.game.id}`);
   }
@@ -732,6 +742,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                   <input
                     autoFocus
                     value={newGroupName}
+                    maxLength={GROUP_NAME_MAX}
                     onChange={(event) => setNewGroupName(event.target.value)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") void confirmAddGroup();
@@ -814,6 +825,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                     <input
                       autoFocus
                       value={renameName}
+                      maxLength={GROUP_NAME_MAX}
                       onChange={(event) => setRenameName(event.target.value)}
                       onKeyDown={(event) => {
                         if (event.key === "Enter") void confirmRename();

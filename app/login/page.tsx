@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { AUTH_COOKIE, verifySessionToken } from "@/utils/auth";
+import { getSessionAccountId } from "@/lib/session";
 import { AuthTabs } from "@/components/AuthTabs";
 import { LoginForm } from "./LoginForm";
+import { safeRedirect } from "@/lib/redirect";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +11,10 @@ function queryParamToString(value: string | string[] | undefined) {
   return value ?? "";
 }
 
-function safeRedirect(target: string) {
-  // Only allow same-origin app paths to avoid open-redirects.
-  return target.startsWith("/") && !target.startsWith("//") ? target : "/";
-}
-
 export default async function LoginPage(props: PageProps<"/login">) {
-  const cookieStore = await cookies();
-  const alreadyAuthed =
-    (await verifySessionToken(cookieStore.get(AUTH_COOKIE)?.value)) !== null;
+  // Puna provjera (i otisak lozinke), ne samo potpis: inače bi token poništen
+  // promjenom lozinke vrtio krug /login → / → /login.
+  const alreadyAuthed = (await getSessionAccountId()) !== null;
   const searchParams = await props.searchParams;
   const target = safeRedirect(queryParamToString(searchParams?.redirect));
 

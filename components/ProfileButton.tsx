@@ -90,6 +90,7 @@ function MenuView({ onChangePassword }: { onChangePassword: () => void }) {
     setLoggingOut(true);
     await fetch("/api/login", { method: "DELETE" });
     // Full navigation so the proxy re-evaluates the cleared cookie.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- namjerno puno učitavanje
     window.location.assign("/login");
   }
 

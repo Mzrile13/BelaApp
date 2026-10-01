@@ -2,6 +2,7 @@ import { getCachedDataset } from "@/lib/cachedStats";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import type { Game, Round } from "@/lib/types";
+import { zagrebDay } from "@/lib/time";
 
 export interface HistoryRow {
   id: string;
@@ -72,10 +73,6 @@ export function parseHistoryFilters(params: URLSearchParams): HistoryFilters {
 
 export function hasActiveFilters(filters: HistoryFilters) {
   return Object.values(filters).some(Boolean);
-}
-
-function zagrebDay(iso: string) {
-  return new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Zagreb" });
 }
 
 /** Komentar je zaseban stupac; ako migracija još nije primijenjena, povijest radi bez njega. */
@@ -189,7 +186,7 @@ async function getFilteredHistoryPage(
       if (!onA && !onB) continue;
     }
     if (filters.from || filters.to) {
-      const day = zagrebDay(game.createdAt);
+      const day = zagrebDay(game.createdAt) ?? "";
       if (filters.from && day < filters.from) continue;
       if (filters.to && day > filters.to) continue;
     }

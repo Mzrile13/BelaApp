@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { HistoryFilterOptions, HistoryFilters, HistoryRow } from "@/lib/history";
+import { formatDateTime } from "@/lib/time";
 
 function HistoryCard({ row }: { row: HistoryRow }) {
   return (
     <section className="card p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-semibold text-heading">
-          Partija {new Date(row.createdAt).toLocaleString("hr-HR")}
+          Partija {formatDateTime(row.createdAt)}
         </p>
         <Link
           href={`/game/${row.id}?from=history`}

@@ -49,10 +49,9 @@ function pairLabel(row: PairStats) {
 export default async function CategoriesPage() {
   noStore();
   const accountId = await requireAccountId();
-  // Dataset prvi: obje izvedene cache stavke se grade nad njim, pa bi u
-  // paraleli hladan cache značio više istih dohvata iz baze.
-  const dataset = await getCachedDataset(accountId);
-  const [{ players, pairs, season }, ratingData] = await Promise.all([
+  // Paralelno: izvedene stavke dijele isto čitanje dataseta (lib/cachedStats.ts).
+  const [dataset, { players, pairs, season }, ratingData] = await Promise.all([
+    getCachedDataset(accountId),
     getCachedAllStats(accountId),
     getCachedRatingData(accountId),
   ]);
