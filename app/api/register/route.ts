@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   }
 
   // Nova grupa kreće prazna — igrače dodaje sama kroz "Nova partija".
-  const token = await createSessionToken(accountId);
+  const token = await createSessionToken(accountId, passwordHash);
   const response = NextResponse.json({ ok: true }, { status: 201 });
   response.cookies.set(AUTH_COOKIE, token, {
     httpOnly: true,

@@ -19,13 +19,13 @@ async function HomeContent() {
   const accountId = await requireAccountId();
   // Aktivne partije iz istog keširanog dataseta kao i statistika: prije su to
   // bila dva nekeširana upita u nizu (sve partije, pa ruke nezavršenih) na
-  // svakom otvaranju naslovnice. Dataset ide prvi jer se statistika gradi nad
-  // njim (vidi players/[username]).
-  const [dataset, account] = await Promise.all([
+  // svakom otvaranju naslovnice. Sve paralelno: statistika dijeli isto čitanje
+  // dataseta (lib/cachedStats.ts).
+  const [dataset, account, { players: playerStats, pairs: pairStatsAll }] = await Promise.all([
     getCachedDataset(accountId),
     getAccountById(accountId),
+    getCachedAllStats(accountId),
   ]);
-  const { players: playerStats, pairs: pairStatsAll } = await getCachedAllStats(accountId);
   const roundsByGameId = groupRoundsByGame(dataset.rounds);
   const activeGames = dataset.games.filter(
     (game) =>

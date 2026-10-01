@@ -16,12 +16,11 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
   // Prije je ova stranica pri svakom otvaranju povukla cijelu povijest računa i
   // iznova izračunala statistiku svih igrača. Oboje je isto što leaderboard već
   // ima izračunato i keširano, pa se sada samo čita iz istog cachea.
-  //
-  // Namjerno u nizu, a ne u Promise.all: statistika se i sama gradi nad ovim
-  // datasetom, pa mu prvi await napuni cache koji drugi onda samo pročita. U
-  // paraleli bi hladan cache značio dva ista dohvata iz baze.
-  const { players } = await getCachedDataset(accountId);
-  const stats = await getCachedAllStats(accountId);
+  // Paralelno: statistika dijeli isto čitanje dataseta (lib/cachedStats.ts).
+  const [{ players }, stats] = await Promise.all([
+    getCachedDataset(accountId),
+    getCachedAllStats(accountId),
+  ]);
   const row = stats.players.find(
     (item) => item.username.toLowerCase() === username.toLowerCase(),
   );

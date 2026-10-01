@@ -40,6 +40,24 @@ export async function POST(request: Request) {
   const username = parsed.success ? parsed.data.username : "";
   const password = parsed.success ? parsed.data.password : "";
 
+  // Drugi limit po imenu računa: napadač koji mijenja IP-ove i dalje gađa isti
+  // račun. Labaviji od IP limita, jer bi ga inače bilo tko mogao zaključati.
+  if (username) {
+    const perAccount = rateLimit(`login-user:${username.trim().toLowerCase()}`, {
+      limit: 20,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!perAccount.ok) {
+      return NextResponse.json(
+        { error: "Previše pokušaja prijave. Pokušajte ponovno kasnije." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(perAccount.retryAfterSeconds) },
+        },
+      );
+    }
+  }
+
   const account = username ? await findAccountCredentials(username) : null;
   const passwordOk = await verifyPassword(password, account?.passwordHash ?? DUMMY_HASH);
 
@@ -53,7 +71,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const token = await createSessionToken(account.id);
+  const token = await createSessionToken(account.id, account.passwordHash);
   const response = NextResponse.json({ ok: true });
   response.cookies.set(AUTH_COOKIE, token, {
     httpOnly: true,

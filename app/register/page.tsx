@@ -1,15 +1,14 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { AUTH_COOKIE, verifySessionToken } from "@/utils/auth";
+import { getSessionAccountId } from "@/lib/session";
 import { AuthTabs } from "@/components/AuthTabs";
 import { RegisterForm } from "./RegisterForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function RegisterPage() {
-  const cookieStore = await cookies();
-  const alreadyAuthed =
-    (await verifySessionToken(cookieStore.get(AUTH_COOKIE)?.value)) !== null;
+  // Puna provjera (i otisak lozinke), ne samo potpis: inače bi token poništen
+  // promjenom lozinke vrtio krug /login → / → /login.
+  const alreadyAuthed = (await getSessionAccountId()) !== null;
 
   if (alreadyAuthed) {
     redirect("/");

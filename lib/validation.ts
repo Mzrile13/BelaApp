@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GROUP_NAME_MAX } from "@/lib/limits";
 
 // Račun = jedna grupa prijatelja s dijeljenim korisničkim imenom i lozinkom.
 export const accountUsernameSchema = z
@@ -12,8 +13,16 @@ export const accountUsernameSchema = z
   );
 
 export const loginSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
+  username: z.string().min(1).max(64),
+  password: z.string().min(1).max(200),
+});
+
+export const groupNameSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Naziv grupe mora imati barem 2 znaka")
+    .max(GROUP_NAME_MAX, `Naziv grupe može imati najviše ${GROUP_NAME_MAX} znakova`),
 });
 
 export const registerSchema = z

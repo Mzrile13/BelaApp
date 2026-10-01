@@ -8,7 +8,7 @@ import {
 } from "@/utils/auth";
 import { findAccountCredentialsById, updateAccountPassword } from "@/lib/accounts";
 import { rateLimit } from "@/lib/rateLimit";
-import { getSessionAccountId, unauthorized } from "@/lib/session";
+import { getSessionAccountId, invalidateSessions, unauthorized } from "@/lib/session";
 import { changePasswordSchema } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -45,12 +45,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Trenutna lozinka nije točna" }, { status: 401 });
   }
 
-  await updateAccountPassword(accountId, await hashPassword(parsed.data.newPassword));
+  const newHash = await hashPassword(parsed.data.newPassword);
+  await updateAccountPassword(accountId, newHash);
+  invalidateSessions(accountId);
 
-  // Svjež token: sesija ostaje aktivna i produžuje se, umjesto da se korisnik
-  // nakon promjene lozinke mora ponovno prijaviti.
+  // Svjež token s novim otiskom lozinke: ovaj uređaj ostaje prijavljen, a svi
+  // ostali (tokeni sa starim otiskom) moraju se ponovno prijaviti.
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(AUTH_COOKIE, await createSessionToken(accountId), {
+  response.cookies.set(AUTH_COOKIE, await createSessionToken(accountId, newHash), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

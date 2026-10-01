@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { getRepo } from "@/lib/supabase";
 import { computeRatings } from "@/lib/rating";
@@ -58,8 +59,22 @@ function datasetFor(accountId: string) {
   );
 }
 
-export function getCachedDataset(accountId: string) {
-  return datasetFor(accountId)();
+// cache(): sve što jedan render traži (stranica + izvedene cache stavke) dijeli
+// isto čitanje dataseta.
+export const getCachedDataset = cache((accountId: string) => datasetFor(accountId)());
+
+/**
+ * Dataset za izvedene cache stavke. Mora se pokrenuti IZVAN njihova
+ * `unstable_cache` callbacka: poziv iz callbacka je ugniježđeni unstable_cache,
+ * a Next tada preskače cache (unstable-cache.js, `isNestedUnstableCache`) i
+ * svaki promašaj leaderboarda ili rejtinga radio je novi puni scan baze.
+ */
+function datasetForDerived(accountId: string) {
+  const dataset = getCachedDataset(accountId);
+  // Kad je izvedena stavka pogodak, nitko ne čeka ovaj promise; bez handlera bi
+  // greška baze postala unhandled rejection.
+  dataset.catch(() => {});
+  return dataset;
 }
 
 // The leaderboard computations scan every round for every player/pair on each
@@ -72,10 +87,10 @@ export function getCachedDataset(accountId: string) {
 // ključ zato da dvije grupe ne dijele istu cache stavku. Ovo je i razlog zašto
 // se accountId prosljeđuje izvana — dokumentacija zabranjuje čitanje
 // cookies()/headers() unutar cache scopea.
-function allStatsFor(accountId: string) {
+function allStatsFor(accountId: string, dataset: Promise<AccountDataset>) {
   return unstable_cache(
     async (): Promise<{ players: PlayerStats[]; pairs: PairStats[]; season: string | null }> => {
-      const { players, games, rounds } = await getCachedDataset(accountId);
+      const { players, games, rounds } = await dataset;
       // Igrači i parovi dijele jedan prolaz kroz povijest (rejting para se
       // izvodi iz rejtinga igrača), pa se cachiraju zajedno — prije su se dvije
       // cache stavke računale odvojeno i svaka je iznutra radila oba posla.
@@ -90,7 +105,7 @@ function allStatsFor(accountId: string) {
 }
 
 export function getCachedAllStats(accountId: string) {
-  return allStatsFor(accountId)();
+  return allStatsFor(accountId, datasetForDerived(accountId))();
 }
 
 export async function getCachedPlayerStats(accountId: string) {
@@ -104,10 +119,10 @@ export async function getCachedPairStats(accountId: string) {
 // Povijest rejtinga po partiji (graf, sezone, usporedba, delta na kraju
 // partije). Zasebna stavka jer je velika, a treba je manje stranica nego
 // leaderboard. Isti tag, pa je invalidira svaka izmjena partije/ruke.
-function ratingDataFor(accountId: string) {
+function ratingDataFor(accountId: string, dataset: Promise<AccountDataset>) {
   return unstable_cache(
     async (): Promise<RatingData> => {
-      const { games, rounds } = await getCachedDataset(accountId);
+      const { games, rounds } = await dataset;
       return toRatingData(computeRatings(games, rounds));
     },
     ["rating-data", accountId],
@@ -116,5 +131,5 @@ function ratingDataFor(accountId: string) {
 }
 
 export function getCachedRatingData(accountId: string) {
-  return ratingDataFor(accountId)();
+  return ratingDataFor(accountId, datasetForDerived(accountId))();
 }

@@ -121,30 +121,37 @@ export function RoundEntryForm({
   );
 
   async function submit() {
-    if (form.pointsTeamA + form.pointsTeamB > 162) {
-      setError("Zbroj bodova iz čiste igre ne može biti veći od 162");
+    if (loading) return;
+    if (form.pointsTeamA + form.pointsTeamB !== 162) {
+      setError("Zbroj bodova iz čiste igre mora biti 162");
       return;
     }
 
     setLoading(true);
     setError("");
-    const response = await fetch(submitEndpoint, {
-      method: submitMethod,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        gameId: game.id,
-        zvanjaByPlayerA: teamAPlayers.map((player) => ({
-          playerId: player.id,
-          points: (zvanjaTokensByPlayerA[player.id] ?? []).reduce((sum, value) => sum + value, 0),
-        })),
-        zvanjaByPlayerB: teamBPlayers.map((player) => ({
-          playerId: player.id,
-          points: (zvanjaTokensByPlayerB[player.id] ?? []).reduce((sum, value) => sum + value, 0),
-        })),
-      }),
-    });
-    setLoading(false);
+    let response: Response;
+    try {
+      response = await fetch(submitEndpoint, {
+        method: submitMethod,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          gameId: game.id,
+          zvanjaByPlayerA: teamAPlayers.map((player) => ({
+            playerId: player.id,
+            points: (zvanjaTokensByPlayerA[player.id] ?? []).reduce((sum, value) => sum + value, 0),
+          })),
+          zvanjaByPlayerB: teamBPlayers.map((player) => ({
+            playerId: player.id,
+            points: (zvanjaTokensByPlayerB[player.id] ?? []).reduce((sum, value) => sum + value, 0),
+          })),
+        }),
+      });
+    } catch {
+      setError("Nema veze s poslužiteljem. Provjeri internet i pokušaj ponovno.");
+      setLoading(false);
+      return;
+    }
 
     let body: {
       error?: string;
@@ -160,9 +167,12 @@ export function RoundEntryForm({
 
     if (!response.ok) {
       setError(body.error ?? "Greška pri spremanju ruke");
+      setLoading(false);
       return;
     }
 
+    // `loading` namjerno ostaje true: router.push ne čeka novu stranicu, pa bi
+    // ponovni dodir na "Spremi" dok ona stiže upisao istu ruku još jednom.
     await onSaved({
       gameFinished: body.gameFinished === true,
       winnerTeam: body.winnerTeam ?? null,

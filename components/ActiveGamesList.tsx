@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { formatDateTime } from "@/lib/time";
 
 interface ActiveGameRow {
   id: string;
@@ -59,7 +60,7 @@ export function ActiveGamesList({ initialGames }: { initialGames: ActiveGameRow[
           <section key={game.id} className="card p-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-semibold text-heading">
-                Partija {new Date(game.createdAt).toLocaleString("hr-HR")}
+                Partija {formatDateTime(game.createdAt)}
               </p>
               <div className="flex gap-2">
                 <Link
@@ -97,7 +98,7 @@ export function ActiveGamesList({ initialGames }: { initialGames: ActiveGameRow[
             <h3 className="text-base font-bold text-heading">Potvrda brisanja</h3>
             <p className="mt-2 text-sm text-soft">
               {confirmStep === 1
-                ? `Želiš li obrisati aktivnu partiju od ${new Date(confirmTarget.createdAt).toLocaleString("hr-HR")}?`
+                ? `Želiš li obrisati aktivnu partiju od ${formatDateTime(confirmTarget.createdAt)}?`
                 : "Jesi li stvarno siguran? Ova radnja trajno briše partiju i sve njezine ruke."}
             </p>
             <div className="mt-4 flex justify-end gap-2">

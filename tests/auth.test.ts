@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createSessionToken,
   hashPassword,
+  passwordVersion,
   verifyPassword,
   verifySessionToken,
 } from "../utils/auth";
@@ -11,6 +12,23 @@ const LEGACY = "00000000-0000-0000-0000-000000000001";
 
 afterEach(() => {
   delete process.env.LEGACY_ACCOUNT_ID;
+  vi.unstubAllEnvs();
+});
+
+describe("tajna za potpis", () => {
+  it("u produkciji bez AUTH_SECRET odbija potpisati token umjesto javnog fallbacka", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("AUTH_SECRET", "");
+    vi.stubEnv("BELA_DATA_DIR", "");
+    await expect(createSessionToken(ACCOUNT, "hash")).rejects.toThrow(/AUTH_SECRET/);
+  });
+
+  it("u produkciji odbija prekratku tajnu", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("AUTH_SECRET", "kratko");
+    vi.stubEnv("BELA_DATA_DIR", "");
+    await expect(createSessionToken(ACCOUNT, "hash")).rejects.toThrow(/AUTH_SECRET/);
+  });
 });
 
 describe("hashPassword / verifyPassword", () => {
@@ -37,23 +55,43 @@ describe("hashPassword / verifyPassword", () => {
 });
 
 describe("session token", () => {
-  it("vraća račun iz vlastitog tokena", async () => {
-    const token = await createSessionToken(ACCOUNT);
-    expect(await verifySessionToken(token)).toEqual({ accountId: ACCOUNT });
+  const HASH = "pbkdf2$sha256$210000$c29s$aGFzaA==";
+
+  it("vraća račun i otisak lozinke iz vlastitog tokena", async () => {
+    const token = await createSessionToken(ACCOUNT, HASH);
+    expect(await verifySessionToken(token)).toEqual({
+      accountId: ACCOUNT,
+      passwordVersion: await passwordVersion(HASH),
+    });
+  });
+
+  it("otisak se mijenja s lozinkom i ne otkriva hash", async () => {
+    const other = await passwordVersion("pbkdf2$sha256$210000$c29s$ZHJ1Z2k=");
+    expect(other).not.toBe(await passwordVersion(HASH));
+    expect(await passwordVersion(HASH)).toMatch(/^[0-9a-f]{16}$/);
   });
 
   it("odbija petljan potpis", async () => {
-    const token = await createSessionToken(ACCOUNT);
+    const token = await createSessionToken(ACCOUNT, HASH);
     const parts = token.split(".");
-    parts[2] = parts[2]!.replace(/.$/, (c) => (c === "a" ? "b" : "a"));
+    parts[3] = parts[3]!.replace(/.$/, (c) => (c === "a" ? "b" : "a"));
     expect(await verifySessionToken(parts.join("."))).toBeNull();
   });
 
-  it("odbija podmetnut accountId (potpis pokriva i njega)", async () => {
-    const token = await createSessionToken(ACCOUNT);
-    const [, expires, signature] = token.split(".");
-    const forged = `22222222-2222-2222-2222-222222222222.${expires}.${signature}`;
-    expect(await verifySessionToken(forged)).toBeNull();
+  it("odbija podmetnut accountId ili otisak (potpis pokriva oboje)", async () => {
+    const token = await createSessionToken(ACCOUNT, HASH);
+    const [, expires, version, signature] = token.split(".");
+    expect(
+      await verifySessionToken(`22222222-2222-2222-2222-222222222222.${expires}.${version}.${signature}`),
+    ).toBeNull();
+    expect(await verifySessionToken(`${ACCOUNT}.${expires}.0000000000000000.${signature}`)).toBeNull();
+  });
+
+  it("prihvaća token bez otiska izdan prije njegova uvođenja", async () => {
+    const token = await createSessionToken(ACCOUNT, HASH);
+    const [, expires] = token.split(".");
+    const legacy = `${ACCOUNT}.${expires}.${await hmacHex(`${ACCOUNT}.${expires}`)}`;
+    expect(await verifySessionToken(legacy)).toEqual({ accountId: ACCOUNT, passwordVersion: null });
   });
 
   it("odbija prazan i besmislen token", async () => {
@@ -63,30 +101,33 @@ describe("session token", () => {
   });
 });
 
+async function hmacHex(payload: string) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(process.env.AUTH_SECRET ?? "bela-tracker-dev-secret-change-me"),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  return Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 describe("stari token bez identiteta", () => {
   // Prijelazna kompatibilnost: cookieji izdani prije multi-tenancyja imaju
   // oblik `<expiry>.<potpis>` i moraju se mapirati na legacy račun, da se pri
   // deployu nitko ne odjavi.
   async function legacyToken(expires: number) {
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(process.env.AUTH_SECRET ?? "bela-tracker-dev-secret-change-me"),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-    const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(String(expires)));
-    const hex = Array.from(new Uint8Array(sig))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return `${expires}.${hex}`;
+    return `${expires}.${await hmacHex(String(expires))}`;
   }
 
   it("mapira se na legacy račun kad je LEGACY_ACCOUNT_ID postavljen", async () => {
     process.env.LEGACY_ACCOUNT_ID = LEGACY;
     const token = await legacyToken(Date.now() + 60_000);
-    expect(await verifySessionToken(token)).toEqual({ accountId: LEGACY });
+    expect(await verifySessionToken(token)).toEqual({ accountId: LEGACY, passwordVersion: null });
   });
 
   it("odbija se kad LEGACY_ACCOUNT_ID nije postavljen", async () => {

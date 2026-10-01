@@ -4,9 +4,11 @@ import { computeSeasonSummary } from "@/lib/season";
 
 /** Podaci za /sezona i /sezona/[season]; `season` null = trenutna po datumu. */
 export async function loadSeasonPage(accountId: string, season: string | null) {
-  // U nizu: rating data se gradi nad datasetom, pa ga prvi await zagrije.
-  const dataset = await getCachedDataset(accountId);
-  const ratingData = await getCachedRatingData(accountId);
+  // Paralelno: rating data dijeli isto čitanje dataseta (lib/cachedStats.ts).
+  const [dataset, ratingData] = await Promise.all([
+    getCachedDataset(accountId),
+    getCachedRatingData(accountId),
+  ]);
   const currentSeason = seasonOf(new Date().toISOString());
   const active = season ?? currentSeason;
   const summary = computeSeasonSummary(active, ratingData, dataset.players, dataset.rounds);

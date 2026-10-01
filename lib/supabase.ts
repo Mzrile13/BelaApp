@@ -1080,6 +1080,9 @@ export function getRepo(accountId: string): BelaRepository {
         .eq("account_id", accountId)
         .not("finished_at", "is", null)
         .order("created_at", { ascending: false })
+        // Bez drugog ključa partije s istim created_at mogu se na granici
+        // stranice ponoviti ili preskočiti.
+        .order("id", { ascending: false })
         .range(offset, offset + limit);
       if (error) throw error;
       const rows = data ?? [];

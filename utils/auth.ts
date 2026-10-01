@@ -13,8 +13,18 @@ const PBKDF2_ITERATIONS = 210_000;
 const PBKDF2_SALT_BYTES = 16;
 const PBKDF2_KEY_BITS = 256;
 
+const DEV_SECRET = "bela-tracker-dev-secret-change-me";
+
 function getSecret() {
-  return process.env.AUTH_SECRET ?? "bela-tracker-dev-secret-change-me";
+  const secret = process.env.AUTH_SECRET;
+  if (secret && secret.length >= 32) return secret;
+  // Javni fallback je dopušten samo lokalno (dev ili lokalni FileRepo). U
+  // produkciji bi s njim bilo tko mogao potpisati cookie za poznati id računa,
+  // pa radije odbijemo svaki zahtjev nego da tiho radimo s njim.
+  if (process.env.NODE_ENV !== "production" || process.env.BELA_DATA_DIR) {
+    return secret || DEV_SECRET;
+  }
+  throw new Error("AUTH_SECRET mora biti postavljen (najmanje 32 znaka)");
 }
 
 function toHex(buffer: ArrayBuffer) {
@@ -106,17 +116,30 @@ export async function verifyPassword(password: string, stored: string | null | u
 }
 
 /**
- * Token oblika `<accountId>.<expiry>.<potpis>`, važeći {@link SESSION_DURATION_MS}.
+ * Kratki otisak trenutnog hasha lozinke. Ide u token, pa promjena lozinke
+ * poništi sve postojeće sesije (dijeljena lozinka grupe: bivši član ne smije
+ * zadržati pristup). HMAC, a ne goli hash, da token ne nosi ništa iz kojeg bi
+ * se dalo pogađati lozinku.
  */
-export async function createSessionToken(accountId: string) {
+export async function passwordVersion(passwordHash: string) {
+  return (await sign(`pv:${passwordHash}`)).slice(0, 16);
+}
+
+/**
+ * Token oblika `<accountId>.<expiry>.<passwordVersion>.<potpis>`, važeći
+ * {@link SESSION_DURATION_MS}.
+ */
+export async function createSessionToken(accountId: string, passwordHash: string) {
   const expires = String(Date.now() + SESSION_DURATION_MS);
-  const payload = `${accountId}.${expires}`;
+  const payload = `${accountId}.${expires}.${await passwordVersion(passwordHash)}`;
   const signature = await sign(payload);
   return `${payload}.${signature}`;
 }
 
 export interface Session {
   accountId: string;
+  /** Nema ga u tokenima izdanima prije uvođenja otiska lozinke. */
+  passwordVersion: string | null;
 }
 
 export async function verifySessionToken(
@@ -133,14 +156,25 @@ export async function verifySessionToken(
     if (!legacyAccountId) return null;
     const [expiresRaw, signature] = parts;
     if (!(await isValid(expiresRaw!, expiresRaw!, signature!))) return null;
-    return { accountId: legacyAccountId };
+    return { accountId: legacyAccountId, passwordVersion: null };
   }
 
-  if (parts.length !== 3) return null;
-  const [accountId, expiresRaw, signature] = parts;
-  if (!accountId) return null;
-  if (!(await isValid(`${accountId}.${expiresRaw}`, expiresRaw!, signature!))) return null;
-  return { accountId };
+  // Token bez otiska lozinke (prije njegova uvođenja) vrijedi dok ne istekne,
+  // da deploy nikoga ne odjavi.
+  if (parts.length === 3) {
+    const [accountId, expiresRaw, signature] = parts;
+    if (!accountId) return null;
+    if (!(await isValid(`${accountId}.${expiresRaw}`, expiresRaw!, signature!))) return null;
+    return { accountId, passwordVersion: null };
+  }
+
+  if (parts.length !== 4) return null;
+  const [accountId, expiresRaw, version, signature] = parts;
+  if (!accountId || !version) return null;
+  if (!(await isValid(`${accountId}.${expiresRaw}.${version}`, expiresRaw!, signature!))) {
+    return null;
+  }
+  return { accountId, passwordVersion: version };
 }
 
 async function isValid(payload: string, expiresRaw: string, signature: string) {

@@ -7,6 +7,7 @@ import { getCachedAllStats, getCachedDataset } from "@/lib/cachedStats";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getRepo } from "@/lib/supabase";
 import { requireAccountId } from "@/lib/session";
+import { formatDateTime } from "@/lib/time";
 
 export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
   const { pairKey } = await props.params;
@@ -15,10 +16,12 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
 
   const accountId = await requireAccountId();
   // Isto kao na stranici igrača: povijest i statistika parova dolaze iz istog
-  // cachea koji puni leaderboard, umjesto punog scana po otvaranju. Redoslijed
-  // je bitan — statistika se gradi nad datasetom, pa mu prvi await puni cache.
-  const { players, games, rounds } = await getCachedDataset(accountId);
-  const allStats = await getCachedAllStats(accountId);
+  // cachea koji puni leaderboard, umjesto punog scana po otvaranju. Paralelno:
+  // statistika dijeli isto čitanje dataseta (lib/cachedStats.ts).
+  const [{ players, games, rounds }, allStats] = await Promise.all([
+    getCachedDataset(accountId),
+    getCachedAllStats(accountId),
+  ]);
   const roundsByGameId = new Map<string, typeof rounds>();
   for (const round of rounds) {
     const bucket = roundsByGameId.get(round.gameId) ?? [];
@@ -83,7 +86,7 @@ export default async function PairPage(props: PageProps<"/pairs/[pairKey]">) {
                   >
                   <div>
                     <p className="text-sm font-medium text-heading">
-                      {new Date(game.createdAt).toLocaleString("hr-HR")}
+                      {formatDateTime(game.createdAt)}
                     </p>
                     <p className="text-xs text-soft">
                       A {score.teamA} : {score.teamB} B · {finished ? "završena" : "u tijeku"}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BackButton } from "@/components/BackButton";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
-import { getCachedAllStats, getCachedDataset, getCachedRatingData } from "@/lib/cachedStats";
+import { getCachedAllStats, getCachedRatingData } from "@/lib/cachedStats";
 import { computeHeadToHead } from "@/lib/headToHead";
 import { requireAccountId } from "@/lib/session";
 import type { PlayerStats } from "@/lib/types";
@@ -40,7 +40,6 @@ function findByName(rows: PlayerStats[], name: string | undefined) {
 export default async function ComparePage(props: PageProps<"/usporedba">) {
   const searchParams = await props.searchParams;
   const accountId = await requireAccountId();
-  await getCachedDataset(accountId);
   const [{ players }, ratingData] = await Promise.all([
     getCachedAllStats(accountId),
     getCachedRatingData(accountId),
