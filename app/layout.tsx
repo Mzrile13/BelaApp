@@ -48,7 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="hr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="hr" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
       {/* Donji razmak za BottomNav dodaje globals.css, samo kad je navigacija prikazana. */}
       <body className="min-h-full flex flex-col">
         {children}

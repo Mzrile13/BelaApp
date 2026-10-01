@@ -89,6 +89,25 @@
   }
 }
 
+/*
+ * Visina dokumenta (body ima min-h-full). Instalirana aplikacija na iOS-u 26
+ * (viewport-fit=cover + black-translucent) ima WebKit regresiju: 100%, 100dvh
+ * i 100svh su kraći za visinu statusne trake (~59pt). Na kratkoj stranici
+ * (prazna sezona, loading kostur) dokument tada završi iznad dna ekrana, a
+ * ispod donje navigacije ostane prazna traka. Samo 100lvh daje punu visinu.
+ * Ograničeno na standalone: u pregledniku bi lvh (visina sa skrivenim trakama)
+ * kratke stranice učinio malo skrolabilnima.
+ */
+html {
+  height: 100%;
+}
+
+@media (display-mode: standalone) {
+  html {
+    height: 100lvh;
+  }
+}
+
 body {
   /*
    * Puna boja ispod sloja s gradijentom (body::after). Bez nje stranica nema
