@@ -27,7 +27,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bela Tracker",
   description: "Praćenje rezultata i naprednih statistika za belot",
-  appleWebApp: { capable: true, title: "Bela", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Bela Tracker", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {

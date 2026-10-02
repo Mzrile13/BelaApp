@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Bela Tracker",
-    short_name: "Bela",
+    short_name: "Bela Tracker",
     description: "Praćenje rezultata i naprednih statistika za belot",
     lang: "hr",
     start_url: "/",
