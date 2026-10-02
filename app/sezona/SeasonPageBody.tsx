@@ -13,7 +13,7 @@ export function SeasonPageBody({ data }: { data: Awaited<ReturnType<typeof loadS
         Sezona traje od 1. listopada do 30. rujna.
         {active === currentSeason ? " Ovo je trenutna sezona." : ""}
       </p>
-      <SeasonSwitcher seasons={seasons} active={active} />
+      <SeasonSwitcher seasons={seasons} active={active} current={currentSeason} />
 
       {previous ? (
         <section className="mb-3 animate-pop rounded-[18px] border border-accent/40 bg-accent/10 p-4">

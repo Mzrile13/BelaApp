@@ -11,9 +11,17 @@ function percent(value: number) {
   return `${Math.round(value * 100)}%`;
 }
 
-export function SeasonSwitcher({ seasons, active }: { seasons: string[]; active: string }) {
-  // Najnovija prva; trenutna sezona je uvijek na popisu, i bez partija.
-  const list = Array.from(new Set([active, ...seasons])).sort().reverse();
+export function SeasonSwitcher({
+  seasons,
+  active,
+  current,
+}: {
+  seasons: string[];
+  active: string;
+  current: string;
+}) {
+  // Najnovija prva; trenutna (i otvorena) sezona je uvijek na popisu, i bez partija.
+  const list = Array.from(new Set([current, active, ...seasons])).sort().reverse();
   return (
     <nav aria-label="Sezone" className="no-scrollbar -mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4">
       {list.map((season) => (

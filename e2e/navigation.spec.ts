@@ -46,3 +46,19 @@ test("service worker se registrira", async ({ page }) => {
   const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
   expect(scope).toMatch(/\/$/);
 });
+
+test("pregled prošle sezone i dalje nudi trenutnu sezonu", async ({ page }) => {
+  await registerAccount(page);
+  await page.goto("/sezona");
+  const heading = await page.getByRole("heading", { level: 1 }).textContent();
+  const current = heading!.replace("Sezona ", "");
+  const [from, to] = current.split("/").map(Number);
+  const past = `${String(from - 1).padStart(2, "0")}/${String(to - 1).padStart(2, "0")}`;
+
+  await page.goto(`/sezona/${past.replace("/", "-")}`);
+  const switcher = page.getByRole("navigation", { name: "Sezone" });
+  await expect(switcher.getByRole("link", { name: past })).toHaveAttribute("aria-current", "page");
+  await switcher.getByRole("link", { name: current }).click();
+  await page.waitForURL(`**/sezona/${current.replace("/", "-")}`);
+  await expect(page.getByRole("heading", { level: 1, name: `Sezona ${current}` })).toBeVisible();
+});
