@@ -88,7 +88,7 @@ async function HomeContent() {
             </p>
           ) : (
             topPlayers.map((stats) => (
-              <Link key={stats.playerId} href={`/players/${stats.username}`} className="block">
+              <Link key={stats.playerId} href={`/players/${stats.username}`} className="block rounded-[18px]">
                 <PlayerSummaryCard stats={stats} />
               </Link>
             ))
