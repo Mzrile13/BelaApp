@@ -5,6 +5,7 @@ import { CategoryBoard, type CategoryEntry } from "@/components/CategoryBoard";
 import { LeaderboardTabs } from "@/components/LeaderboardTabs";
 import { getCachedAllStats, getCachedDataset, getCachedRatingData } from "@/lib/cachedStats";
 import { computeSeasonSummary, MVP_MIN_GAMES } from "@/lib/season";
+import { partija, plural, ruka } from "@/lib/plural";
 import { requireAccountId } from "@/lib/session";
 import type { PairStats, PlayerStats } from "@/lib/types";
 
@@ -68,7 +69,7 @@ export default async function CategoriesPage() {
     (row) => (seasonGames.get(row.playerId) ?? 0) >= MVP_MIN_GAMES,
     (row) => row.seasonDelta,
     (row) => signed(row.seasonDelta),
-    (row) => `${seasonGames.get(row.playerId) ?? 0} partija u sezoni`,
+    (row) => `${partija(seasonGames.get(row.playerId) ?? 0)} u sezoni`,
   );
   const mvp = seasonBoard[0] ?? null;
 
@@ -135,7 +136,7 @@ export default async function CategoriesPage() {
             (row) => row.timesCalled >= CALL_MIN_CALLS,
             (row) => row.callValueAdded,
             (row) => signed(row.callValueAdded, 1),
-            (row) => `${row.timesCalled} zvanja`,
+            (row) => `${row.timesCalled} ${plural(row.timesCalled, "zvanje", "zvanja", "zvanja")}`,
           )}
         />
 
@@ -183,7 +184,7 @@ export default async function CategoriesPage() {
             (row) => row.clutchRounds >= CLUTCH_MIN_ROUNDS,
             (row) => row.clutchIndex,
             (row) => `${(row.clutchIndex * 100).toFixed(0)}%`,
-            (row) => `${row.clutchRounds} ruku`,
+            (row) => `${ruka(row.clutchRounds)}`,
           )}
         />
 
@@ -212,7 +213,7 @@ export default async function CategoriesPage() {
 
         <CategoryBoard
           title="Kemija"
-          description={`Parovi koji igraju iznad zbroja svojih rejtinga. Min. ${CHEMISTRY_MIN_GAMES} zajedničkih partija.`}
+          description={`Parovi koji igraju iznad zbroja svojih rejtinga. Min. ${CHEMISTRY_MIN_GAMES} ${plural(CHEMISTRY_MIN_GAMES, "zajednička partija", "zajedničke partije", "zajedničkih partija")}.`}
           entries={chemistryPairs
             .slice()
             .sort((a, b) => b.chemistry - a.chemistry)
@@ -220,14 +221,14 @@ export default async function CategoriesPage() {
               key: `${row.playerAId}-${row.playerBId}`,
               label: pairLabel(row),
               value: `${signed(row.chemistry * 100, 1)}%`,
-              hint: `${row.gamesTogether} partija`,
+              hint: partija(row.gamesTogether),
               href: `/pairs/${row.playerAId}__${row.playerBId}`,
             }))}
         />
 
         <CategoryBoard
           title="Neslaganje"
-          description={`Parovi koji igraju ispod zbroja svojih rejtinga. Min. ${CHEMISTRY_MIN_GAMES} zajedničkih partija.`}
+          description={`Parovi koji igraju ispod zbroja svojih rejtinga. Min. ${CHEMISTRY_MIN_GAMES} ${plural(CHEMISTRY_MIN_GAMES, "zajednička partija", "zajedničke partije", "zajedničkih partija")}.`}
           entries={chemistryPairs
             .slice()
             .sort((a, b) => a.chemistry - b.chemistry)
@@ -235,7 +236,7 @@ export default async function CategoriesPage() {
               key: `${row.playerAId}-${row.playerBId}`,
               label: pairLabel(row),
               value: `${signed(row.chemistry * 100, 1)}%`,
-              hint: `${row.gamesTogether} partija`,
+              hint: partija(row.gamesTogether),
               href: `/pairs/${row.playerAId}__${row.playerBId}`,
             }))}
         />

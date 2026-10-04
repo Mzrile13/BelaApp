@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   }
   if (!unique.has(parsed.data.dealerPlayerId)) {
     return NextResponse.json(
-      { error: "Prvi djelitelj mora biti jedan od odabranih 4 igrača" },
+      { error: "Prvi djelitelj mora biti jedan od četiri odabrana igrača" },
       { status: 400 },
     );
   }

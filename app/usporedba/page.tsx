@@ -4,6 +4,7 @@ import { BackButton } from "@/components/BackButton";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { getCachedAllStats, getCachedRatingData } from "@/lib/cachedStats";
 import { computeHeadToHead } from "@/lib/headToHead";
+import { plural } from "@/lib/plural";
 import { requireAccountId } from "@/lib/session";
 import type { PlayerStats } from "@/lib/types";
 
@@ -150,7 +151,8 @@ export default async function ComparePage(props: PageProps<"/usporedba">) {
             <p className="text-[11.5px] font-bold uppercase tracking-[0.05em] text-muted">Kao partneri</p>
             {h2h.partners.games ? (
               <p className="mt-1">
-                {h2h.partners.wins} pobjeda u {h2h.partners.games} partija ({pct(h2h.partners.winRate)})
+                {h2h.partners.wins} {plural(h2h.partners.wins, "pobjeda", "pobjede", "pobjeda")} u{" "}
+                {h2h.partners.games} {plural(h2h.partners.games, "partiji", "partije", "partija")} ({pct(h2h.partners.winRate)})
               </p>
             ) : (
               <p className="mt-1 text-subtle">Nisu igrali u paru.</p>

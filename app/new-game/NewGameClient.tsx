@@ -6,6 +6,7 @@ import { BackButton } from "@/components/BackButton";
 import type { Player, PlayerGroup } from "@/lib/types";
 import { GROUP_NAME_MAX } from "@/lib/limits";
 import { avatarFor, initialOf } from "@/lib/avatar";
+import { igrac } from "@/lib/plural";
 
 interface PlayersPayload {
   players: Player[];
@@ -20,10 +21,6 @@ type Step = "groups" | "setup";
 type SlotKey = "A0" | "A1" | "B0" | "B1";
 
 const SLOT_ORDER: SlotKey[] = ["A0", "A1", "B0", "B1"];
-
-function memberCountLabel(count: number): string {
-  return `${count} ${count === 1 ? "igrač" : "igrača"}`;
-}
 
 export interface NewGameInitialData {
   players: Player[];
@@ -162,10 +159,10 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
     counterLabel = "Odaberi grupu za nastavak";
     counterColor = "#7d9587";
   } else if (canContinue) {
-    counterLabel = `✓ ${total} igrača — spremno za postavu`;
+    counterLabel = `✓ ${igrac(total)} — spremno za postavu`;
     counterColor = "#a9c98f";
   } else {
-    counterLabel = `Treba ${4 - total} igrača više (min. 4)`;
+    counterLabel = `Treba još ${igrac(4 - total)} (min. 4)`;
     counterColor = "#d0a97a";
   }
 
@@ -539,7 +536,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
             className="mt-[2px] text-[11.5px] font-semibold"
             style={{ color: isSelected ? "#c9d9a0" : "#8fa89b" }}
           >
-            {memberCountLabel(members.length)}
+            {igrac(members.length)}
           </p>
         </div>
       </div>
@@ -679,7 +676,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
               </div>
               <h1 className="mt-2 text-xl font-extrabold text-heading">Odabir grupe igrača</h1>
               <p className="mt-1 text-sm text-muted">
-                Odaberi grupu tapom ili napravi novu. Dodaj igrače u jednom polju.
+                Odaberi grupu dodirom ili napravi novu. Dodaj igrače u jednom polju.
               </p>
             </div>
 
@@ -1026,7 +1023,7 @@ export function NewGameClient({ initialData }: { initialData: NewGameInitialData
                                 +
                               </div>
                               <span className="flex-1 text-[13px] font-semibold text-ink">
-                                &quot;{suggestion.name}&quot;
+                                „{suggestion.name}”
                               </span>
                               <span className="text-[11px] font-bold uppercase tracking-[0.04em] text-accent">
                                 Kreiraj novog

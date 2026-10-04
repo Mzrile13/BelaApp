@@ -4,7 +4,7 @@ import { BackButton } from "@/components/BackButton";
 import { Callout, DataTable, Prose, Section, StatEntry } from "@/components/DocsPrimitives";
 
 export const metadata: Metadata = {
-  title: "Uputstva — Bela Tracker",
+  title: "Upute — Bela Tracker",
   description: "Kako pokrenuti partiju, upisati ruku i snaći se u statistikama.",
 };
 
@@ -22,7 +22,7 @@ const CONTENTS = [
 
 const b = "font-semibold text-ink";
 
-export default function UputstvaPage() {
+export default function UputePage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-3 p-4 pb-20">
       <BackButton fallbackHref="/" className="self-start" />
@@ -95,7 +95,7 @@ export default function UputstvaPage() {
         <Callout title="Igrači koji sjede jedan nasuprot drugome su par">
           <p>
             U isti tim stavi dvojicu koji igraju zajedno. Statistike parova i rejting
-            ovise o tome, pa krivo složen tim kvari brojke za sve četvoricu.
+            ovise o tome, pa krivo složen tim kvari brojke za svu četvoricu.
           </p>
         </Callout>
       </Section>
@@ -123,7 +123,7 @@ export default function UputstvaPage() {
           }
         >
           Dodirni igrača koji je zvao, pa vrijednost: +20, +50 ili +100 mogu se
-          dodati više puta (npr. dvije terce = dva puta +20), a +150 i +200 se
+          dodati više puta (npr. dva terca = dva puta +20), a +150 i +200 se
           uključuju i isključuju. Reset briše zvanja odabranog igrača. Belu upiši kao
           +20.
         </StatEntry>

@@ -59,7 +59,7 @@ export default function InformacijePage() {
       <Section id="rangiranje" eyebrow="Sažetak" title="Kako se rangira">
         <Prose>
           <p>
-            Postoje točno dvije ljestvice, i svaka odgovara na svoje pitanje.
+            Postoje točno dvije ljestvice i svaka odgovara na svoje pitanje.
             Igrači se rangiraju po <b className="font-semibold text-ink">rejtingu</b>,
             koji mjeri jačinu. Parovi se rangiraju po{" "}
             <b className="font-semibold text-ink">kemiji</b>, koja mjeri igraju li
@@ -181,7 +181,7 @@ poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
             ["Početni rejting", "1500"],
             ["K, prvih 10 partija", "48"],
             ["K, nakon toga", "24"],
-            ["Prolazaka kroz povijest", "4"],
+            ["Broj prolaza kroz povijest", "4"],
             ["Sezonska regresija", "25% (1. listopada)"],
           ]}
         />
@@ -195,7 +195,7 @@ poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
           </p>
           <p>
             Provjereno mjerenjem: zadanim izmišljenim igračima s poznatim pravim
-            rejtinzima generirane su partije, pa se gledalo koliko vjerno ih sustav
+            rejtinzima generirane su partije, pa se gledalo koliko ih sustav vjerno
             rekonstruira. Nepristran rezultat je 1.00.
           </p>
           <DataTable
@@ -222,7 +222,7 @@ poraz   500:1001  →  24 × 1.30 × (0 − 0.215) =  −7`}</Formula>
             ["300", "85%"],
             ["400", "91%"],
           ]}
-          caption="Razlika između dva igrača prepolovi se dok uđe u tim, jer je jačina tima prosjek dvojice. Razlika od 150 bodova između dva igrača znači razliku od oko 75 među timovima, tj. oko 61%."
+          caption="Razlika između dva igrača prepolovi se kad uđe u tim, jer je jačina tima prosjek dvojice. Razlika od 150 bodova između dva igrača znači razliku od oko 75 među timovima, tj. oko 61%."
         />
       </Section>
 
@@ -262,7 +262,7 @@ poredak    = rejting − ±`}</Formula>
           </p>
           <p>
             Prikaz <span className="font-mono text-ink">1687 ±22</span> čitaj kao:
-            pravi rejting je vrlo vjerojatno oko 1687, i sustav je u to prilično siguran.
+            pravi rejting je vrlo vjerojatno oko 1687 i sustav je u to prilično siguran.
             Manji ±, zasluženiji broj.
           </p>
         </Prose>
@@ -355,7 +355,7 @@ po partiji = vrijednost / odigrane partije`}</Formula>
           }
         >
           Udio zvanja koja su prošla, razdvojen po tome je li zvanje bilo izbor. Djelitelj
-          zove zadnji, pa ako svi prije njega dalju — mora. To nije njegova odluka i
+          zove zadnji, pa ako svi prije njega kažu dalje — mora. To nije njegova odluka i
           nepošteno ju je mjeriti kao dobrovoljnu, pa sustav prepoznaje tko je dijelio
           koju ruku i mjeri ta zvanja odvojeno.
         </StatEntry>
@@ -439,7 +439,7 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
           }
           reading={
             <>
-              Nezgodan protivnik nije nužno onaj koji te najviše puta pobijedio, nego onaj
+              Nezgodan protivnik nije nužno onaj koji te je najviše puta pobijedio, nego onaj
               koji te pobjeđuje više nego što bi smio.
             </>
           }
@@ -547,7 +547,7 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
 
         <StatEntry name="Stara MVP ocjena">
           Uklonjena. Bila je ponderirani zbroj komponenti razvučenih na raspon trenutne
-          ekipe, pa je najgori igrač uvijek dobivao nulu bez obzira koliko dobar bio.
+          ekipe, pa je najgori igrač uvijek dobivao nulu bez obzira na to koliko je bio dobar.
           Komponente su joj uz to mjerile uglavnom istu stvar, a nije korigirala ni
           partnera ni protivnika. Uz nju su otišle i dvije izvedene brojke: utjecaj
           partnera, koji se pokazao pukim artefaktom računice, i rizik zvanja, koji se

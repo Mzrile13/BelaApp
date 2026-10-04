@@ -2,6 +2,7 @@ import Link from "next/link";
 import { RotateCcw, Trophy } from "lucide-react";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { ShareButton } from "@/components/ShareButton";
+import { ruka } from "@/lib/plural";
 import type { Game, Player, TeamId } from "@/lib/types";
 
 interface VictoryCardProps {
@@ -92,7 +93,7 @@ export function VictoryCard({
           {score.teamA} : {score.teamB}
         </p>
         <p className="text-[12px] text-muted">
-          {roundsCount} ruku
+          {ruka(roundsCount)}
           {bestRound
             ? ` · najbolja ruka #${bestRound.roundNumber} (Tim ${bestRound.team}, ${bestRound.points})`
             : ""}

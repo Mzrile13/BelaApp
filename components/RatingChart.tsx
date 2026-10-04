@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { plural } from "@/lib/plural";
 import { APP_TIME_ZONE } from "@/lib/time";
 
 export interface RatingPoint {
@@ -96,7 +97,7 @@ export function RatingChart({ points, initialRating }: RatingChartProps) {
           viewBox={`0 0 ${W} ${H}`}
           className="h-auto w-full touch-pan-y select-none"
           role="img"
-          aria-label={`Rejting kroz ${points.length} partija, od ${Math.round(points[0].rating)} do ${Math.round(points[points.length - 1].rating)}`}
+          aria-label={`Rejting kroz ${points.length} ${plural(points.length, "partiju", "partije", "partija")}, od ${Math.round(points[0].rating)} do ${Math.round(points[points.length - 1].rating)}`}
           onPointerMove={handlePointer}
           onPointerDown={handlePointer}
           onPointerLeave={() => setActive(null)}

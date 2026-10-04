@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   });
   if (!limited.ok) {
     return NextResponse.json(
-      { error: "Previše pokušaja. Pokušajte ponovno kasnije." },
+      { error: "Previše pokušaja. Pokušaj ponovno kasnije." },
       {
         status: 429,
         headers: { "Retry-After": String(limited.retryAfterSeconds) },

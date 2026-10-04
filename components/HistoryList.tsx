@@ -300,7 +300,7 @@ export function HistoryList({
           ? "Učitavam..."
           : activeCount > 0
             ? "Nema partija za odabrane filtere."
-            : "Još nema odigranih rundi."}
+            : "Još nema odigranih partija."}
       </section>
     );
   } else {

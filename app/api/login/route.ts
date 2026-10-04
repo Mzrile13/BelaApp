@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   });
   if (!limited.ok) {
     return NextResponse.json(
-      { error: "Previše pokušaja prijave. Pokušajte ponovno kasnije." },
+      { error: "Previše pokušaja prijave. Pokušaj ponovno kasnije." },
       {
         status: 429,
         headers: { "Retry-After": String(limited.retryAfterSeconds) },
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     });
     if (!perAccount.ok) {
       return NextResponse.json(
-        { error: "Previše pokušaja prijave. Pokušajte ponovno kasnije." },
+        { error: "Previše pokušaja prijave. Pokušaj ponovno kasnije." },
         {
           status: 429,
           headers: { "Retry-After": String(perAccount.retryAfterSeconds) },

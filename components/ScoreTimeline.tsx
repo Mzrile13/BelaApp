@@ -149,7 +149,7 @@ export function ScoreTimeline({ rounds, game, playersById, canEditRounds = false
                               : "bg-pad/85 text-white"
                           }`}
                         >
-                          {round.callerSucceeded ? "Prošao" : "Pad"}
+                          {round.callerSucceeded ? "Prošao" : "Pao"}
                         </span>
                       </div>
                     </div>

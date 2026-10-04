@@ -19,10 +19,10 @@ export function validateRoundInput(input: RoundInput, game: Game): string | null
   }
 
   if (input.stigliaTeam === "A" && input.pointsTeamA !== 162) {
-    return "Štiglja Tim A je moguća samo kad Tim A uzme svih 162 čista boda";
+    return "Štiglja za Tim A moguća je samo kad Tim A uzme svih 162 boda iz čiste igre";
   }
   if (input.stigliaTeam === "B" && input.pointsTeamB !== 162) {
-    return "Štiglja Tim B je moguća samo kad Tim B uzme svih 162 čista boda";
+    return "Štiglja za Tim B moguća je samo kad Tim B uzme svih 162 boda iz čiste igre";
   }
 
   const teamA = new Set(game.teams.teamA);

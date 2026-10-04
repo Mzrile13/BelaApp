@@ -3,6 +3,7 @@ import { unstable_noStore as noStore } from "next/cache";
 import { BackButton } from "@/components/BackButton";
 import { LeaderboardTabs } from "@/components/LeaderboardTabs";
 import { getCachedPairStats } from "@/lib/cachedStats";
+import { partija } from "@/lib/plural";
 import { requireAccountId } from "@/lib/session";
 import type { PairStats } from "@/lib/types";
 
@@ -53,7 +54,7 @@ function renderPairRow(row: PairStats, rank: number | null) {
           </p>
           <p className="mt-px truncate text-[11.5px] text-muted">
             {(row.winRate * 100).toFixed(0)}% stvarno · {(row.expectedWinRate * 100).toFixed(0)}%
-            očekivano · {row.gamesTogether} partija
+            očekivano · {partija(row.gamesTogether)}
           </p>
         </div>
       </div>
@@ -93,7 +94,7 @@ export default async function PairLeaderboardPage(props: PageProps<"/leaderboard
           type="search"
           name="q"
           defaultValue={queryRaw}
-          placeholder="Pretraži par (username)..."
+          placeholder="Pretraži par po imenu igrača…"
           className="w-full rounded-xl border border-white/5 bg-well/40 px-3 py-2 text-ink placeholder:text-muted"
         />
       </form>

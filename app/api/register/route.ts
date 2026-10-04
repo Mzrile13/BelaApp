@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   });
   if (!limited.ok) {
     return NextResponse.json(
-      { error: "Previše pokušaja registracije. Pokušajte ponovno kasnije." },
+      { error: "Previše pokušaja registracije. Pokušaj ponovno kasnije." },
       {
         status: 429,
         headers: { "Retry-After": String(limited.retryAfterSeconds) },

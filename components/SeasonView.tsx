@@ -81,7 +81,7 @@ export function SeasonView({ summary }: { summary: SeasonSummary }) {
         {[
           ["Partija", summary.games],
           ["Ruku", summary.rounds],
-          ["Štiglji", summary.stigliaCount],
+          ["Štiglje", summary.stigliaCount],
         ].map(([label, value]) => (
           <div key={label} className="rounded-[14px] bg-well/45 px-3 py-2.5 text-center">
             <p className="font-mono text-[20px] font-extrabold text-heading">{value}</p>

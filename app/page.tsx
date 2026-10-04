@@ -140,11 +140,11 @@ async function HomeContent() {
       </section>
 
       <Link
-        href="/uputstva"
+        href="/upute"
         className="flex items-center justify-center gap-2 rounded-[16px] border border-subtle/22 bg-well/40 p-[15px] text-[13.5px] font-semibold text-soft"
       >
         <BookOpen size={16} className="text-accent" />
-        Uputstva
+        Upute
       </Link>
 
       <Link

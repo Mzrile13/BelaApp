@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { ImageResponse } from "next/og";
 import { loadGameBundle } from "@/lib/gameData";
+import { ruka } from "@/lib/plural";
 import { getGameScore, getWinningTeam } from "@/lib/scoring";
 import { getSessionAccountId, unauthorized } from "@/lib/session";
 import { formatDate } from "@/lib/time";
@@ -102,7 +103,7 @@ export async function GET(_request: Request, ctx: RouteContext<"/game/[id]/share
         </div>
 
         <span style={{ fontSize: 30, color: "#8fa89b" }}>
-          {rounds.length} ruku · do {1001}
+          {ruka(rounds.length)} · do {1001}
         </span>
       </div>
     ),

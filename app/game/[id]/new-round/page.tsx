@@ -21,7 +21,7 @@ export default async function NewRoundPage(props: PageProps<"/game/[id]/new-roun
         <BackButton fallbackHref={`/game/${params.id}`} />
         <section className="rounded-[14px] border border-accent/40 bg-accent/10 p-4 text-ink">
           <p className="text-lg font-bold">Partija je završena.</p>
-          {winnerTeam ? <p className="mt-1 text-sm">Pobjednik je Tim {winnerTeam}.</p> : null}
+          {winnerTeam ? <p className="mt-1 text-sm">Pobijedio je Tim {winnerTeam}.</p> : null}
           <Link
             href={`/game/${params.id}`}
             className="btn-accent mt-3 block w-full rounded-xl py-3 text-center font-semibold"

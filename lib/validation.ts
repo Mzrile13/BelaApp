@@ -9,7 +9,7 @@ export const accountUsernameSchema = z
   .max(24, "Korisničko ime je predugo")
   .regex(
     /^[a-zA-Z0-9._-]+$/,
-    "Dozvoljena su slova, brojevi, točka, underscore i crtica",
+    "Dopuštena su slova, brojevi, točka, donja crta i crtica",
   );
 
 export const loginSchema = z.object({
@@ -41,7 +41,7 @@ export const registerSchema = z
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Upišite trenutnu lozinku"),
+    currentPassword: z.string().min(1, "Upiši trenutnu lozinku"),
     newPassword: z
       .string()
       .min(8, "Nova lozinka mora imati barem 8 znakova")
@@ -60,11 +60,11 @@ export const changePasswordSchema = z
 export const createPlayerSchema = z.object({
   username: z
     .string()
-    .min(3, "Username mora imati barem 3 znaka")
-    .max(24, "Username je predug")
+    .min(3, "Ime igrača mora imati barem 3 znaka")
+    .max(24, "Ime igrača je predugo")
     .regex(
       /^[a-zA-Z0-9_-]+$/,
-      "Dozvoljena su slova, brojevi, underscore i crtica",
+      "Dopuštena su slova, brojevi, donja crta i crtica",
     ),
 });
 
