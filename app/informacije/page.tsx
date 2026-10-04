@@ -506,8 +506,8 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
         <DataTable
           columns={["Ljestvica", "Sortira se po", "Minimalni uzorak"]}
           rows={[
-            ["MVP sezone", "porast rejtinga u sezoni", "5 partija"],
-            ["Uspon sezone", "porast rejtinga u sezoni", "5 partija"],
+            ["MVP sezone", "porast rejtinga u sezoni", "15 partija"],
+            ["Uspon sezone", "porast rejtinga u sezoni", "15 partija"],
             ["Forma", "promjena kroz zadnjih 10 partija", "3 partije"],
             ["Zvanje aduta", "vrijednost zvanja po partiji", "10 zvanja"],
             ["Hrabrost", "udio zvanja iz volje", "30 ruku"],

@@ -65,6 +65,7 @@ function AwardCard({
 export function SeasonView({ summary }: { summary: SeasonSummary }) {
   const { mvp, pairChampion, biggestWin } = summary;
   const usernameById = new Map(summary.players.map((row) => [row.playerId, row.username]));
+  const standings = summary.players.filter((row) => row.games >= MVP_MIN_GAMES);
 
   if (summary.games === 0) {
     return (
@@ -156,10 +157,15 @@ export function SeasonView({ summary }: { summary: SeasonSummary }) {
           <Trophy size={16} className="text-accent" aria-hidden /> Poredak sezone
         </h2>
         <p className="mb-2.5 text-[11.5px] text-muted">
-          Po promjeni rejtinga u sezoni. MVP treba barem {MVP_MIN_GAMES} partija.
+          Po promjeni rejtinga u sezoni. Ulaze igrači s barem {MVP_MIN_GAMES} partija.
         </p>
+        {standings.length === 0 ? (
+          <p className="text-[13px] text-subtle">
+            Nitko još nema {MVP_MIN_GAMES} partija u ovoj sezoni.
+          </p>
+        ) : null}
         <ol className="flex flex-col gap-1.5">
-          {summary.players.map((row, index) => (
+          {standings.map((row, index) => (
             <li key={row.playerId}>
               <Link
                 href={`/players/${row.username}`}
@@ -172,7 +178,6 @@ export function SeasonView({ summary }: { summary: SeasonSummary }) {
                     <span className="block truncate text-[13.5px] font-bold text-heading">{row.username}</span>
                     <span className="block text-[11.5px] text-muted">
                       {row.wins}W / {row.games - row.wins}L ({percent(row.winRate)})
-                      {row.games < MVP_MIN_GAMES ? " · premalo partija" : ""}
                     </span>
                   </span>
                 </span>

@@ -79,7 +79,7 @@ async function HomeContent() {
 
       <section className="card px-[18px] pt-[18px] pb-2">
         <h2 className="mb-3.5 flex items-center gap-2 text-[14.5px] font-bold text-heading">
-          <Trophy size={16} className="text-accent" /> Top igrači
+          <Trophy size={16} className="text-accent" /> Najbolji igrači
         </h2>
         <div className="space-y-3">
           {topPlayers.length === 0 ? (
@@ -88,7 +88,9 @@ async function HomeContent() {
             </p>
           ) : (
             topPlayers.map((stats) => (
-              <PlayerSummaryCard key={stats.playerId} stats={stats} />
+              <Link key={stats.playerId} href={`/players/${stats.username}`} className="block">
+                <PlayerSummaryCard stats={stats} />
+              </Link>
             ))
           )}
         </div>
@@ -103,9 +105,10 @@ async function HomeContent() {
             <p className="text-sm text-subtle">Nema dovoljno podataka za parove.</p>
           ) : (
             pairStats.map((pair) => (
-              <div
+              <Link
                 key={`${pair.playerAId}-${pair.playerBId}`}
-                className="rounded-[14px] bg-well/45 px-3 py-[11px]"
+                href={`/pairs/${pair.playerAId}__${pair.playerBId}`}
+                className="block rounded-[14px] bg-well/45 px-3 py-[11px]"
               >
                 <p className="text-[13px] font-bold text-heading">
                   {pair.playerAUsername} + {pair.playerBUsername}
@@ -130,7 +133,7 @@ async function HomeContent() {
                   </b>{" "}
                   · očekivano {(pair.expectedWinRate * 100).toFixed(0)}%
                 </p>
-              </div>
+              </Link>
             ))
           )}
         </div>

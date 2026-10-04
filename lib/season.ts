@@ -1,8 +1,11 @@
 import type { RatingData } from "@/lib/ratingHistory";
 import type { Player, Round, TeamId } from "@/lib/types";
 
-/** Ispod ovoga igrač ne može biti MVP sezone (vidi i /leaderboard/categories). */
-export const MVP_MIN_GAMES = 5;
+/**
+ * Ispod ovoga igrač nije u poretku sezone i ne može biti MVP (vidi i
+ * /leaderboard/categories). Isti prag za oboje: MVP je prvi u poretku.
+ */
+export const MVP_MIN_GAMES = 15;
 /** Ispod ovoga par ne može biti prvak sezone. */
 export const PAIR_CHAMPION_MIN_GAMES = 3;
 
