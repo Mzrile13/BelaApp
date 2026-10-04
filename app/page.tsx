@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Info, Trophy, Users } from "lucide-react";
+import { BookOpen, Info, Trophy, Users } from "lucide-react";
 import { ProfileButton } from "@/components/ProfileButton";
 import { PlayerSummaryCard } from "@/components/PlayerSummaryCard";
 import { getGameScore, getWinningTeam, groupRoundsByGame } from "@/lib/scoring";
@@ -138,6 +138,14 @@ async function HomeContent() {
           )}
         </div>
       </section>
+
+      <Link
+        href="/uputstva"
+        className="flex items-center justify-center gap-2 rounded-[16px] border border-subtle/22 bg-well/40 p-[15px] text-[13.5px] font-semibold text-soft"
+      >
+        <BookOpen size={16} className="text-accent" />
+        Uputstva
+      </Link>
 
       <Link
         href="/informacije"

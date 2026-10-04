@@ -533,8 +533,7 @@ nezgodan protivnik = protivnik protiv kojeg najviše zaostaješ
 
       <Section id="izostavljeno" eyebrow="Granice" title="Što se ne računa">
         <StatEntry name="Nezavršene partije">
-          Partija ulazi u statistiku tek kad netko stigne do 1001 ili kad se ručno
-          označi kao završena. Nedovršena partija ne ulazi nigdje — ni u rejting, ni u
+          Partija ulazi u statistiku tek kad netko stigne do 1001. Nedovršena partija ne ulazi nigdje — ni u rejting, ni u
           prosjeke, ni u brojanje ruku. Njezina margina nije usporediva s partijom koja
           je odigrana do kraja.
         </StatEntry>
