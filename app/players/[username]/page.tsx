@@ -54,22 +54,12 @@ export default async function PlayerPage(props: PageProps<"/players/[username]">
         <RatingChart points={ratingPoints} initialRating={DEFAULT_RATING_CONFIG.initialRating} />
       </section>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Link
-          href={compareBase}
-          className="inline-flex items-center gap-1.5 rounded-[12px] border border-subtle/30 px-3 py-2 text-[12.5px] font-bold text-soft"
-        >
-          <Swords size={15} aria-hidden /> Usporedi s…
-        </Link>
-        {row.nemesisUsername ? (
-          <Link
-            href={`${compareBase}&b=${encodeURIComponent(row.nemesisUsername)}`}
-            className="inline-flex items-center gap-1.5 rounded-[12px] border border-subtle/30 px-3 py-2 text-[12.5px] font-bold text-soft"
-          >
-            Usporedi s nemezisom ({row.nemesisUsername})
-          </Link>
-        ) : null}
-      </div>
+      <Link
+        href={compareBase}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-[12px] border border-subtle/30 px-3 py-2.5 text-[12.5px] font-bold text-soft"
+      >
+        <Swords size={15} aria-hidden /> Usporedi s…
+      </Link>
       <h2 className="mb-3 mt-4 text-lg font-semibold text-heading">Partije igrača</h2>
       <HistoryList
         initialRows={page.rows}
